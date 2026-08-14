@@ -12,7 +12,7 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `output-styles/colleague-zh.md` | main session only | voice and language for user-facing prose |
 | `agents/` | on dispatch | effort-pinned and role-scoped sub-agent definitions |
 | `hooks/` | per the events in `settings.example.json` | shell hooks |
-| `skills/` | description resident, body on invocation | 25 skills |
+| `skills/` | description resident, body on invocation | 22 skills |
 | `settings.example.json` | copy to `~/.claude/settings.json` | read the security notes first |
 
 ## Install
@@ -88,7 +88,8 @@ Per-tool schema cost, from `--disallowedTools <tool>`:
 
 - `skills/ui-ux-pro-max/{data,scripts,references}` come wholesale from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill). `local/` and its `SKILL.md` are local work.
 - `skills/writing-for-agents` cites [danyuchn/asd-ste100-skill](https://github.com/danyuchn/asd-ste100-skill) for the ASD-STE100 summary.
-- `skills/{agent-routing,computer-use,orca-cli,orchestration,peer-agent}` drive the Orca agent runner and assume it is installed.
+- `skills/{agent-routing,peer-agent}` drive the Orca agent runner and assume it is installed.
+- Orca's own `orchestration`, `orca-cli` and `computer-use` skills come from [stablyai/orca](https://github.com/stablyai/orca) and Orca installs them into `~/.agents/skills/` itself, so they are not copied here. `agent-routing` quotes three sentences from Orca's orchestration guide and re-checks them with its own `check-anchors.sh`; that guide ships inside the Orca binary and is read with `orca-ide skills get orchestration`, so it moves with the app rather than with any file.
 
 ## Removed before publishing
 
