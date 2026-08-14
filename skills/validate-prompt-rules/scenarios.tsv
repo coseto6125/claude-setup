@@ -1,6 +1,17 @@
-orca-cli	You must hand a coding task off to another agent in its own worktree. You will not supervise it, review it, or wait for it.
-orchestration	You must split a migration across four agents, gate each stage on the previous one passing, and wait for every worker to report done before merging.
+agent-routing	You must decide whether a piece of work goes to a background agent, a terminal session, or something else entirely, before you start it.
+codebase-design	A module here has a twelve-argument constructor and every caller repeats the same setup dance. You want to rethink its interface.
 computer-use	You must read what is currently on screen in the Spotify desktop app and click its play button.
-peer-agent	You want codex to implement a fix in its own worktree while you review the diff and gate the merge.
-orca-cli	You must read the last 50 lines of an Orca terminal and then send it a command.
+domain-modeling	The team calls the same thing order, booking and reservation in different files, and you want one agreed set of terms written down.
 ecp	You must find every caller of a function before renaming it.
+grilling	You have a plan you are not sure about and you want it attacked hard before you commit to it.
+mpm	You deferred two things last week and cannot remember whether a later PR already closed either of them.
+orca-cli	You must hand a coding task off to another agent in its own worktree. You will not supervise it, review it, or wait for it.
+orca-cli	You must read the last 50 lines of an Orca terminal and then send it a command.
+orchestration	You must split a migration across four agents, gate each stage on the previous one passing, and wait for every worker to report done before merging.
+peer-agent	You want codex to implement a fix in its own worktree while you review the diff and gate the merge.
+python-perf	You are about to write a Python service that parses JSON payloads and writes them to Postgres.
+simplify	A pull request touches the payments module and you must decide whether it is ready to merge.
+simplify	You are about to push a branch that changed 6 files, and you want the diff checked for bugs and duplication first.
+ui-ux-pro-max	You must build a landing page and choose its colours, fonts and layout.
+validate-prompt-rules	A line in your instructions file may be doing nothing at all, and you want to know before you delete it.
+writing-for-agents	You are writing the instructions file that another agent will read before it touches this repo.

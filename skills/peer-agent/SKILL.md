@@ -1,9 +1,11 @@
 ---
 name: peer-agent
-description: Run a peer coding agent (codex, or another Claude) as the implementer in its own worktree while you review its diff and gate the merge. Use when the user names codex, when two agents cross-review each other's diffs, or for a multi-PR program you supervise. If nobody reviews the result it is a handoff, not this skill: use `orca-cli`.
+description: Run a peer coding agent (codex, or another Claude) as the implementer in its own worktree while you review its diff and gate the merge. Use when the user names codex, when two agents cross-review each other's diffs, or for a multi-PR program you supervise. If nobody reviews the result it is a handoff, not this skill; use `orca-cli` instead.
 ---
 
 # Peer-agent programs
+
+This skill covers only what is specific to driving a peer agent: the launch, the poll, the diff gate. Reviewing the diff itself is `simplify`, and worktree mechanics are `orca-cli`; both are assumed known here.
 
 You review, gate, and merge. The **peer** implements in its own worktree. The channel
 between you is asynchronous, lossy, and echo-prone — every rule below exists because

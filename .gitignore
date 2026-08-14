@@ -40,3 +40,8 @@ session.json
 cookies.txt
 cookies.json
 *.har
+
+# check-anchors.sh state; records the local Orca version and changes on every run
+.last-checked
+*.bak
+*.new.tsv

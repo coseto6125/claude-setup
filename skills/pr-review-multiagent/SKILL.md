@@ -1,6 +1,8 @@
 ---
 name: pr-review-multiagent
-description: Merge-readiness review of a GitHub PR, ending in a formal review comment posted to the PR. Use when a PR spans multiple subsystems, a schema migration, an API contract, or a security path — or whenever a posted GitHub review is what's wanted. For a trivial or single-file PR, use `simplify`.
+description: Six-angle merge-readiness review of a GitHub PR, posted to the PR.
+disable-model-invocation: true
+allowed-tools: Bash(gh pr view:*) Bash(gh pr diff:*) Bash(gh pr list:*) Bash(gh pr comment:*) Bash(ecp:*) Bash(git blame:*) Bash(git log:*) Bash(git diff:*) Read Grep Glob Task Write
 ---
 
 # PR Review — multi-agent, ecp-driven

@@ -1,6 +1,6 @@
 ---
 name: ecp
-description: 'Tracing who-calls-X or a data flow — mid-debug, not only before a refactor — or exploring code structure: where a symbol is defined, who calls it, blast radius, routes/contracts. Reach here before grep. Command by question: definition→`ecp find`, who-calls/blast-radius→`ecp impact`, full context→`ecp inspect`, filename-read-vs-written→`ecp impact --literal`, routes/contracts→`ecp routes`/`ecp contracts`, trace execution flow→`ecp processes`, graph question with no verb (orphans, all-impls)→`ecp cypher`. Grep only for non-code text: config values, log strings, fs layout.'
+description: 'Use this skill whenever a question is about code structure rather than text: where a symbol is defined, who calls it, what breaks if it changes, what routes or contracts exist, how execution flows, what is orphaned. Reach here before grep, mid-debug as much as before a refactor. Grep stays for non-code text only: config values, log strings, filesystem layout.'
 ---
 
 # EgentCodePlexus (ecp) — Structural Analysis Entry

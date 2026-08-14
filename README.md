@@ -25,6 +25,8 @@ cp ~/claude-setup/settings.example.json ~/.claude/settings.json
 
 Then edit `~/.claude/settings.json`: replace `<YOUR_CONTEXT7_API_KEY>`, and expand `$HOME` in the hook paths if your shell does not.
 
+`CLAUDE.md` settles Python 3.14 syntax arguments by running [`pyci-check`](https://github.com/coseto6125/pyci-check), so install it or that rule has nothing to point at. The programs the hooks call are listed under Security notes and none of them ship here either.
+
 ## Security notes
 
 These are properties of this configuration, not defects. Read them before you copy anything into `~/.claude`.

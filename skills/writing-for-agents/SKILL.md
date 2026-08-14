@@ -126,3 +126,7 @@ A review of a document you did not just write is its own branch. Seven recurring
 - **ambiguity**
 
 For a full review or a material rewrite, account for every one of the seven, and name each one as present, absent, or not applicable. For a scoped edit, check the touched meaning and its coupled artifacts, and report only actionable findings.
+
+## Auditing a skill you wrote
+
+`audit.py --all` checks every skill against the measurable rules; `audit.py refs` reports cross-references that point at a skill which was removed or is user-invoked only. **Call them, do not read them** — the findings they print are the whole contract, and the source is large.

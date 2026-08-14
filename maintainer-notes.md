@@ -114,6 +114,25 @@ Net length change is 128 chars, so this is a correctness fix that happens to be 
 
 `switch-playwright` was measured here but does not ship in this repo. It drove a private HTTP MCP, so it went out with the rest of that material. The rule it demonstrates still holds for the descriptions that remain.
 
-A first attempt also rewrote `orchestration`, `orca-cli` and `computer-use` (3,143 chars down to 1,626, also 18/18). Those three are symlinks into `~/.agents/skills/`, which Orca overwrites from `stablyai/orca`, so the edit cannot survive. See `skill-overlays/README.md`. The whole routing bug turned out to be fixable without them.
+A first attempt also rewrote `orchestration`, `orca-cli` and `computer-use` (3,143 chars down to 1,626, also 18/18). Those three are symlinks into `~/.agents/skills/`, which Orca installs and overwrites from `stablyai/orca`, so the edit cannot survive and they are not published here. To override one of their rules, quote the sentence inside `agent-routing` and declare the exception there: `anchors.txt` holds the quoted sentences and `check-anchors.sh` re-checks them against the guide Orca actually ships. The whole routing bug turned out to be fixable without them.
+
+Orca does not refresh those three on a schedule of its own. On 2026-08-15 all three sat three weeks behind the running app: `orchestration` still read the terminal handle from `startupTerminal.handle` where the shipped guide reads `agentTerminalHandle` first, and `orca-cli`'s description had lost the artifact triggers that decide whether it gets picked at all. That second one is why descriptions get checked before bodies. A stale body misinforms a skill that was already invoked; a stale description stops the invocation happening. `orca skills update` refuses to run from a shell that forwards to an Orca host on another machine, so the comparison is manual: `diff <(orca-ide skills get <name>) ~/.agents/skills/<name>/SKILL.md`.
 
 `skills/validate-prompt-rules/route.sh` runs this test. It swaps the entire skills tree through `CLAUDE_CONFIG_DIR`, so the only thing that differs between arms is the descriptions, and credentials still resolve because `.credentials.json` is copied into the temp config directory.
+
+## Python, the `except A, B:` red line
+
+The rule in `CLAUDE.md` points at `pyci-check syntax` instead of restating the parser behaviour, so the tool has to be installed for the rule to land: [coseto6125/pyci-check](https://github.com/coseto6125/pyci-check). Both halves were re-verified on 2026-08-15:
+
+- `pyci-check` runs on its own uv tool venv, Python **3.14.6**. `pyci_check/syntax.py` calls `ast.parse` there, so a file holding `except ValueError, TypeError:` returns `✓ All files have correct syntax`, exit 0.
+- `ruff 0.16.0`, `ruff format --target-version py314 --diff` on `except (ValueError, TypeError):` emits `-except (ValueError, TypeError):` / `+except ValueError, TypeError:`. Parens added by a reviewer get stripped again by the pre-commit hook.
+
+So the check is not a proxy for the rule; it is the rule. A reviewer that disagrees with `pyci-check syntax` is wrong about the Python version it is reading, not about the code.
+
+## `switch-playwright`, removed 2026-08-15
+
+Orca's embedded browser covers the work, so the skill, `~/.local/bin/switch-pw.sh`, and the
+`playwright` entry in `~/.config/mcp/code-executor-minimal.json` are gone (backup:
+`~/.claude/backups/switch-playwright-removed/`). The routing table above keeps the skill's name
+because that run happened; it is history, not a live reference. Removing it also released the
+1,155 MB of playwright-mcp and headless Chrome RSS the skill existed to ration.

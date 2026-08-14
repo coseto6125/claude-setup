@@ -39,6 +39,8 @@ claude -p "One sentence, no tools: do you have a global instruction preferring '
 # Expect "No." If it says yes / cites ECP.md → isolation FAILED (wrong dir or stale flag), redo.
 ```
 
+**Call the scripts here, do not read them.** `audit.py --all` and `audit.py refs` print every finding, and `route.sh <skills-dir> <n> <model>` prints the routing tally. Their source is large and reading it buys nothing the output does not already say.
+
 ## The method
 
 Control and the rule as written — plus arm B for a reword test — isolated, **n≥3 per arm**: a smoke test, not proof. Before running: **predeclare the target behavior** (the observable outcome the rule should produce, e.g. "picks io.StringIO"), and give **every behaviorally distinct branch of the rule its own scenario** — one probe clears only the branch it exercises. **Check the control can fail, and that it can answer at all**: a scenario stating the evidence in words that imply the verdict ("the rewrite *violated* the rule") scores every arm alike and measures nothing, while one demanding an artifact the scenario can't determine makes every arm refuse. Asking for an artifact — a command, an ordered list — beats a yes/no when the scenario supplies what the artifact needs.

@@ -1,6 +1,6 @@
 ---
 name: simplify
-description: Review the current diff for spec conformance, bugs, reuse, quality, and efficiency, then fix what it finds — tiered, so most diffs cost zero sub-agents. Use before pushing, or when asked to review changed code. Other skills reach here for `CHECKLIST.md`, the shared review checklist.
+description: "This is the code review skill on this machine. Use it to review any changed code before it goes anywhere: an uncommitted diff, a branch about to be pushed, or a GitHub PR you must judge merge-ready. It checks spec conformance, bugs, reuse, quality, and efficiency, then fixes what it finds — tiered, so most diffs cost zero sub-agents. Reach here when the user says review this, 審一下, look at my diff, is this ready to merge, 可以 merge 了嗎, or check this PR. Other skills reach here for `CHECKLIST.md`, the shared review checklist."
 ---
 
 # Simplify — tiered, ecp-aware diff review
@@ -30,7 +30,7 @@ Pick the LOWEST tier the diff qualifies for; Phase-2 risk moves it up.
 
 **Reviewer agent** — Tier 2 and Tier 3 both dispatch `subagent_type: deep-review` with `model: sonnet`: read-only, ecp-aware, already carrying the confidence protocol. At Phase-2 HIGH risk, drop the model override so Correctness runs on its native opus.
 
-**Above HIGH** — a diff whose failure would be expensive enough to want a reader whose mistakes are uncorrelated with yours — is out of scope here: hand off to `pr-review-multiagent`, or run Dispatch's cross-family track (codex) alongside this review.
+**Above HIGH** — a diff whose failure would be expensive enough to want a reader whose mistakes are uncorrelated with yours — is out of scope here: report that the risk exceeds this skill and let the user decide, or run Dispatch's cross-family track (codex) alongside this review.
 
 **Tier-3 dimensions** — launch only the ones the diff can violate, typically 2–4:
 

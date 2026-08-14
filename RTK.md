@@ -1,33 +1,7 @@
 # RTK - Rust Token Killer
 
-**Usage**: Token-optimized CLI proxy (60-90% savings on dev operations)
+A PreToolUse hook rewrites bash commands to `rtk <cmd>`, which compacts output. It costs no tokens and needs no action from you.
 
-## Meta Commands (always use rtk directly)
-
-```bash
-rtk gain              # Show token savings analytics
-rtk gain --history    # Show command usage history with savings
-rtk discover          # Analyze Claude Code history for missed opportunities
-rtk proxy <cmd>       # Execute raw command without filtering (for debugging)
-```
-
-## Installation Verification
-
-```bash
-rtk --version         # Should show: rtk X.Y.Z
-rtk gain              # Should work (not "command not found")
-which rtk             # Verify correct binary
-```
-
-⚠️ **Name collision**: If `rtk gain` fails, you may have reachingforthejack/rtk (Rust Type Kit) installed instead.
-
-## Hook-Based Usage
-
-All other commands are automatically rewritten by the Claude Code hook.
-Example: `git status` → `rtk git status` (transparent, 0 tokens overhead)
-
-Piped commands: rtk attaches to the consuming stage, not the producer.
-`ls -la | head` stays raw; `docker ps | grep web` becomes `docker ps | rtk grep web`.
-To compact a pipeline's producer, write `rtk` explicitly on that stage.
-
-Refer to CLAUDE.md for full command reference.
+- When rtk refuses a command (compound `find` predicates, `-exec`, anything it does not model), run the native command or `rtk proxy <cmd>` and move on.
+- In a pipeline the hook attaches rtk to the consuming stage. Write `rtk` yourself on the producing stage when that is the stage worth compacting.
+- Savings reports live in `rtk gain`, `rtk gain --history`, and `rtk discover`. Run one only when the user asks about token savings.

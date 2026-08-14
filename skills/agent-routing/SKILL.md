@@ -1,6 +1,6 @@
 ---
 name: agent-routing
-description: Choose which agent runner and which channel a piece of work goes to: Orca, the harness's own SendMessage, or ecp. Use while deciding between them. Once the target is known, drive it directly: `orca-cli` for Orca worktrees and terminals, `orchestration` for supervising a task DAG, `computer-use` for desktop windows.
+description: Choose which agent runner and which channel a piece of work goes to — Orca, the harness's own SendMessage, or ecp. Use while deciding between them. Once the target is known, drive it directly with `orca-cli` for Orca worktrees and terminals, `orchestration` for supervising a task DAG, `computer-use` for desktop windows.
 ---
 
 # Agent routing
