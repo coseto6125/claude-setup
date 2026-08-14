@@ -4,9 +4,15 @@
 # Runs every arm on opus, sonnet and haiku, n trials each, in parallel.
 # Isolation: empty cwd + --setting-sources project, per the validate-prompt-rules skill.
 set -u
+# Saved replies contain the full scenario. Keep them owner-only even when
+# AB_RAW_DIR points somewhere the directory mode does not protect.
+umask 077
 SCN_F="$1"; ASK_F="$2"; SCORER="$3"; N="$4"; shift 4
 SCN=$(cat "$SCN_F"); ASK=$(cat "$ASK_F")
 WORK=$(mktemp -d)
+# Replies are scored and then discarded, which makes row-reading impossible after the
+# fact. Keep every reply on disk: one file per trial, so parallel writers never interleave.
+RAWDIR="${AB_RAW_DIR:-$(mktemp -d -t ab-raw-XXXXXX)}"
 cp "$SCORER" "$WORK/score.py"
 
 # canary: prove the user CLAUDE.md is not leaking into any arm
@@ -45,10 +51,13 @@ $ASK" --model "$model" --setting-sources project --append-system-prompt "$(cat "
     rm -f "$WORK/err.$$"; return
   fi
   rm -f "$WORK/err.$$"
-  printf '%s\t%s\t%s\n' "$arm" "$model" "$(printf '%s' "$out" | python3 "$WORK/score.py")"
+  local label; label=$(printf '%s' "$out" | python3 "$WORK/score.py")
+  printf '%s\n' "$out" > "$RAWDIR/$arm.$model.$i.$label.txt"
+  printf '%s\t%s\t%s\n' "$arm" "$model" "$label"
 }
-export -f run_one; export WORK SCN ASK
+export -f run_one; export WORK SCN ASK RAWDIR
 
 parallel_n=3
 cat "$JOBS" | xargs -d '\n' -P "$parallel_n" -I{} bash -c 'run_one "$@"' _ {} | sort
 rm -rf "$WORK"
+echo "raw replies: $RAWDIR"

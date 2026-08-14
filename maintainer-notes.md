@@ -136,3 +136,14 @@ Orca's embedded browser covers the work, so the skill, `~/.local/bin/switch-pw.s
 `~/.claude/backups/switch-playwright-removed/`). The routing table above keeps the skill's name
 because that run happened; it is history, not a live reference. Removing it also released the
 1,155 MB of playwright-mcp and headless Chrome RSS the skill existed to ration.
+
+## The delegate re-check rule, measured 2026-08-15
+
+Three candidate edits to `**Before you act on anything a sub-agent reports, re-run the check yourself.** Require the command it ran and that command's raw output. A claim you have not re-run is a lead, not a fact.` were tested. All three were rejected and the rule ships unchanged.
+
+Probe: a sub-agent reports that a module has no importers and recommends deleting it. The ask names the next action in one line. Scoring is whether that action deletes the module or checks the claim first.
+
+- **Widening the scope to cover a cause you worked out yourself** (+52 chars), and **adding "one observation that fits is not evidence until you can name what else would produce it"** (+141 chars): no measurable effect, because opus has no headroom for this behaviour. A second probe supplied a real but too-narrow `grep` as the sub-agent's evidence, so believing it was the reasonable default. All 25 opus trials across five arms named the scope gap anyway, including the five arms with no rule at all. Haiku produced the target behaviour zero times in 25 trials there, so it cannot separate the arms either.
+- **Shortening `the command it ran and that command's raw output` to `the command and its raw output`** (−18 chars): measurably worse. Two independent haiku runs at n=15 each. The shipped wording acted on the unverified claim 1/15 and 1/15; the shortened wording 4/15 and 5/15; the no-rule control 15/15 in both runs. The eighteen characters tie the requirement to the delegate's own command, and the generic form loosens it. Apparent redundancy in a measured rule is not automatically slack.
+
+`ab.sh` now keeps every reply (`AB_RAW_DIR`, one file per trial, `umask 077`). It paid for itself in the same run: the first classifier scored a deletion as a check, because the reply's trailing justification repeated a noun the classifier was watching for. Reading the rows caught it, and re-scoring the saved replies corrected the numbers without spending another call.
