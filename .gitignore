@@ -1,0 +1,42 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# live config that carries keys or machine state
+settings.json
+*.local.json
+memory/
+.credentials.json
+*.credentials.json
+projects/
+shell-snapshots/
+statsig/
+todos/
+
+# secrets, in the shapes they arrive in
+.env
+.env.*
+!.env.example
+secrets.json
+credentials.json
+service-account*.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ecdsa
+id_ed25519
+*.ppk
+.netrc
+.npmrc
+.pypirc
+
+# session and browser state
+*.session
+session.json
+cookies.txt
+cookies.json
+*.har

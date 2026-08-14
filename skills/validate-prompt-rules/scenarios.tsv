@@ -1,0 +1,6 @@
+orca-cli	You must hand a coding task off to another agent in its own worktree. You will not supervise it, review it, or wait for it.
+orchestration	You must split a migration across four agents, gate each stage on the previous one passing, and wait for every worker to report done before merging.
+computer-use	You must read what is currently on screen in the Spotify desktop app and click its play button.
+peer-agent	You want codex to implement a fix in its own worktree while you review the diff and gate the merge.
+orca-cli	You must read the last 50 lines of an Orca terminal and then send it a command.
+ecp	You must find every caller of a function before renaming it.

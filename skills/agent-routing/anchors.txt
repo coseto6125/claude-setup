@@ -1,0 +1,3 @@
+`terminal send` when an existing agent needs a free-form prompt
+Existing terminal handoff:
+Use `orca worktree create --prompt ...` or `orca terminal send ...` for full handoffs or untracked/lightweight prompts

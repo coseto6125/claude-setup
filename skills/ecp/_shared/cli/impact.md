@@ -1,0 +1,51 @@
+# ecp impact
+
+Two modes:
+
+1. **Symbol blast radius** — given a function / method / class, list every caller (upstream) or callee (downstream) with file:line and caller counts.
+2. **Path-literal site lookup** — given an exact path string (`--literal VALUE`), list every place that string appears in the graph, with sink classification (`sink:read` / `sink:write` / `sink:join` / `sink:free`).
+
+## Usage
+
+### Symbol blast radius (default mode)
+
+```bash
+ecp impact <SYMBOL> [--direction up] [--repo <PATH>]
+```
+
+- `<SYMBOL>`: Positional argument or `--target X`.
+- `--direction`: `up` (who calls me — default), `down` (who I call), or `both`.
+- `--baseline origin/main`: Compare against a branch to see impact of staged changes.
+- `--kind`, `--file_path`: Filter the results.
+- `--include-tests`: Include test files in the impact analysis.
+
+### Path-literal site lookup
+
+```bash
+ecp impact --literal session_meta.json
+```
+
+Returns every file:line that embeds the exact string, with the enclosing function and the sink kind. Designed for "filename split-brain" detection: when one part of the codebase writes `session_meta.json` and another part still reads `meta.json` (the PR #357 bug class), query each suspected literal separately and compare the two result sets.
+
+`--literal` does not do Levenshtein or other fuzzy clustering; use exact values.
+
+- `sink:read|confidence:high` — direct read (`fs::read_to_string`, `File.readText`, …)
+- `sink:write|confidence:high` — direct write
+- `sink:open-read` / `sink:open-write` — open-mode opens
+- `sink:join|confidence:medium` — overloaded method names (`.join`, `.push`) where the receiver type can't be statically resolved
+- `sink:ext-change|confidence:high` — `with_file_name` / `with_extension`
+- `sink:free|confidence:high` — literal not embedded in a call (let binding, const initialiser, raw-string fixture inside macros)
+
+`--literal` is mutually exclusive with `<NAME>` / `--target` / `--baseline`.
+
+### Path-literal split-brain scan
+
+```bash
+ecp impact --literal-coherence --format json
+```
+
+Scans all PathLiteral nodes and emits likely filename split-brain candidate pairs. A pair is reported only when the literals have the same extension, similar basenames, nearby source directories, and separated access patterns (one read-only, one write-only). Use this before guessing candidate pairs manually.
+
+## Reading the blast radius
+
+`impact` returns the raw caller / callee set — it does not assign a risk label. Judge change risk from the result directly: a large upstream caller count, or callers in core / widely-imported modules, means a wide blast radius — stop and confirm with the user before a breaking change. Caller counts are a **lower bound** (the resolver suppresses ambiguous bare calls to common names); a suspiciously low count warrants a `grep` cross-check before trusting it.
