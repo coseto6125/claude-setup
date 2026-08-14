@@ -9,11 +9,16 @@ SKILLS="$1"; N="$2"; MODEL="$3"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 CFG=$(mktemp -d)/cfg; mkdir -p "$CFG"
+JOBS=$(mktemp)
+# The arms authenticate from a copy of the real credentials, so the copy dies
+# with the script on any exit path. Without this an interrupt leaves a
+# plaintext token in a temp directory until the machine reboots.
+trap 'rm -rf "$(dirname "$CFG")" "$JOBS"' EXIT INT TERM
+
 cp -r "$SKILLS" "$CFG"/skills
 cp "${CLAUDE_HOME:-$HOME/.claude}"/.credentials.json "$CFG"/ 2>/dev/null
 echo '{}' > "$CFG"/settings.json
 
-JOBS=$(mktemp)
 while IFS=$'\t' read -r want scn; do
   [ -z "${want:-}" ] && continue
   for i in $(seq 1 "$N"); do printf '%s\t%s\n' "$want" "$scn" >> "$JOBS"; done
@@ -32,4 +37,3 @@ Name the single skill you would invoke. Output only its name, nothing else." \
 export -f ask; export CFG MODEL
 
 cat "$JOBS" | xargs -d '\n' -P 6 -I{} bash -c 'ask "$@"' _ {} | sort | uniq -c | sort -rn
-rm -rf "$(dirname "$CFG")" "$JOBS"

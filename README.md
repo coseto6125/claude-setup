@@ -41,7 +41,7 @@ These are properties of this configuration, not defects. Read them before you co
 
 **`skills/improve-codebase-architecture` produces an HTML report that loads CDN scripts.** Tailwind and Mermaid come from `cdn.tailwindcss.com` and `cdn.jsdelivr.net` with no integrity pin, and Mermaid initialises at `securityLevel: "loose"`. The report holds your repository's structure and the skill opens it in your browser.
 
-**`skills/validate-prompt-rules/route.sh` copies `.credentials.json` into a temp directory.** The A/B arms need it to authenticate. Cleanup runs at the end of the script only, so an interrupted run leaves a plaintext copy in `/tmp`. Remove it yourself if you kill the script.
+**`skills/validate-prompt-rules/route.sh` copies `.credentials.json` into a temp directory.** The A/B arms authenticate from that copy. `mktemp -d` gives the directory mode 0700 and the copy keeps the source's 0600, so another account cannot read it, and an `EXIT INT TERM` trap removes it on every exit path. It is still a second plaintext token on disk while the script runs.
 
 ## The output style reaches the main session only
 
