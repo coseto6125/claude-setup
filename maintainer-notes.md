@@ -112,17 +112,13 @@ Editing only those three, which are local real directories, takes it to **18/18*
 
 Net length change is 128 chars, so this is a correctness fix that happens to be free.
 
-`switch-playwright` was measured here but does not ship in this repo. It drove a private HTTP MCP, so it went out with the rest of that material. The rule it demonstrates still holds for the descriptions that remain.
-
-A first attempt also rewrote `orchestration`, `orca-cli` and `computer-use` (3,143 chars down to 1,626, also 18/18). Those three are symlinks into `~/.agents/skills/`, which Orca installs and overwrites from `stablyai/orca`, so the edit cannot survive and they are not published here. To override one of their rules, quote the sentence inside `agent-routing` and declare the exception there: `anchors.txt` holds the quoted sentences and `check-anchors.sh` re-checks them against the guide Orca actually ships. The whole routing bug turned out to be fixable without them.
-
-Orca does not refresh those three on a schedule of its own. On 2026-08-15 all three sat three weeks behind the running app: `orchestration` still read the terminal handle from `startupTerminal.handle` where the shipped guide reads `agentTerminalHandle` first, and `orca-cli`'s description had lost the artifact triggers that decide whether it gets picked at all. That second one is why descriptions get checked before bodies. A stale body misinforms a skill that was already invoked; a stale description stops the invocation happening. `orca skills update` refuses to run from a shell that forwards to an Orca host on another machine, so the comparison is manual: `diff <(orca-ide skills get <name>) ~/.agents/skills/<name>/SKILL.md`.
+A first attempt also rewrote `orchestration`, `orca-cli` and `computer-use` (3,143 chars down to 1,626, also 18/18). Those three are symlinks into `~/.agents/skills/`, which Orca overwrites from `stablyai/orca`, so the edit cannot survive. See `skill-overlays/README.md`. The whole routing bug turned out to be fixable without them.
 
 `skills/validate-prompt-rules/route.sh` runs this test. It swaps the entire skills tree through `CLAUDE_CONFIG_DIR`, so the only thing that differs between arms is the descriptions, and credentials still resolve because `.credentials.json` is copied into the temp config directory.
 
 ## Python, the `except A, B:` red line
 
-The rule in `CLAUDE.md` points at `pyci-check syntax` instead of restating the parser behaviour, so the tool has to be installed for the rule to land: [coseto6125/pyci-check](https://github.com/coseto6125/pyci-check). Both halves were re-verified on 2026-08-15:
+The rule in `CLAUDE.md` points at `pyci-check syntax` instead of restating the parser behaviour. Both halves were re-verified on 2026-08-15:
 
 - `pyci-check` runs on its own uv tool venv, Python **3.14.6**. `pyci_check/syntax.py` calls `ast.parse` there, so a file holding `except ValueError, TypeError:` returns `✓ All files have correct syntax`, exit 0.
 - `ruff 0.16.0`, `ruff format --target-version py314 --diff` on `except (ValueError, TypeError):` emits `-except (ValueError, TypeError):` / `+except ValueError, TypeError:`. Parens added by a reviewer get stripped again by the pre-commit hook.
@@ -137,13 +133,160 @@ Orca's embedded browser covers the work, so the skill, `~/.local/bin/switch-pw.s
 because that run happened; it is history, not a live reference. Removing it also released the
 1,155 MB of playwright-mcp and headless Chrome RSS the skill existed to ration.
 
-## The delegate re-check rule, measured 2026-08-15
 
-Three candidate edits to `**Before you act on anything a sub-agent reports, re-run the check yourself.** Require the command it ran and that command's raw output. A claim you have not re-run is a lead, not a fact.` were tested. All three were rejected and the rule ships unchanged.
+## The seven unmeasured sections, measured 2026-08-15
 
-Probe: a sub-agent reports that a module has no importers and recommends deleting it. The ask names the next action in one line. Scoring is whether that action deletes the module or checks the claim first.
+Isolated A/B per section: RULE arm loads that section alone, CONTROL arm loads nothing,
+`--setting-sources project` from an empty dir, canary passed on every run. opus + haiku.
+Probe files under `/tmp/ab7` were throwaway; the design is recorded here.
 
-- **Widening the scope to cover a cause you worked out yourself** (+52 chars), and **adding "one observation that fits is not evidence until you can name what else would produce it"** (+141 chars): no measurable effect, because opus has no headroom for this behaviour. A second probe supplied a real but too-narrow `grep` as the sub-agent's evidence, so believing it was the reasonable default. All 25 opus trials across five arms named the scope gap anyway, including the five arms with no rule at all. Haiku produced the target behaviour zero times in 25 trials there, so it cannot separate the arms either.
-- **Shortening `the command it ran and that command's raw output` to `the command and its raw output`** (−18 chars): measurably worse. Two independent haiku runs at n=15 each. The shipped wording acted on the unverified claim 1/15 and 1/15; the shortened wording 4/15 and 5/15; the no-rule control 15/15 in both runs. The eighteen characters tie the requirement to the delegate's own command, and the generic form loosens it. Apparent redundancy in a measured rule is not automatically slack.
+| section | probe | RULE | CONTROL | verdict |
+|---|---|---|---|---|
+| Code Style (general) | `match` over an if/elif chain on four string values | 6/6 | 0/6 | load-bearing |
+| Proactive Engineering | next action after fixing a None-deref | 10/10 | 1/10 | load-bearing |
+| MCP Tool Calling | one production SQL query | 6/6 | 1/6 | load-bearing |
+| Test Discipline | order of actions on a reproduced bug | 6/6 | 3/6 | load-bearing |
+| Core Philosophy | dedup 10M strings, first-seen order | 8/10 | 5/10 | load-bearing on opus (3v0); haiku already does it |
+| Surgical Changes | "retry an HTTP GET a few times", nothing specified | 9/10 | 7/10 | weak, opus-only (4v2) |
+| Memory | which of two facts to store | 13/16 | 13/16 | **no effect detected, two independent probes** |
 
-`ab.sh` now keeps every reply (`AB_RAW_DIR`, one file per trial, `umask 077`). It paid for itself in the same run: the first classifier scored a deletion as a check, because the reply's trailing justification repeated a noun the classifier was watching for. Reading the rows caught it, and re-scoring the saved replies corrected the numbers without spending another call.
+Probe design matters more than n. Proactive Engineering first measured 6/6 vs 6/6 on a probe
+that asked "what do you do about the other three?" — the question already carried the decision.
+Rewritten to "state your single next action", the same section separates 10/10 vs 1/10.
+A null result on a probe whose control cannot fail says nothing.
+
+Memory is nominated for deletion on that evidence, not deleted: two probes are a smoke test,
+and the section costs 65 tokens. Re-probe with a session-summary task before removing it.
+
+## Leave-one-out replaces add-one-in, measured 2026-08-21
+
+The 2026-08-15 table above used **add-one-in**: the RULE arm loaded one section alone, the
+CONTROL arm loaded nothing. That design gives the wrong answer for a rule that lives inside a
+document. Demonstration, on the `colleague-zh` punctuation guardrail: bare opus never reaches
+for an arrow (10/10 clean), so add-one-in reads it as a no-op. Remove the guardrail and keep the
+rest of the style, and it leaks 0/10 on arrows and 0/10 on em-dashes. **The other paragraphs
+create the pressure the guardrail resists.** Deleting it is worse than writing no style at all.
+
+Design that replaces it: `A` = the whole document, `B` = the whole document minus one section,
+`control` = bare (a saturation check, never the baseline). `validate.sh`'s `spawn_docs` reads
+`<id>.A.md` / `<id>.B.md`, so generate both files from the live file with a script.
+
+### CLAUDE.md sections, leave-one-out, n=6 per arm, opus + haiku, POSITION=claude-md
+
+Numbers are hand-scored; the first regex pass misjudged four of eight (it accepted
+`git checkout -b` where the section specifies a worktree, and missed "mention the bare `except:`"
+because the pattern said "mention it").
+
+| section | opus c/B/A | haiku c/B/A | verdict |
+|---|---|---|---|
+| Important Reminders | 0/0/6 | 0/0/6 | load-bearing, both models |
+| Prompt Writing Guide | 0/0/6 | 0/0/6 | load-bearing, both models |
+| Across rounds | 0/0/6 | 0/1/5 | load-bearing, both models |
+| Branch Discipline | 0/0/6 | 0/0/4 | load-bearing |
+| Surgical Changes | 0/0/6 | 2/5/6 | opus load-bearing; haiku does not separate |
+| What a delegate returns | 6/6/6 | 0/0/6 | opus saturated, haiku load-bearing |
+| Memory | 6/6/6 | 6/6/6 | fourth saturated probe, still no verdict |
+| Search & Read | invalid | invalid | third broken probe design |
+
+Nothing is deletable. Branch Discipline is not about branching at all: every arm branches, and
+only the section produces `git worktree add`, the `fix/` prefix and an explicit base.
+*What a delegate returns* repeats the Word choice pattern above — inert on the strongest reader,
+100% on the weakest: haiku without it answers "Delete scripts/backfill.py." 6/6.
+
+Memory has now failed to separate on four probes across two sessions. Search & Read has failed
+three designs; the last two were mine (one asked a code-structure question that `ECP.md` owns,
+one said "a path you already know" and supplied no path).
+
+### Prompt Writing Guide, compressed 1,111 → 704 chars
+
+Five probes, A = compressed, B = current, n=6 per arm on opus and haiku. Every probe ties.
+Two bullets are confirmed load-bearing and both survive: positive phrasing (opus control 0/6,
+haiku control 0/6, both arms 6/6 and 5/6) and abstract-rules-first (haiku control 3/6, both arms
+6/6; saturated on opus). The other three probes measure nothing in either version.
+
+## `colleague-zh` Voice, the turn-ending sentence
+
+Live failure: a turn ended on 「開始了。」 with no tool call after it, then repeated one turn
+later with the first fix already in place.
+
+Four probe designs failed before one worked. The two informative failures: a scenario that
+*instructs* the handoff scores every arm at 0/10, and an escape hatch cheap enough to name
+(`output TOOLCALL`) scores every arm at ~100%. The design that reproduces it states facts only
+("the first of three things is done, the other two are open") and asks for the whole message.
+
+n=12 per arm on opus, scoring whether the closing sentence announces a future action:
+
+| passage | clean |
+|---|---|
+| bare | 0/12 |
+| whole passage removed | 8/24 |
+| original sentence alone ("Let the last sentence be the last fact.") | 3/12 |
+| red line alone | 7/12 |
+| shipped: original + "A fact is already true when you write it" + red line | 11/12 |
+
+The original sentence alone is indistinguishable from writing nothing (p=0.81). The red line
+alone is 7/12. Together they are 11/12 (p=0.0011 against removal, p=0.078 against the red line
+alone). **A sentence can be inert alone and load-bearing in combination** — the same shape as
+"a name needs two mentions" above. The negative wording is deliberate: this prior is strong
+enough that bare opus announces 12/12, which is the condition `writing-for-agents` names for
+keeping an explicit negative.
+
+Removed on the same evidence: a `**Tool calls fire direct.**` paragraph added to the style that
+same day. Against the rest of the style it scored 20/20 vs 18/20 at n=20 (p=0.24), while bare
+opus scored 2/20 — redundant against the document, not against the model.
+
+## Proactive Engineering, the regex bullet, extended 2026-08-21
+
+Five probe designs found nothing before one reproduced the failure. The four that failed all
+**named the hazard in the scenario** ("attributes are inconsistent, tags span lines", "subjects
+contain colons, quotes and newlines", "imports inside try/except"). That phrasing hands the model
+the existing bullet's own trigger — *ambiguous boundaries* — so every arm scored ~100%. It also
+hides the real failure, which is not a decision but a **perception**: nobody labels real input as
+ragged, the sample looks regular, and the regex goes in.
+
+The design that reproduces it shows a clean sample and says nothing about the format being
+awkward: sum the amount column of a 40,000-row `data/tx.csv` whose first three rows are
+`2026-08-19,alice,120.00` and friends. Bare opus and opus with the current file both answer
+`awk -F, '{s+=$3}'` 12/12.
+
+Two candidate additions, near-identical length, opus n=12, leave-one-out:
+
+| arm | wording | hit |
+|---|---|---|
+| control | — | 0/12 |
+| B (file as shipped) | — | 0/12 |
+| v7 | "A named format has a parser. Before you split or pattern-match text, name the format and use its parser: CSV, TSV, HTML, JSON, YAML, source code, `git` output" | 0/12 |
+| v6 (shipped) | "Never field-split a delimited format by hand (`awk -F,`, `split(',')`, `cut -d`) — use its reader, even when the sample rows look clean" | 12/12 |
+
+p = 3.7e-07 for v6 against either B or v7. v7 already follows the `vague-trigger` rule — its
+trigger is a moment ("Before you split or pattern-match text"), not a category — and still scores
+zero. **A moment-shaped trigger is necessary, not sufficient. Name the command the model would
+otherwise type.** On an HTML scenario every arm scores 12/12, so v6 costs nothing where the
+behaviour is already right.
+
+Rejected on the same run: three wordings aimed at regex-as-classifier (choose-an-approach,
+report-a-classifier's-numbers, write-parsing-code). All saturate at ~100% in every arm across
+both models, ~500 calls. Whenever the situation is *stated*, both models already spot-check and
+already reach for the parser. That failure lives in `classifier-artifacts-outrank-data`, and the
+durable fix is a scorer that prints rows, not a rule.
+
+## Test Discipline, reworded 2026-08-24 — pilot only, not shipping-grade
+
+Old wording: "When you have reproduced a bug, write the failing test before you write the fix."
+New wording (from `forrestchang/andrej-karpathy-skills`): "Write a test that reproduces the bug,
+then make it pass." Shorter (10 words vs 16); same target behaviour (test before fix).
+
+haiku, n=5 per arm, `--setting-sources project` from an empty dir, canary passed, scenario "fix a
+bug where total() mishandles an empty list", ASK = list first two actions:
+
+| arm | hit (test mentioned at or before the fix step) |
+|---|---|
+| control (no rule) | 3/5 |
+| old wording | 5/5 |
+| new wording | 5/5 |
+
+No difference detected at this n — grounds to prefer the shorter wording, not proof they are
+equivalent. This is a smoke test, not the leave-one-out n≥15-times-two bar the rest of this file
+holds to; the 2026-08-15 add-one-in run above (6/6 vs 3/6) is the only shipping-grade measurement
+this section has ever had, and it was never re-run against this specific new wording. Re-probe at
+n≥15 before treating the swap as settled.

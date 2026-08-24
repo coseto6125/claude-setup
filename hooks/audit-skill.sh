@@ -13,7 +13,7 @@ AUDIT="$HOME/.claude/skills/writing-for-agents/audit.py"
 findings=$(python3 "$AUDIT" "$file" 2>/dev/null) || true
 refs=$(python3 "$AUDIT" refs 2>/dev/null) || true
 case "$refs" in clean) ;; *) findings="$findings\n$refs" ;; esac
-findings=$(printf '%b' "$findings" | grep -v '^clean$' || true)
+findings=$(printf '%b' "$findings" | grep -vE '^clean( \([0-9]+ exempt\))?$' || true)
 case "$findings" in ''|*clean) exit 0 ;; esac
 
 reason="skill audit — $file

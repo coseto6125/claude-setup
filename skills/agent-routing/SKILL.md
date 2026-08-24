@@ -1,6 +1,6 @@
 ---
 name: agent-routing
-description: Choose which agent runner and which channel a piece of work goes to — Orca, the harness's own SendMessage, or ecp. Use while deciding between them. Once the target is known, drive it directly with `orca-cli` for Orca worktrees and terminals, `orchestration` for supervising a task DAG, `computer-use` for desktop windows.
+description: "Choose which agent runner, which channel, or which browser a piece of work goes to — Orca, the harness's own SendMessage, or ecp. Use while deciding between them, and whenever a task needs a browser at all: rendering a URL, screenshotting a local dev server, or checking how a page looks. Once the target is known, drive it directly with `orca-cli` for Orca worktrees, terminals, and the embedded browser, `orchestration` for supervising a task DAG, `computer-use` for desktop windows."
 ---
 
 # Agent routing
@@ -96,6 +96,25 @@ its section before trusting the override.
 `check-anchors.sh` in this skill's folder checks those three quotes against the running
 Orca and names any that no longer match. It probes the app version on each run and pulls
 the guide only when Orca itself changed, so the usual run costs one status call.
+
+## Anything that needs a browser
+
+Wanting to see a page IS the trigger. The moment the thought forms — render this URL,
+screenshot the dev server, check how the page looks, does this layout overflow — the
+browser is Orca's embedded one, reached through `orca-cli`.
+
+**Never hand-write a Playwright script, and never launch a browser binary directly.**
+Drive Orca's embedded browser through `orca-cli` instead. The `playwright` MCP entry
+was removed on 2026-08-15 because the embedded browser covers the work, and re-creating
+it by hand re-imports the 1,155 MB of playwright-mcp and headless-Chrome RSS that
+removal released. `~/.claude/maintainer-notes.md` records the decision.
+
+Route by what holds the pixels, not by whether the target feels Orca-managed. Judging
+"is this Orca's business?" is the step that fails: a local dev server reads as plain
+shell work and the browser rule never fires.
+
+- A URL, a local dev server, a web app, a rendered document → `orca-cli`, embedded browser.
+- A desktop window, a webview, an app that is not a page → `computer-use`.
 
 ## Reaching codex
 

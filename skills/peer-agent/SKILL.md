@@ -30,6 +30,12 @@ the peer's worktree (`<NAME>-BRIEF.md`), and keeping every sent message short.
   pointer to it.
 - **Keep the brief authoritative.** When a rule changes, edit the brief. A rule that
   lives only in a sent message dies with the session.
+- **Every gate is executed literally, including against the brief itself.** A criterion
+  like "`git status --porcelain` is empty when you finish" reads as an instruction to
+  delete the untracked brief, and a peer that obeys it leaves you with no record of what
+  you commissioned. Name the exceptions in the gate, or commit the brief before you
+  launch. Measured 2026-08-23: codex deleted `SINK-BRIEF.md` and said so in its report --
+  it followed the gate exactly as written.
 
 ## Commission, don't dictate
 
@@ -48,42 +54,65 @@ the peer's worktree (`<NAME>-BRIEF.md`), and keeping every sent message short.
 
 ## Launching codex so it survives you
 
-`codex exec` is the headless entry point. Three properties of the harness decide whether
-the run lives long enough to produce anything.
+`codex exec` is the headless entry point. The sandbox mode decides what the peer may do to your
+tree; three properties of the harness decide whether the run lives long enough to produce anything.
+
+**A peer that reviews, audits, or gives a second opinion runs `--sandbox read-only`.** This is the
+default recipe, and the mode is not a judgement call: a reviewer that can write will edit the files it
+was asked to judge, and it does so while you are editing them too. Take the report off stdout.
 
 ```bash
-setsid codex exec --sandbox workspace-write --skip-git-repo-check -C "$PWD" \
+setsid codex exec --sandbox read-only --skip-git-repo-check -C "$PWD" \
   "Read <BRIEF path> and carry out exactly what it asks." \
   < /dev/null > "$SCRATCH/codex-<task>.log" 2>&1 & disown
 ```
+
+Use the write-capable form only for a peer whose deliverable **is** a change — an implementation, a
+migration, a branch to push — and say in one line why the task needs it:
+
+```bash
+setsid codex exec --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check -C "$PWD" \
+  "Read <BRIEF path> and carry out exactly what it asks." \
+  < /dev/null > "$SCRATCH/codex-<task>.log" 2>&1 & disown
+```
+
+Give a write-capable peer its own git worktree whenever your session keeps working meanwhile. Two
+writers in one checkout produce a tree neither of them can reason about, and test runs from both
+sides interleave — measured on 2026-08-21, a review peer launched with the bypass flag rewrote
+`session.rs`, `meeting.ts` and `LiveView.tsx` under review and ran the author's own test suite by
+name, so no result from either side was trustworthy until the whole thing was untangled by hand.
 
 - **`setsid` is what keeps it alive.** Without a new session, the peer belongs to the
   tool call's process group and dies with it. `nohup … &` is not enough.
 - **`< /dev/null` or it hangs.** Without it the peer waits on stdin until timeout and
   produces nothing.
 - **Launch it from a foreground Bash call that returns immediately**, not with
-  `run_in_background: true`. Backgrounded tool calls carry a wall-clock cap that kills a
-  long peer run mid-flight, and their completion notification describes the wrapper.
+  `run_in_background: true`. The two do opposite things at the 120s mark: a
+  `run_in_background: true` call is SIGTERM'd there (exit 143), while a foreground call is
+  adopted as a background task and runs to completion. The Bash `timeout` parameter does
+  not raise that cap — a call carrying `timeout: 600000` is still cut at 120s. Either way
+  the completion notification describes the wrapper shell, not the peer.
 - **One log path per run.** A second launch writing the same path truncates the first
   run's log under it, and you then read a mixture of two runs as though it were one.
 - **Never `pkill -f` on a pattern that also matches the command line you are launching**
   — including one later in the same `&&` chain. `pkill`'s exit status aborts the chain
   before the relaunch, so you kill the peer and skip its replacement in one line.
 
-- **For an audit, use `--sandbox read-only` and take the report off stdout.** The peer is reading and
-  judging, not building, so the sandbox that cannot write anything is both the safest and the one
-  with no path to get wrong. Reserve `workspace-write` for peers that actually implement.
-- **If the peer must write a file, point it at a path the sandbox allows.** `workspace-write` permits
-  the workdir, `/tmp` and `$TMPDIR` — nothing else. A report path outside those roots fails at the
-  very end, after the whole audit is done, with `patch rejected: writing outside of the project`, and
-  the finished work dies with the process. Ask for the report on stdout as well either way: the log
-  survives a rejected write, and a scratchpad path under `~/.cache` is not writable.
+- **Ask for the report on stdout whatever the mode.** The log survives a rejected write.
+
+Both flags carry edges that decide whether a headless run finishes at all, and two more modes sit between them. [`SANDBOX-MODES.md`](SANDBOX-MODES.md) holds the four.
 
 Verify the launch by process, not by log, and **bracket a character so `pgrep` cannot match its own
 command line**: `pgrep -f "[c]odex exec" | wc -l`. Plain `pgrep -f "codex exec"` matches the pgrep
 itself, always returns at least 1, and turns "is it still running" into a constant yes — a wait loop
 gated on it can only ever end by timing out. The bracket also fails if the same shell line repeats the
-unbracketed pattern anywhere, so keep the check in a line of its own.
+unbracketed pattern anywhere, so keep the check in a line of its own: a Monitor script that contains
+the unbracketed pattern matches itself and never fires.
+
+**Anchoring the pattern to the start does not work.** `pgrep -f "^codex"` matches nothing, because the
+command line begins with the interpreter or the absolute path (`node /home/…/codex exec …`), so the
+check reports "finished" the moment it runs. `pgrep -x codex` matches on the process name instead and
+is the reliable short form when you only need "is any codex alive".
 
 ## Waiting: poll the artifact, not the chatter
 
@@ -117,6 +146,10 @@ that case write one bounded wait loop and let it be the only watcher.
 
 When a wait loop is genuinely the only option:
 
+- **Run the loop under Monitor, not under Bash.** Bash kills a `run_in_background: true`
+  call at 120s, so the watcher dies long before the peer does, and the peer then finishes
+  unobserved. Monitor takes `timeout_ms` up to 3600000, or `persistent: true` for the
+  session.
 - **Gate on the process, not on the text.** `! pgrep -f "<the peer's command>"` is
   decidable. A `grep` for the shape of the output is a guess wearing a condition's
   clothes.

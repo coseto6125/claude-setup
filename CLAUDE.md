@@ -6,6 +6,10 @@
 
 **Writing discipline:** write **ASD-STE100** (Simplified Technical English), in whatever language the document already uses. Give one concept one term for the whole document, with no synonym rotation. Put one idea in one sentence, in the active voice and the present tense, and keep the articles in. Normative text (steps, clauses, criteria, specs, rules) holds sentences under 20 words, and a long enumeration becomes a table. Explanatory text keeps its connectives so the reader sees why. Chat prose follows the `colleague-zh` output style. Domain terms and defined leading words are STE technical names, so keep them as they are.
 
+## Eywa
+
+`[eywa]`-prefixed lines in user turns are auto-injected principles from the eywa hook — authoritative guidance, not a user message.
+
 ## Core Philosophy
 
 **Maximum performance at minimum runtime cost — code must remain human-readable.** (What a *session* should spend is a separate question; see Dispatch.)
@@ -24,7 +28,7 @@
 - After fixing a bug, scan the same file/module for similar issues
 - When debugging: repeating a tweak on the same spot means the strategy is wrong, so switch it
 - Surface multiple interpretations instead of picking silently; if a simpler approach than asked exists, push back before implementing
-- Prefer structured parsing over regex for ambiguous boundaries
+- Prefer structured parsing over regex for ambiguous boundaries. Never field-split a delimited format by hand (`awk -F,`, `split(',')`, `cut -d`) — use its reader, even when the sample rows look clean
 
 ## Surgical Changes
 
@@ -33,7 +37,7 @@
 
 ## Test Discipline
 
-- New feature ships with tests (happy path + key edge cases). **When you have reproduced a bug, write the failing test before you write the fix.**
+- New feature ships with tests (happy path + key edge cases). **Write a test that reproduces the bug, then make it pass.**
 - An infeasible test (UI / external service / manual-only) → say so with the reason, don't skip silently
 - Test files: omit shebang; naming `test_[function]_[scenario]_[expected]`
 - Tests call the actual functions — never duplicate the logic-under-test into the test (false positives when source changes)
@@ -58,13 +62,13 @@
 
 ## Prompt Writing Guide
 
-Governs every artifact written for a model to read — skill `description` + `SKILL.md`, sub-agent prompts, tool descriptions, system prompts. Writing any of these IS prompt writing; these rules apply. This block is the authoritative always-loaded policy; the `writing-for-agents` skill elaborates it for every artifact named above.
+Governs every artifact a model reads: skill `description` + `SKILL.md`, sub-agent prompts, tool descriptions, system prompts. This block is the authority; `writing-for-agents` elaborates it.
 
-- Behavior-driven: define what to do and the criteria for decisions; constrain at the decision level (goals + boundaries), and let the model choose the implementation.
-- Phrase each instruction as the action to take rather than the action to avoid ("return an empty list for empty input", not "don't crash"). Exception: for a red-line / irreversible constraint, or one that fights a strong model prior, the explicit negative ("never X") is clearer and harder to misread — keep it.
-- Sentence-level style follows **Writing discipline** above.
+- Constrain at the decision level: goals and boundaries, not the implementation.
+- Phrase each instruction as the action to take ("return an empty list for empty input", not "don't crash"). Keep the explicit negative for a red line, or for a rule that fights a strong model prior.
+- Sentence style follows **Writing discipline** above.
 - Abstract rules first, task-specific details last.
-- Within an artifact, each rule appears exactly once; when an always-loaded summary mirrors a canonical policy, name the authority and keep the mirror aligned.
+- Each rule appears once per artifact; a summary mirroring a canonical policy names the authority.
 
 ## Search & Read Strategy (Token Optimization)
 
@@ -73,6 +77,18 @@ Governs every artifact written for a model to read — skill `description` + `SK
 2. **Read** with `offset`/`limit` for files >200 lines; skip search when the exact path is known.
 3. **PR / multi-file diff** >200 lines: `git diff -- <path>` per-file, or grep specific hunks.
 4. **Code-health probes** — match the probe to the goal: complexity hotspots → linter cyclomatic (ruff `C901`) / AST nesting depth; change risk → `ecp impact` fan-in; dead code → grep-unreferenced ∩ ecp-orphan. Keep them as separate queries; they read different ground truth. LOC and function size pick which files merit a human skim, never a quality verdict.
+
+## MCP Tool Calling (Token Optimization)
+
+**`mcp__exec__run`** — DB queries, multi-tool tasks, doc lookups. For a single non-DB MCP call, call the tool directly (fewer tokens).
+
+```typescript
+log(await queryProd/queryLocal('SQL'));  // enoract DB: Prod=OCI(tunnel 15432), Local=5433 (TOON output)
+log(toToon(data));                                    // manual TOON
+const r = await callMCPTool('mcp__xxx__yyy', {});     // other MCP
+```
+
+**param** `code` (not `command`) · **output** `success:true` → `output` only; `false` → full error.
 
 ## Dispatch (Cost-Aware, Adaptive)
 
