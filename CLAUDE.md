@@ -19,10 +19,12 @@
 - Choose the lowest complexity — analyze the theoretical minimum first
 - In-place over copying when no side effects
 - Prove perf claims with profiling (`cProfile`): profile → top-5 hotspots → optimize → re-profile → delegate bench verification to a subagent. This one is a standing exception to Dispatch: a benchmark needs a clean process, not a fresh perspective.
+- **Delete before you optimize.** When a change keeps the same functionality at equal or better performance: delete the step, simplify what remains, make it faster, then replace a hardcoded value with a derived one — a later step on a step you should have deleted wastes it. Confirm a test exercises the path before you delete it; no coverage is a sign you don't know it's dead, not permission to skip the check.
 
 ## Proactive Engineering
 
 - Before modifying logic, think top-down: architecture fit, existing similar functionality, correct placement
+- A breaking change to a public interface or an existing caller needs the user's explicit sign-off before you make it — a low count from `ecp impact` lowers the review bar, not the requirement to ask.
 - Investigate with tools before asking the user
 - No AskUserQuestion menu for decisions you can resolve; take the superset option, state choice + why in one line. Reserve it for real forks (answer changes next action, not derivable from code/memory/defaults)
 - After fixing a bug, scan the same file/module for similar issues
@@ -148,6 +150,7 @@ Recipes and environment live in the `python-perf` skill (packages, class shape, 
 
 - Prefer expressions over loops when single-step; use loops for multi-step / try-except logic
 - **Branch on three or more string or enum values with `match`, never an if/elif chain** — destructure attr names to eliminate duplicate branches
+- Remove a special case by restructuring, not by branching around it. When two branches differ by a single statement, move that statement outside them instead of duplicating it.
 - Absolute imports at module top
 - Mermaid: theme-adaptive colors for dark mode · CJK markdown tables: column-align with spaces (CJK char = 2 display widths)
 

@@ -24,7 +24,7 @@ Fall back to grep or an Explore agent only when the target is non-code text, or 
 
 ## Before any refactor / rename / signature change
 
-`ecp impact --target <symbol> --direction upstream` to see callers. Many callers, or callers in core / widely-imported modules → confirm with user.
+`ecp impact --target <symbol> --direction upstream` to see callers. The count and module list decide how much to say. CLAUDE.md's public-interface rule decides whether to ask at all.
 
 ## Reading output — five tells
 
