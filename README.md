@@ -92,6 +92,8 @@ Per-tool schema cost, from `--disallowedTools <tool>`:
 
 - `skills/ui-ux-pro-max/{data,scripts,references}` come wholesale from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill). `local/` and its `SKILL.md` are local work.
 - `skills/writing-for-agents` cites [danyuchn/asd-ste100-skill](https://github.com/danyuchn/asd-ste100-skill) for the ASD-STE100 summary.
+- `skills/i-have-adhd` comes from [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd), MIT, Ayoub Ghriss.
+- `skills/eli5` comes from [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5), MIT.
 - `skills/{agent-routing,peer-agent}` drive the Orca agent runner and assume it is installed.
 - Orca's own `orchestration`, `orca-cli` and `computer-use` skills come from [stablyai/orca](https://github.com/stablyai/orca) and Orca installs them into `~/.agents/skills/` itself, so they are not copied here. `agent-routing` quotes three sentences from Orca's orchestration guide and re-checks them with its own `check-anchors.sh`; that guide ships inside the Orca binary and is read with `orca-ide skills get orchestration`, so it moves with the app rather than with any file.
 
