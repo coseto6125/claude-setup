@@ -290,3 +290,61 @@ equivalent. This is a smoke test, not the leave-one-out n≥15-times-two bar the
 holds to; the 2026-08-15 add-one-in run above (6/6 vs 3/6) is the only shipping-grade measurement
 this section has ever had, and it was never re-run against this specific new wording. Re-probe at
 n≥15 before treating the swap as settled.
+
+## Three new rules, added 2026-08-25 — pilot only, not shipping-grade
+
+Source ideas: Musk's delete/simplify/accelerate/automate ordering and Linus Torvalds' "good
+taste" (eliminate a special case by restructuring) and "never break userspace." Not named in
+`CLAUDE.md` itself — kept unattributed there, provenance recorded here instead.
+
+**Core Philosophy, "Delete before you optimize."** haiku, n=5 per arm, `--setting-sources project`
+from an empty dir, canary passed.
+
+| scenario | control | rule |
+|---|---|---|
+| obviously-dead branches ("never occurred") | 3/5 delete-first, 2/5 stall-and-investigate | 5/5 immediate delete |
+| flag-guarded branch (deleting would be wrong) | 5/5 correctly keeps it | 5/5 correctly keeps it (saturated — no headroom to show an effect here) |
+| reword test: original vs condensed wording, same scenario as row 1 | — | original 5/5, condensed 4/5 delete + 1/5 "check test coverage first" (the new test-check clause firing, not a leak) |
+
+The delete-first ordering has a real, if modest, effect: it removes a hesitation baseline
+sometimes shows, it doesn't override an existing safety judgment. The condensed wording was
+reword-tested against the original and found consistent. The "confirm a test exercises the path"
+clause itself — added after these runs, prompted by asking whether the rule's own precondition
+("keeps the same functionality") is checkable rather than a bare judgment call — has not been
+probed on a scenario built to distinguish "deletes anyway" from "checks coverage first"; that
+probe was designed (`scn_delete_notest.txt`, `score_delete_notest.py` in the session scratchpad)
+but not run before this rule shipped. Re-run it before trusting that clause specifically.
+
+**Proactive Engineering, breaking-change sign-off.** Same isolation, n=5 per arm, scenario: a
+signature change breaks exactly one caller, in a peripheral test-helper file, not a core module.
+
+| arm | asks before proceeding |
+|---|---|
+| control (no rule) | 0/5 |
+| positive wording (shipped) | 5/5 |
+| negative wording ("Never break... silently") | 5/5 |
+
+Clean, unsaturated effect; the positive rewrite held as well as the blunt negative at this n — no
+leak observed, unlike the `colleague-zh` case elsewhere in this file where a positive rewrite did
+leak. Paired with a matching edit to `ECP.md`: its "many callers → confirm" line was a second,
+weaker threshold for the same decision (derived-mirror drift), demoted to a pure `ecp impact`
+usage note that points at this rule as the sole authority on whether to ask.
+
+**Code Style, eliminate a special case by restructuring.** Scenario: a linked-list bug where
+`self.size -= 1` was added to one branch of an if/else and not the other (concrete, not the
+original abstract "linked-list head-node" framing — the abstract scenario let both arms dodge by
+asking to see the code first).
+
+| version | restructure rate (moves the line out, vs patching the missing branch) |
+|---|---|
+| control (no rule) | 0/5, then 2/5 on a repeat run — noisy at this n |
+| abstract wording ("has not hidden... has eliminated it") | 3/5, then 4/5 on repeat |
+| concrete wording (shipped: "when two branches differ by a single statement, move it outside them") | 5/5, both times tested |
+
+The concrete wording never underperformed the abstract one across two independent n=5 runs and
+costs the same or fewer words — shipped on that basis. The margin over the abstract wording is
+within the n=5 noise floor; not shipped as "proven better," shipped as "at least as good, free."
+
+**Common thread**: every abstract framing here (the original C wording, the "keeps the same
+functionality" precondition in A) tests weaker than a version naming the concrete pattern or
+check — same lesson as `name-the-wrong-command` in auto-memory, now measured twice more.
