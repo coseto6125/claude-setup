@@ -33,16 +33,13 @@ mpm --dir /other/repo/.claude list --status open  # explicitly another repo's lo
 ## Read (never mutates)
 
 ```
-mpm list --status open                 # triage open work (default if no filter)
-mpm list --status open --json          # machine-readable (compact JSON)
-mpm show <id>                          # one full entry
-mpm stub <id>                          # just the one-line resolution stub
-mpm query pr:498                       # did PR #498 surface or close a follow-up?
-mpm query status:open size:L           # flat key:value AND filter (space-separated)
-mpm graph <id> --direction up          # what DEPENDS ON <id> (who is blocked-on / links-to it)
-mpm graph <id> --direction down        # what <id> ITSELF depends on (its own blocked-on / links-to / supersedes)
-mpm validate                           # dangling links, duplicate ids
-mpm next-id                            # the next free id for today (no entry created)
+mpm --help            # every subcommand, always current
+mpm <sub> --help      # that subcommand's flags
+
+Reach for these first, and let `--help` supply the flags:
+  read      list · show · stub · query · graph
+  write     add · done · wontfix · supersede · block · unblock · reopen · set · move · link
+  check     validate
 ```
 
 `query` filter keys (combine with spaces, all must match): `status`, `category`,
@@ -54,16 +51,9 @@ mpm next-id                            # the next free id for today (no entry cr
 ## Write (re-renders both markdown files; prints the affected id)
 
 ```
-mpm add --category "<C>" --scope "<what & why it matters>" [--why <out-of-scope|blocked-by|size-too-large|other>] [--size S|M|L] [--surfaced "PR #<N>"]
-mpm done <id> --pr <N> [--commit <sha>] [--note "..."]    # resolved by a PR
-mpm done <id> --branch <branch> --commit <sha>            # resolved on a branch, not a PR
-mpm wontfix <id> --reason "..."
-mpm supersede <id> --by <other-id>                        # <other-id> must exist
-mpm block <id> --on <other-id>      ·     mpm unblock <id> [--on <other-id>]
-mpm reopen <id>                                           # pull a resolved entry back to open
-mpm set <id> --field <name> --value "..." [--append]      # edit one field; --append for links/lists
-mpm move <id> --category "<C>"
-mpm link <from-id> <to-id>                                # records a links-to edge
+The two that carry a convention `--help` cannot tell you:
+  `add --scope` says what the work is AND why it matters, in one sentence.
+  `done --pr <N>` is the normal close; `--branch <b> --commit <sha>` is the one for work that never became a PR.
 ```
 
 ## Three hard constraints (these are where calls go wrong)

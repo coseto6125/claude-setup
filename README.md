@@ -12,7 +12,7 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `output-styles/colleague-zh.md` | main session only | voice and language for user-facing prose |
 | `agents/` | on dispatch | effort-pinned and role-scoped sub-agent definitions |
 | `hooks/` | per the events in `settings.example.json` | shell hooks |
-| `skills/` | description resident, body on invocation | 22 skills |
+| `skills/` | description resident, body on invocation | 25 skills |
 | `settings.example.json` | copy to `~/.claude/settings.json` | read the security notes first |
 
 ## Install
@@ -35,9 +35,9 @@ These are properties of this configuration, not defects. Read them before you co
 
 **The permission `allow` list runs to 45 entries.** Each one is a subcommand pattern rather than a whole command family, and the widest of them (`Bash(python3:*)`, `Bash(xargs:*)`, `Bash(cat:*)`) approve an arbitrary argument to a general-purpose program. Combined with the mode above, that is the real reach. Cut the list down to what you run.
 
-**Hooks execute on every matching event.** `hooks/` holds eight scripts and `settings.example.json` wires four of them: `auto-etoon.sh` and `limit-worktrees.sh` on `PreToolUse`, `idle-guard-stop.sh` on `Stop`, `idle-guard-submit.sh` on `UserPromptSubmit`. Read each one before you install it.
+**Hooks execute on every matching event.** `hooks/` holds nine scripts and `settings.example.json` wires seven of them: `auto-etoon.sh`, `limit-worktrees.sh`, `guard-main-edit.sh`, `guard-push-simplify.sh` and `ecp-graph-nudge.sh` on `PreToolUse`, `idle-guard-stop.sh` on `Stop`, `idle-guard-submit.sh` on `UserPromptSubmit`. Read each one before you install it. `guard-main-edit.sh` enforces a rule `CLAUDE.md` only states — it refuses an edit to a file on the default branch and prints the worktree command to use instead. `guard-push-simplify.sh` blocks `git push` until `/simplify` has run in that session. `ecp-graph-nudge.sh` hands over the exact `ecp impact` command a symbol's direct callers cannot answer on their own.
 
-The other four ship unwired, so wire them yourself or delete them. Two of them enforce a rule `CLAUDE.md` only states, and this machine runs both: `guard-main-edit.sh` on `PreToolUse` refuses an edit to a file on the default branch and prints the worktree command to use instead, and `guard-push-simplify.sh` on `PreToolUse` blocks `git push` until `/simplify` has run in that session. `audit-skill.sh` belongs on `PostToolUse` for `Edit`, `Write` and `MultiEdit`, and checks a `SKILL.md` against the measurable rules the moment it is written. `worktree-symlinks.sh` is the fourth.
+The other two ship unwired, so wire them yourself or delete them. `audit-skill.sh` belongs on `PostToolUse` for `Edit`, `Write` and `MultiEdit`, and checks a `SKILL.md` against the measurable rules the moment it is written. `worktree-symlinks.sh` is the second.
 
 **Three programs run from hooks and none of them ships here**: `rtk` on `PreToolUse`, `$HOME/.local/bin/ecp` on `PreToolUse`, `SessionStart` and `UserPromptSubmit`, and `$HOME/.orca/agent-hooks/claude-hook.sh` on eleven events. Only the Orca one tests for the file first, and it writes the path inside single quotes, so a plain shell does not expand `$HOME` and the test fails whatever the file's real state. The `ecp` and `rtk` entries have no guard at all, so a missing binary is a failed hook rather than a no-op. `settings.example.json` also sets `~/.claude/statusline.sh` as the status line, and that script is not in this repo either. Install those programs, or delete the entries.
 

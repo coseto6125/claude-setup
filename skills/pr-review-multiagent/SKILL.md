@@ -47,15 +47,7 @@ Each returns `[{description, file, line_range, reason, severity, failure_scenari
 
 ## Phase 4: Confidence scoring (1 Haiku agent per issue, parallel, ≤20 at a time)
 
-Input: the PR, that one issue, the CLAUDE.md paths. Score 0–100 against these anchors:
-
-- **0** — false positive, pre-existing, or something the linter catches (typo, missing import, type error, formatting)
-- **25** — possibly real, unverifiable
-- **50** — real but trivial, with no CLAUDE.md rule behind it
-- **75** — very likely real and reachable in production, or an explicit CLAUDE.md violation
-- **100** — certain bug, data corruption, or hard crash
-
-Score 0 for anything in these classes: a line outside the diff · anything lint or typecheck catches · a nitpick a senior engineer would let pass · a generic test-coverage / security / docs ask with no rule behind it · code already carrying `# noqa` or `# type: ignore` · a deliberate behaviour change that is the point of the PR.
+Input: the PR, that one issue, the CLAUDE.md paths. Score 0–100 against the anchors in `~/.claude/skills/simplify/CHECKLIST.md` → Confidence, which also lists the classes that score 0.
 
 More than 20 issues → score them in waves of 20 (Dispatch's parallel-agent cap).
 

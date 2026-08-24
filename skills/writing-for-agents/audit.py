@@ -102,12 +102,19 @@ def drift(paths: list[Path]) -> list[str]:
         for tool, subs in documented.items():
             real = help_subcommands([tool])
             if real is None:
-                found.append(f"{skill}: `{tool} --help` says nothing parseable. Check the tool by hand.")
+                # A tool with no subcommand list (setsid, jq, curl) has nothing to drift against.
                 continue
             for sub in sorted(subs - real):
                 found.append(f"{skill}: documents `{tool} {sub}`, which `{tool} --help` does not list. Rerun the help and fix the line.")
-            for sub in sorted(real - subs):
-                found.append(f"{skill}: `{tool} {sub}` exists and the skill never mentions it. Point at `{tool} --help` instead of listing commands.")
+            # The reverse direction only matters for a skill that acts as a cheat sheet:
+            # it copied the help output, so it inherits the duty to stay in sync. A skill
+            # that names two commands in passing owes nothing to the rest of the CLI.
+            missing = sorted(real - subs)
+            if len(subs) >= 5 and missing:
+                found.append(
+                    f"{skill}: documents {len(subs)} `{tool}` commands and misses {len(missing)} "
+                    f"({', '.join(missing[:4])}…). Point at `{tool} --help` instead of keeping a copy."
+                )
     return found
 
 
@@ -150,6 +157,35 @@ def refs(paths: list[Path], root: Path) -> list[str]:
     return found
 
 
+EXEMPTIONS = Path(__file__).parent / "audit-exemptions.md"
+
+
+def exempt() -> set[tuple[str, str]]:
+    """(skill, rule) pairs a human already judged and wrote a reason for."""
+    if not EXEMPTIONS.is_file():
+        return set()
+    pairs = set()
+    for line in EXEMPTIONS.read_text(encoding="utf-8").splitlines():
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) == 3 and parts[1].startswith("rule"):
+            pairs.add((parts[0], parts[1]))
+    return pairs
+
+
+def drop_exempt(findings: list[str]) -> tuple[list[str], int]:
+    """Split findings into the ones to report and the count already accounted for."""
+    known, kept = exempt(), []
+    held = 0
+    for finding in findings:
+        skill, _, rest = finding.partition(": ")
+        rule = rest.split(":", 1)[0].strip()
+        if (skill, rule) in known:
+            held += 1
+        else:
+            kept.append(finding)
+    return kept, held
+
+
 def main(argv: list[str]) -> int:
     if argv and argv[0] == "drift":
         base = Path(argv[1]) if len(argv) > 1 else Path.home() / ".claude/skills"
@@ -172,7 +208,11 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
 
-    print("\n".join(findings) if findings else "clean")
+    findings, held = drop_exempt(findings)
+    if findings:
+        print("\n".join(findings))
+    else:
+        print(f"clean ({held} exempt)" if held else "clean")
     return 1 if findings else 0
 
 
