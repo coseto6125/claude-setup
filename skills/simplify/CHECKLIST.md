@@ -46,7 +46,7 @@ Applies only when a spec source resolved; with none, record "no spec available" 
 
 ## Quality
 
-1. **Altitude** — a special case layered on shared infrastructure means the fix sits too shallow; name the underlying mechanism to generalize instead
+1. **Altitude** — a special case layered on shared infrastructure means the fix sits too shallow; name the underlying mechanism to generalize instead. A special case that also breaks a stated CLAUDE.md rule (Code Style's restructuring rule, for instance) files once, under Conventions — not here too.
 2. **Redundant state** — duplicates existing state, cacheable-derivable values, observers that could be direct calls
 3. **Parameter sprawl** — new params instead of restructuring existing ones
 4. **Copy-paste with variation** — near-duplicate blocks needing a shared abstraction (`ecp find` confirms whether one is already canonical)
