@@ -41,7 +41,7 @@ Launch concurrently with the `Agent` tool. Each receives the PR diff, `<cgn_cont
 | 3 | **Git history & blame** | `git blame` the modified lines for why the old code was written that way; flag regressions. |
 | 4 | **Historical PR cross-check** | `gh pr list --search "<file>"` for past PRs touching the same files; apply their recurring comments here. |
 | 5 | **Comment compliance** | Read the `TODO/FIXME/WARN/NOTE` comments in the modified files; confirm the new code honours each existing warning. |
-| 6 | **Simplify checklist** | Apply every rung of the Reuse, Quality, and Efficiency sections of `~/.claude/skills/simplify/CHECKLIST.md`. |
+| 6 | **Simplify checklist** | Apply every rung of the Reuse, Quality, and Efficiency sections of `~/.claude/skills/simplify/CHECKLIST.md`. Add that file's Security section when the diff touches a route table, an auth or session path, a tenancy check, a permission, a credential, a webhook handler, a tool the model can call, or a server-side fetch of a caller-supplied URL. The Security section routes into `~/.claude/skills/simplify/security/SURFACES.md`, which probes the repo for surfaces and loads depth only for those it finds. |
 
 Each returns `[{description, file, line_range, reason, severity, failure_scenario, command, command_output}]` — `failure_scenario` is the concrete inputs or state and the wrong output or crash they produce, and an angle that cannot supply one drops the finding rather than filing it weakly; `command`/`command_output` let Phase 4 re-check in one jump instead of redoing the search. Each angle closes with its blind spots: what it did not read, run, or verify.
 

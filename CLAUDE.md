@@ -64,7 +64,7 @@
 
 ## Prompt Writing Guide
 
-Governs every artifact a model reads: skill `description` + `SKILL.md`, sub-agent prompts, tool descriptions, system prompts. This block is the authority; `writing-for-agents` elaborates it.
+Governs every artifact a model reads: skill `description` + `SKILL.md`, sub-agent prompts, tool descriptions, system prompts. This block is the authority for a line you write in passing. **Invoke `writing-for-agents` before you write, edit or review one of those artifacts as the task itself.** It carries the levers this block does not: the information hierarchy, progressive disclosure, completion criteria, the seven review modes, and `audit.py`.
 
 - Constrain at the decision level: goals and boundaries, not the implementation.
 - Phrase each instruction as the action to take ("return an empty list for empty input", not "don't crash"). Keep the explicit negative for a red line, or for a rule that fights a strong model prior.
@@ -79,6 +79,11 @@ Governs every artifact a model reads: skill `description` + `SKILL.md`, sub-agen
 2. **Read** with `offset`/`limit` for files >200 lines; skip search when the exact path is known.
 3. **PR / multi-file diff** >200 lines: `git diff -- <path>` per-file, or grep specific hunks.
 4. **Code-health probes** — match the probe to the goal: complexity hotspots → linter cyclomatic (ruff `C901`) / AST nesting depth; change risk → `ecp impact` fan-in; dead code → grep-unreferenced ∩ ecp-orphan. Keep them as separate queries; they read different ground truth. LOC and function size pick which files merit a human skim, never a quality verdict.
+
+## Tool Call Batching (Token Optimization)
+
+- **Never issue two Bash calls whose commands do not depend on each other.** Join them with `;` in one call. The probing trio you reach for first — `pwd; ls; git status` — is one call, not three. Measured here: `Bash` carries 58% of long-session context.
+- **Screenshots bill by pixel area, not file size** (~1 token per 28×28 patch; a long edge over 1568px is downscaled first). Compressing the PNG saves zero tokens — resizing is the only lever. Tile a multi-page sweep into one contact sheet rather than reading N images.
 
 ## MCP Tool Calling (Token Optimization)
 
@@ -102,7 +107,7 @@ This section is the canonical dispatch policy — skills that fan out defer to i
 
 ### When to dispatch
 
-- **Fan-out** — give each independent sub-goal its own acceptance criterion before dispatching it. Cap parallel agents at 20 unless the user asks for more.
+- **Fan-out** — give each independent sub-goal its own acceptance criterion before dispatching it. Cap parallel agents at 20 unless the user asks for more. **Never open one of the targets yourself to calibrate the fan-out.** Calibration belongs in the acceptance criterion you write, not in your own context. Dispatch first; if the returns show the criterion was wrong, fix the criterion and re-dispatch.
 - **Adversarial** — dispatch an independent verifier when a conclusion is expensive to get wrong.
 
 **Risk is inferred, not looked up.** Structural signals set the floor: `ecp impact` upstream fan-in, and auth / payment / schema-migration / concurrency paths. Raise it from what the user emphasised this turn and from what the project itself guards. Take the highest; one sentence from the user ("just a prototype") lowers it.
@@ -118,6 +123,8 @@ From sonnet up, require **blind spots** too: what it did not read, run, or verif
 ### Across rounds
 
 Each return is a decision point — re-check, follow a thread, dispatch more, or finish. The goal fixes what "done" means; you decide how to reach it.
+
+Before the second round's dispatch, write `"subagentPromptCacheTtl": "1h"` into the project's `.claude/settings.local.json`, never `~/.claude/settings.json`. It applies to the next dispatch with no restart.
 
 Stop when two consecutive rounds bring back nothing that changes the next decision.
 

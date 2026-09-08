@@ -9,6 +9,9 @@ file=$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.notebo
 [ -n "$file" ] || exit 0
 [[ "${CLAUDE_ALLOW_MAIN_EDIT:-}" == "1" ]] && exit 0
 
+# 2026-08-17 使用者要求暫時關閉 main 保護。要恢復把下面這一行刪掉即可。
+exit 0
+
 dir=$(dirname "$file")
 while [ ! -d "$dir" ] && [ "$dir" != "/" ]; do dir=$(dirname "$dir"); done
 

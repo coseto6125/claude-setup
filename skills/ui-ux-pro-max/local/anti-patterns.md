@@ -1,23 +1,76 @@
 # Anti-Patterns & Technical Standards
 
-Condensed from Impeccable (pbakaus/impeccable v3.1.0). Updated 2026-05-14. Use this as a checklist to catch common mistakes after building.
+Condensed from Impeccable (pbakaus/impeccable v4.1.2 `reference/craft-floor.md`). Updated 2026-08-28. Use this as a checklist to catch common mistakes after building.
 
 ## AI Slop Tells
 
 These patterns signal AI-generated design. Avoid all of them:
-- **Fonts**: Skip system defaults (Inter, Roboto, Arial, Open Sans, Lato, Montserrat). Aspire beyond second-reflex typefaces too—Fraunces, Newsreader, Lora, Crimson Pro, Playfair Display, Cormorant, Syne, IBM Plex, Space Mono, Space Grotesk, DM Sans, DM Serif, Outfit, Plus Jakarta Sans, Instrument Sans are genuinely good faces, but they appear so frequently in generated output that they no longer give a project its own voice. Browse Pangram Pangram, Velvetyne, ABC Dinamo, Future Fonts, Klim Type Foundry
-- **Color**: Purple gradients on white, cyan/neon on dark, gradient text on headings/metrics, glowing accents, generic glassmorphism
-- **Layout**: Three equal feature cards, hero metric template (big number + subtitle + icon), everything centered, cards wrapping everything, cards nested inside cards, modals for everything (modals are lazy — use inline or progressive disclosure), rounded rectangles with generic drop shadows
-- **Motion**: Bounce/elastic easing (tacky since ~2015), overshoot effects
+
+A style borrowed to signal a category the page did not earn is wrong. These borrowed styles are the densest tell, so hunt them first.
+
+- **Fonts**: Skip system defaults (Inter, Roboto, Arial, Open Sans, Lato, Montserrat). Skip the second-reflex faces too: Fraunces, Newsreader, Lora, Crimson Pro, Playfair Display, Cormorant, Syne, IBM Plex, Space Mono, Space Grotesk, DM Sans, DM Serif, Outfit, Plus Jakarta Sans, Instrument Sans. These are good faces. They appear so often in generated output that they give a project no voice. Browse Pangram Pangram, Velvetyne, ABC Dinamo, Future Fonts, Klim Type Foundry. Source and self-host the display face. The closest installed font is a failure, not a fallback.
+- **Color**: Purple gradients on white, cyan/neon on dark, gradient text on headings and metrics, glowing accents, generic glassmorphism. Pick light or dark from the use scene: who reads this, where, under what ambient light. Picking it from the category is a reflex.
+- **Layout**: Three equal feature cards, hero metric template (big number + subtitle + icon), everything centered, cards wrapping everything, cards nested inside cards, rounded rectangles with generic drop shadows. A modal for a task that needs neither interruption nor protected focus. Section numbers (01 / 02 / 03) unless the sequence itself carries information the reader needs.
+- **Eyebrow above a heading**: Never. The heading carries its own weight. Delete the label.
+- **Motion**: Bounce/elastic easing (tacky since ~2015), overshoot effects. One authored moment beats one identical entrance on every section.
 - **Content**: "Elevate your workflow," John Doe, 99.99%, emoji avatars, SVG-egg placeholders, repeating the same information (redundant headers, intros that restate the heading)
-- **Decoration**: Large icons with rounded corners above every heading (templated look), rounded elements with thick colored border on one side (lazy accent), sparklines as decoration (look sophisticated, convey nothing), monospace typography as lazy shorthand for "technical/developer" vibes
-- **Hierarchy**: Making every button primary — use ghost buttons, text links, secondary styles; hierarchy matters
+- **Decoration**: Large icons with rounded corners above every heading (templated look), a colored `border-left` or `border-right` above 1px on cards, list items, callouts, or alerts, sparklines and progress rings standing in for content. Monospace type is wrong unless the content is code, data, or measurement. A hard offset shadow (`box-shadow: 4px 4px 0`) is wrong unless the world is actually neobrutalist. Unicode glyphs and emoji standing in for an icon system are wrong. Draw icons from one real library at one stroke weight.
+- **Cut-outs**: A circle, polygon, or radial-gradient mask approximating a photo subject's edge reads worse than no cut-out at all. Derive an alpha matte from the actual image, or ship a real cut-out asset.
+- **Browser surfaces**: The parts you did not draw still carry the design. Theme `::selection`, `caret-color`, custom scrollbars, `text-underline-offset`, and tabular numerals from the palette. This is the cheapest signal that a page was built rather than assembled, and the one models skip most reliably.
+- **Hierarchy**: Making every button primary. Use ghost buttons, text links, and secondary styles.
 - **Portfolio sites**:
-  - Three-column card grid for portfolio items — use timeline lists or logo grids
-  - Gradient CTA buttons on personal sites — use text-only CTAs
-  - Stock hero image behind name — let typography be the hero
+  - Three-column card grid for portfolio items. Use timeline lists or logo grids
+  - Gradient CTA buttons on personal sites. Use text-only CTAs
+  - Stock hero image behind the name. Let typography be the hero
   - "Skills" section with progress bars
   - Animated statistics counters
+
+## Production Tells
+
+The tells above come from craft review. These came out of running real
+LLM-generated landing pages and reading what the model reached for when it tried
+to *look* designed. Condensed from Leonxlnx/taste-skill (MIT) §9.F-9.G,
+2026-08-24. Treat each as a hard ban unless the brief asks for it by name.
+
+**Hero and top of page**
+- Version or status labels as the hero eyebrow: `V0.6`, `BETA`, `ALPHA`, `EARLY ACCESS`, `INVITE-ONLY PREVIEW`. Only when the brief is about launch status.
+- A decoration text strip across the hero bottom: `BRAND. MOTION. SPATIAL.`, `TYPE / FORM / MOTION`, `ESTD. 2018 · LISBON`. Agency-portfolio cliché. Allowed only when the strip carries real links or real status.
+- Scroll cues of any kind: `Scroll`, `↓ scroll`, `Scroll to explore`, animated mouse-wheel icons. The reader is looking at the hero. They know what scroll is.
+
+**Fake product surfaces**
+- A product UI built from styled `<div>`s to simulate a screenshot. This is the single densest tell. Ship a real screenshot, a generated image, a live component, or nothing.
+- Fake version footers inside those fakes: `v0.6.2-rc.1`, `last sync 4s ago · main`.
+- Version stamps in a marketing footer: `v1.4.2`, `Build 0048`. Those are devtool fixtures, not landing-page content.
+- Live-stock counters as decoration: `Reservation 412 of 800`. Only with real data behind them.
+
+**Separators and dots**
+- The middle dot `·` as the default separator. Maximum one per metadata line. For a separator family, use line breaks, hairlines, or columns.
+- A colored status dot before every nav link, list row, or badge. Allowed only when the dot carries real semantic state, and then once per section.
+- Hairline or crosshair grid lines drawn to make a page "feel designed". Use them only when they organize real content.
+- `border-t` and `border-b` on every row of a long list or spec table. Pick one, and use it sparsely.
+
+**Typography flourishes**
+- The em-dash `—` anywhere the user can see it: headline, eyebrow, pill, body, quote, attribution, caption, button, alt text. Use a period, a comma, a colon, parentheses, or two sentences. The en-dash `–` as a separator goes too; ranges take a hyphen.
+- A headline split with `<br>` and half of it italicized, used as a default design move.
+- Vertical rotated text. Only when the brief is explicitly experimental and the composition needs it.
+
+**Labels and captions**
+- Poetic section labels: `From the field`, `Field notes`, `On our desks`, `Currently on the bench`. Use the plain functional label or none.
+- `Quietly trusted by` / `Quietly in use at` as a social-proof header. Say `Trusted by`, or let the logos speak.
+- A micro-meta sentence under a section heading explaining the section's own intent. Eyebrow, headline, body is enough.
+- Generic step labels: `Stage 1 / 2 / 3`, `Phase 01 / 02 / 03`, `Pass One / Two / Three`. The step content is the label: `Install`, `Configure`, `Ship`.
+- Pills and tags overlaid on a photo. Caption below the image, or nothing.
+- Fake photo credits: `Frame XII · 35mm`, `Plate 03 · House archive`. Credit a real photographer or write one functional caption.
+- Locale, time, or weather strips: `LIS 14:23 · 18°C`, `Lisbon, working with founders`. Allowed for a real venue or a genuinely timezone-distributed team. A contact address in the footer is fine; an atmospheric strip is not.
+
+**Data and comparison visuals**
+- Scoring or progress bars with a filled background track on a marketing page. Use a number with a small icon, or a thin inline bar with no track.
+- A floating explainer paragraph in the top-right corner of a section header, aligned to nothing. Put it under the headline, or build a real two-column header.
+
+**Assets**
+- Hand-rolled SVG icons. Use one real library at one stroke weight: Phosphor, HugeIcons, Radix, Tabler.
+- Broken Unsplash URLs. Use `https://picsum.photos/seed/{descriptive-string}/{w}/{h}`, a generated image, or a real asset.
+- shadcn/ui in its default state. Retheme radii, colors, shadows and type first; `local/sources.md` covers tweakcn for exactly this.
 
 ## Typography
 

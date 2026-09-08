@@ -348,3 +348,53 @@ within the n=5 noise floor; not shipped as "proven better," shipped as "at least
 **Common thread**: every abstract framing here (the original C wording, the "keeps the same
 functionality" precondition in A) tests weaker than a version naming the concrete pattern or
 check — same lesson as `name-the-wrong-command` in auto-memory, now measured twice more.
+
+## Prompt Writing Guide, the `writing-for-agents` pointer
+
+Live failure 2026-09-04: a session edited `simplify/SKILL.md` by hand, following the Guide's
+own bullets from context, and never invoked `writing-for-agents`. The skill's own description
+never fired, because the inline block already felt like coverage.
+
+Probe reproduces the failure rather than describing it: the task is a RULE change to a named
+SKILL.md ("make the code-review skill launch a second reviewer at every tier, not only the top
+one"), the ask is the ordered procedure, and a realistic 30-skill list sits in every arm. Target
+behaviour = a step that names `writing-for-agents`. n=4 per arm, isolated via `CLAUDE_CONFIG_DIR`
++ `--setting-sources user` (canary NONE 3/3).
+
+| arm | opus | haiku |
+|---|---|---|
+| control (skill list only) | 0/4 | 0/4 |
+| A: `This block is the authority; \`writing-for-agents\` elaborates it.` | 0/4 | 0/4 |
+| B: `...authority for a line you write in passing. **Invoke \`writing-for-agents\` before you write, edit or review one of those artifacts as the task itself.**` | **4/4** | 0/4 |
+
+B shipped. The old wording is inert on BOTH models, so it was a pointer in name only — it stated
+what the material is and named no branch that triggers the reach.
+
+Haiku floors at 0/4 on every arm, and that is left alone: a haiku sub-agent dispatched as
+`lite-scan` has no Skill tool, so it cannot obey the rule whatever the wording says.
+
+Two earlier probe designs measured nothing and are recorded so they are not retried. One named a
+file path and every arm answered "I need permission to read it" (the ask lacked "No tools"). One
+supplied the section text and framed the task as tightening WORDING; opus control then hit 3/3,
+because a skill literally named `writing-for-agents` is the obvious pick for a wording task. The
+design that separates frames the task as a rule change, where the skill is not the obvious pick.
+
+## `simplify`, cross-family is not a judgement call
+
+Same session, same failure: the tier table's dispatch was executed, and codex was not launched on
+a HIGH-risk diff. The trigger sat beside the table as prose, conditioned on a judgement phrase
+("expensive enough to want a reader whose mistakes are uncorrelated with yours"), while every
+table row keys off a mechanical condition.
+
+Probe: a Tier-1 diff (2 files, 60 lines, no auth/schema/concurrency), ask = the reviewers you
+launch. Target = codex named. Control carries the tier table plus "codex is available as an
+independent cross-family reviewer", so it CAN hit. n=8 on haiku across two runs.
+
+| arm | haiku |
+|---|---|
+| control (codex available, no trigger) | 0/8 |
+| A: cross-family runs "on top of Tier 3" | 0/8 |
+| B: **Cross-family — always.** every tier from 1 up | **7/8** |
+
+B shipped. A scoring 0/8 is correct behaviour for A, not a defect: at Tier 1 the old rule does not
+fire by design. What the probe measures is that the new wording reaches even haiku, 7/8.

@@ -49,7 +49,20 @@ RESULTS_PATH="$PWD/results.jsonl"
 BODYDIR="${BODYDIR:-$PWD/bodies}"  # resolved before the cd below
 RESDIR="$(mktemp -d)"
 GATEDIR="$(mktemp -d)"             # empty dir for the canary gate
-trap 'rm -rf "$RESDIR" "$GATEDIR"' EXIT
+# `--setting-sources project` alone does NOT drop ~/.claude — measured 2026-09-02,
+# four canary runs each recited the user's ECP.md. CLAUDE_CONFIG_DIR moves the whole
+# user surface to a directory we built, so every arm below shares one empty baseline
+# while the project source still carries a claude-md arm's own CLAUDE.md.
+CLEANCFG="$(mktemp -d)"
+printf '{}' > "$CLEANCFG/settings.json"
+cp "$HOME/.claude/.credentials.json" "$CLEANCFG"/ 2>/dev/null   # auth, not a setting-source
+export CLAUDE_CONFIG_DIR="$CLEANCFG"
+# The two things that would put a rule into every arm. The CLI writes its own
+# state here as it runs (.claude.json, projects/, sessions/); those carry no rules.
+for leak in CLAUDE.md skills; do
+  [ -e "$CLEANCFG/$leak" ] && { echo "ISOLATION FAILED — $CLEANCFG/$leak exists" >&2; exit 1; }
+done
+trap 'rm -rf "$RESDIR" "$GATEDIR" "$CLEANCFG"' EXIT
 
 TRIALS="${TRIALS:-3}"             # floor for a smoke test — raise before acting on a deletion
 MODEL="${MODEL:-haiku}"           # weakest deployed reader = stress test; reconfirm null results on every deployed model
@@ -76,7 +89,7 @@ if printf '%s' "$canary" | grep -Eq "$CANARY_RE"; then
   echo "Fix cwd / --setting-sources before spending trials." >&2
   exit 1
 fi
-echo "isolation OK (canary: ${canary:0:60})"
+echo "isolation OK (no CLAUDE.md / skills under $CLEANCFG; canary: ${canary:0:50})"
 
 run() {  # id variant wording scenario ask trial outfile
   local id="$1" variant="$2" wording="$3" scenario="$4" ask="$5" trial="$6" out="$7"
