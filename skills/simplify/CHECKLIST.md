@@ -16,6 +16,8 @@ Score 0 for anything in these classes: a line outside the diff · anything lint 
 
 The gate sits where the reader decides, so each skill states its own: [`simplify`](SKILL.md) fixes at 70, because a local fix is cheap to undo. `pr-review-multiagent` posts at 75, because a PR comment is public.
 
+**A finding that clears the gate carries its fix.** The fix is the concrete change: the edited line, the command to run, the block to delete. "It is small", "the code works today", and "the change is too big to apply here" are the reader's reasons to decline that fix. None of them lets the report name the problem and stop there. A finding that stays unapplied carries its fix as a proposal. A finding that never matched a rung is governed by the score-0 list above instead.
+
 ## Spec (intent)
 
 Applies only when a spec source resolved; with none, record "no spec available" and move on. This axis reports on its own and is never merged into the others: code can follow every convention, pass every correctness rung, and still implement the wrong thing, so a clean sweep elsewhere must not read as spec conformance.
