@@ -20,10 +20,14 @@ the `orca-cli` skill; this skill is the collaboration contract on top of them.
 **Supervised** is the default. Orca launches the peer as a worker, the peer ends
 with a `worker_done` message carrying its report, and you wait on that message.
 Delivery is then a fact the runtime states, not a shape you look for in a file.
-Confirm Orca is up with `ORCA status --json`, then follow the `orchestration`
+`ORCA` is the placeholder the `orca-cli` skill resolves (`orca-ide` on Linux, never bare `orca`: outside an Orca terminal that is the GNOME screen reader). Confirm Orca is up with `ORCA status --json`, then follow the `orchestration`
 skill: `task-create`, `dispatch --inject`, and
 `check --wait --types worker_done,escalation,question --timeout-ms <n>`. A
 review-only `worker_done` reports findings and authorises no edits of yours.
+**Ack every delivery the wait returns, heartbeats included.** `check --wait` re-delivers the
+oldest unacknowledged delivery and holds the ones behind it, so a loop that only greps for
+`worker_done` reads the same heartbeat forever while the report sits queued. Measured
+2026-09-09: the task showed `completed` for 12 minutes before an `--ack` let the report through.
 
 **Detached** is for an Orca that is not running, or a peer you deliberately keep
 outside it. `setsid codex exec` writes to a log, and the rest of this file covers

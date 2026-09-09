@@ -12,10 +12,10 @@ metadata:
 
 Two parts, and they compose.
 
-- **Part 1 — Audience** decides what an explanation contains. It applies when the request names a person, a role, an age or a level, and to any bare `ELI5`.
+- **Part 1 — Audience** decides what an explanation contains. It applies when the request names a person, a role, an age or a level, and when the request names none: Part 1 then infers the reader.
 - **Part 2 — Output shape** decides how a response is laid out. It applies to every response for the rest of the session, explanation or not.
 
-`/eli5` on its own turns on Part 2. `/eli5 <topic> for <audience>` uses both.
+`/eli5` on its own turns on Part 2. `/eli5 <topic>` uses both, with or without a `for <audience>` clause.
 
 ## Persistence
 
@@ -126,7 +126,7 @@ For **business audiences** (managers, directors):
 ### Examples
 
 **User says**: "ELI5 what a database index is"
-**Audience**: Age 5 (default)
+**Audience**: Age 5 (the request carries no audience signal)
 **Response style**: "Imagine you have a huuuge book with thousands of pages. Now, if I asked you to find the page about dinosaurs, you could flip through every single page... or you could look at the table of contents at the front! A database index is like that table of contents. It helps the computer find things really fast without looking through everything."
 
 **User says**: "Explain this API rate limiting to my manager"

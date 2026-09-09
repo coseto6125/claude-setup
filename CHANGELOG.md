@@ -3,6 +3,39 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.1 — 2026-09-09
+
+### Changed
+
+- `skills/eli5`: three lines outside Step 1 still described the age-5 default that v0.1.0
+  removed. Part 1 now says it applies when the request names an audience *and* when it names
+  none, `/eli5 <topic>` is documented as working with or without a `for <audience>` clause,
+  and the worked example labels its audience `Age 5 (the request carries no audience signal)`
+  rather than `Age 5 (default)`.
+- `skills/peer-agent`: acknowledge every delivery `check --wait` returns, heartbeats included.
+  The wait re-delivers the oldest unacknowledged delivery and holds the ones behind it, so a
+  loop that only greps for `worker_done` reads the same heartbeat forever while the report
+  sits queued. Measured 2026-09-09: a task showed `completed` for 12 minutes before an
+  `--ack` let the report through.
+
+### Measured
+
+The two `pending` rows in v0.1.0 are filled in. Both hold, which is the point: the rewrite
+moved the engineer and the inferred-reader branches and left the others alone.
+
+| probe | no skill | before | after |
+|---|---|---|---|
+| analogy drawn from a 15-year-old's world | 0/15 | 14/15 | 15/15 |
+| manager named, impact and a decision to take | 11/15 | 13/15 | 15/15 |
+
+The manager row's control is 11/15 here against the 6/15 recorded in v0.1.0; the control arm
+was re-run alongside the `before` arm so all three numbers come from one round.
+
+The open question v0.1.0 left — whether `A bare ELI5 with no other signal means age 5` reads
+as the token alone rather than as a request carrying no audience signal — was measured and
+answered: the shipped wording scores 14/15, a reworded version 13/15, against a 9/15 control.
+The wording stays.
+
 ## v0.1.0 — 2026-09-09
 
 ### Changed
