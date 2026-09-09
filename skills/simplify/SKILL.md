@@ -93,7 +93,7 @@ Wait for every reviewer, codex included, then act by confidence, scored against 
 - **50–69** — list in the summary as "worth a look".
 - **<50** — drop. A finding you spent a command investigating and then rejected goes under a `## Scanned, not acted on` heading instead: one line each, carrying its score and why it stays.
 
-Fix everything you can reach. Three classes stay unapplied and go to the summary as proposals, each with one line saying why:
+Fix everything you can reach. Three classes stay unapplied and go to the summary as proposals, each carrying the concrete change it proposes and one line saying why it stays unapplied:
 
 - a fix that changes intended behaviour
 - a fix that reaches outside the files the diff touches

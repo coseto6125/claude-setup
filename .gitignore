@@ -45,3 +45,8 @@ cookies.json
 .last-checked
 *.bak
 *.new.tsv
+
+# claude-seo machine state
+skills/seo/.venv/
+skills/seo/ms-playwright/
+skills/seo/runtime-state.json

@@ -12,7 +12,7 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `output-styles/colleague-zh.md` | main session only | voice and language for user-facing prose |
 | `agents/` | on dispatch | effort-pinned and role-scoped sub-agent definitions |
 | `hooks/` | per the events in `settings.example.json` | shell hooks |
-| `skills/` | description resident, body on invocation | 25 skills |
+| `skills/` | description resident, body on invocation | 25 written here, plus 32 directories vendored from `claude-seo` |
 | `settings.example.json` | copy to `~/.claude/settings.json` | read the security notes first |
 
 ## Install
@@ -27,6 +27,12 @@ Then edit `~/.claude/settings.json`: replace `<YOUR_CONTEXT7_API_KEY>`, and expa
 
 `CLAUDE.md` settles Python 3.14 syntax arguments by running [`pyci-check`](https://github.com/coseto6125/pyci-check), so install it or that rule has nothing to point at. The programs the hooks call are listed under Security notes and none of them ship here either.
 
+## Vendored third-party skills
+
+`skills/seo` and the 31 `skills/seo-*` directories are [`claude-seo`](https://github.com/AgriciDaniel/claude-seo) v2.2.5 by AgriciDaniel, MIT-licensed, copied unmodified. They sit here so one clone reproduces the whole machine, not because they were written for it. Two directories the upstream install creates are excluded: `seo/.venv` (777 MB) and `seo/ms-playwright` (656 MB). Install those from the upstream repo, or run `skills/seo/bin/claude-seo` and let it build them. `seo/runtime-state.json` is machine state and is excluded too.
+
+Upgrade by re-installing from upstream rather than by patching here.
+
 ## Security notes
 
 These are properties of this configuration, not defects. Read them before you copy anything into `~/.claude`.
@@ -35,11 +41,13 @@ These are properties of this configuration, not defects. Read them before you co
 
 **The permission `allow` list runs to 45 entries.** Each one is a subcommand pattern rather than a whole command family, and the widest of them (`Bash(python3:*)`, `Bash(xargs:*)`, `Bash(cat:*)`) approve an arbitrary argument to a general-purpose program. Combined with the mode above, that is the real reach. Cut the list down to what you run.
 
-**Hooks execute on every matching event.** `hooks/` holds nine scripts and `settings.example.json` wires seven of them: `auto-etoon.sh`, `limit-worktrees.sh`, `guard-main-edit.sh`, `guard-push-simplify.sh` and `ecp-graph-nudge.sh` on `PreToolUse`, `idle-guard-stop.sh` on `Stop`, `idle-guard-submit.sh` on `UserPromptSubmit`. Read each one before you install it. `guard-main-edit.sh` enforces a rule `CLAUDE.md` only states — it refuses an edit to a file on the default branch and prints the worktree command to use instead. `guard-push-simplify.sh` blocks `git push` until `/simplify` has run in that session. `ecp-graph-nudge.sh` hands over the exact `ecp impact` command a symbol's direct callers cannot answer on their own.
+**Hooks execute on every matching event.** `hooks/` holds twelve scripts and `settings.example.json` wires seven of them: `auto-etoon.sh`, `limit-worktrees.sh`, `guard-main-edit.sh`, `guard-push-simplify.sh` and `ecp-graph-nudge.sh` on `PreToolUse`, `idle-guard-stop.sh` on `Stop`, `idle-guard-submit.sh` on `UserPromptSubmit`. Read each one before you install it. `guard-main-edit.sh` enforces a rule `CLAUDE.md` only states — it refuses an edit to a file on the default branch and prints the worktree command to use instead. `guard-push-simplify.sh` blocks `git push` until `/simplify` has run in that session. `ecp-graph-nudge.sh` hands over the exact `ecp impact` command a symbol's direct callers cannot answer on their own.
 
-The other two ship unwired, so wire them yourself or delete them. `audit-skill.sh` belongs on `PostToolUse` for `Edit`, `Write` and `MultiEdit`, and checks a `SKILL.md` against the measurable rules the moment it is written. `worktree-symlinks.sh` is the second.
+The other five ship unwired, so wire them yourself or delete them. `audit-skill.sh` belongs on `PostToolUse` for `Edit`, `Write` and `MultiEdit`, and checks a `SKILL.md` against the measurable rules the moment it is written. `worktree-symlinks.sh` is the second. The three `eywa-*.sh` scripts are the rest: they inject coding principles on `UserPromptSubmit`, capture them on `Stop`, and clear the session cache on `PreCompact`. They read `$HOME/.eywa/` and query a local server on `127.0.0.1:8788`; without that server running, `eywa-inject.sh` is a no-op.
 
-**Three programs run from hooks and none of them ships here**: `rtk` on `PreToolUse`, `$HOME/.local/bin/ecp` on `PreToolUse`, `SessionStart` and `UserPromptSubmit`, and `$HOME/.orca/agent-hooks/claude-hook.sh` on eleven events. Only the Orca one tests for the file first, and it writes the path inside single quotes, so a plain shell does not expand `$HOME` and the test fails whatever the file's real state. The `ecp` and `rtk` entries have no guard at all, so a missing binary is a failed hook rather than a no-op. `settings.example.json` also sets `~/.claude/statusline.sh` as the status line, and that script is not in this repo either. Install those programs, or delete the entries.
+**Four programs run from hooks and none of them ships here** (`eywa` is the fourth, wired by nothing in `settings.example.json`): `rtk` on `PreToolUse`, `$HOME/.local/bin/ecp` on `PreToolUse`, `SessionStart` and `UserPromptSubmit`, and `$HOME/.orca/agent-hooks/claude-hook.sh` on eleven events. Only the Orca one tests for the file first, and it writes the path inside single quotes, so a plain shell does not expand `$HOME` and the test fails whatever the file's real state. The `ecp` and `rtk` entries have no guard at all, so a missing binary is a failed hook rather than a no-op. `settings.example.json` also sets `~/.claude/statusline.sh` as the status line, and that script is not in this repo either. Install those programs, or delete the entries.
+
+**The vendored `skills/seo` tree ships 60 Python scripts and a launcher.** They fetch and render arbitrary URLs through Playwright, and they read API credentials from the environment: `DATAFORSEO_PASSWORD`, Google service-account files for GSC and GA4, Moz, Bing Webmaster, and others. Nothing here holds a key, and none of these run until the skill is invoked; the code is upstream's, so review it there before you point it at a site you do not own.
 
 **`skills/ui-ux-pro-max/local/lighthouse_ab.py` runs unpinned code in an unsandboxed browser.** It calls `npx --yes lighthouse`, which fetches whatever the npm registry serves at that moment, and it launches Chrome with `--no-sandbox`. Point it at pages you trust. Its `label=` argument also lands in the output path unfiltered, so a label containing `../` writes outside the report directory.
 
