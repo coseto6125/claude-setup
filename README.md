@@ -15,6 +15,38 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `skills/` | description resident, body on invocation | 25 written here, plus 32 directories vendored from `claude-seo` |
 | `settings.example.json` | copy to `~/.claude/settings.json` | read the security notes first |
 
+### The 25 skills written here
+
+| Skill | What it does | Origin |
+| --- | --- | --- |
+| `agent-routing` | Picks the runner for a piece of work, and which browser drives a page | — |
+| `authority-check` | The design questions to settle before writing code that carries authority | — |
+| `codebase-design` | Vocabulary for deep modules: interfaces, seams, testability | mattpocock |
+| `dep-audit` | Upgrades every dependency to latest and audits the breakage against real usage | — |
+| `domain-modeling` | Ubiquitous language and ADRs | mattpocock |
+| `ecp` | Structural code queries: definitions, callers, blast radius, routes | — |
+| `eli5` | Explains a topic for a named audience, shaped for an ADHD reader | [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5) |
+| `gh-report` | Files issues and PRs against repositories we do not own | — |
+| `grill-me` | A relentless interview to sharpen a plan or design | mattpocock |
+| `grill-with-docs` | The same interview, writing ADRs and a glossary as it goes | mattpocock |
+| `grilling` | Stress-tests a plan, decision or idea on request | mattpocock |
+| `improve-codebase-architecture` | Scans for deepening opportunities, reports them as HTML | mattpocock |
+| `mpm` | Reads and updates the cross-session follow-ups log through the `mpm` CLI | — |
+| `peer-agent` | Runs codex or another Claude as the implementer while you gate the merge | — |
+| `pr-finalize` | Removes a finished PR's worktree and branch | — |
+| `pr-review-multiagent` | Six-angle merge-readiness review, posted to the PR | — |
+| `python-perf` | Package defaults, class shape and the selection tables for Python | — |
+| `simplify` | The code review skill on this machine | — |
+| `to-questionnaire` | Turns a decision you cannot answer into a questionnaire for someone else | mattpocock |
+| `to-spec` | Turns the conversation into a spec in the issue tracker | mattpocock |
+| `to-tickets` | Breaks a plan into tracer-bullet tickets with their blocking edges | mattpocock |
+| `ui-ux-pro-max` | A local UI/UX database plus a registry of external component sources | — |
+| `validate-prompt-rules` | A/B tests whether a prompt rule changes model behaviour at all | — |
+| `wait-what` | Re-pitches a message that did not land | mattpocock |
+| `writing-for-agents` | Rules for any document an agent reads | mattpocock |
+
+The `mattpocock` rows started as [mattpocock/skills](https://github.com/mattpocock/skills) and were rewired here: `ecp` commands replace subjective judgement calls, and the dispatch sentences point back at `CLAUDE.md`. Re-install from upstream by rebuilding on the upstream file and re-applying those edits, not by overwriting.
+
 ## Install
 
 ```bash
@@ -24,6 +56,8 @@ cp ~/claude-setup/settings.example.json ~/.claude/settings.json
 ```
 
 Then edit `~/.claude/settings.json`: replace `<YOUR_CONTEXT7_API_KEY>`, and expand `$HOME` in the hook paths if your shell does not.
+
+`settings.example.json` is this machine's `settings.json` with that one key blanked and `$HOME` put back where the absolute path was. It sets `modelSettings` rather than `model`, so it pins an effort level per model and leaves the model itself to whatever the CLI last selected. Add `"model": "opus[1m]"` if you want it fixed.
 
 `CLAUDE.md` settles Python 3.14 syntax arguments by running [`pyci-check`](https://github.com/coseto6125/pyci-check), so install it or that rule has nothing to point at. The programs the hooks call are listed under Security notes and none of them ship here either.
 
@@ -45,7 +79,7 @@ These are properties of this configuration, not defects. Read them before you co
 
 The other five ship unwired, so wire them yourself or delete them. `audit-skill.sh` belongs on `PostToolUse` for `Edit`, `Write` and `MultiEdit`, and checks a `SKILL.md` against the measurable rules the moment it is written. `worktree-symlinks.sh` is the second. The three `eywa-*.sh` scripts are the rest: they inject coding principles on `UserPromptSubmit`, capture them on `Stop`, and clear the session cache on `PreCompact`. They read `$HOME/.eywa/` and query a local server on `127.0.0.1:8788`; without that server running, `eywa-inject.sh` is a no-op.
 
-**Four programs run from hooks and none of them ships here** (`eywa` is the fourth, wired by nothing in `settings.example.json`): `rtk` on `PreToolUse`, `$HOME/.local/bin/ecp` on `PreToolUse`, `SessionStart` and `UserPromptSubmit`, and `$HOME/.orca/agent-hooks/claude-hook.sh` on eleven events. Only the Orca one tests for the file first, and it writes the path inside single quotes, so a plain shell does not expand `$HOME` and the test fails whatever the file's real state. The `ecp` and `rtk` entries have no guard at all, so a missing binary is a failed hook rather than a no-op. `settings.example.json` also sets `~/.claude/statusline.sh` as the status line, and that script is not in this repo either. Install those programs, or delete the entries.
+**Four programs run from hooks and none of them ships here** (`eywa` is the fourth, wired by nothing in `settings.example.json`): `rtk` on `PreToolUse`, `$HOME/.local/bin/ecp` on `PreToolUse`, `SessionStart` and `UserPromptSubmit`, and `$HOME/.orca/agent-hooks/claude-hook.sh` on twelve events. Only the Orca one tests for the file first: it branches on `$OSTYPE`, runs the `.cmd` variant on Windows shells, and falls back to draining stdin and printing `{}` when the file is missing. The `ecp` and `rtk` entries have no guard at all, so a missing binary is a failed hook rather than a no-op. `settings.example.json` also sets `~/.claude/statusline.sh` as the status line, and that script is not in this repo either. Install those programs, or delete the entries.
 
 **The vendored `skills/seo` tree ships 60 Python scripts and a launcher.** They fetch and render arbitrary URLs through Playwright, and they read API credentials from the environment: `DATAFORSEO_PASSWORD`, Google service-account files for GSC and GA4, Moz, Bing Webmaster, and others. Nothing here holds a key, and none of these run until the skill is invoked; the code is upstream's, so review it there before you point it at a site you do not own.
 
