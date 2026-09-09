@@ -14,7 +14,7 @@ A style borrowed to signal a category the page did not earn is wrong. These borr
 - **Eyebrow above a heading**: Never. The heading carries its own weight. Delete the label.
 - **Motion**: Bounce/elastic easing (tacky since ~2015), overshoot effects. One authored moment beats one identical entrance on every section.
 - **Content**: "Elevate your workflow," John Doe, 99.99%, emoji avatars, SVG-egg placeholders, repeating the same information (redundant headers, intros that restate the heading)
-- **Decoration**: Large icons with rounded corners above every heading (templated look), a colored `border-left` or `border-right` above 1px on cards, list items, callouts, or alerts, sparklines and progress rings standing in for content. Monospace type is wrong unless the content is code, data, or measurement. A hard offset shadow (`box-shadow: 4px 4px 0`) is wrong unless the world is actually neobrutalist. Unicode glyphs and emoji standing in for an icon system are wrong. Draw icons from one real library at one stroke weight.
+- **Decoration**: Large icons with rounded corners above every heading (templated look), a colored `border-left` or `border-right` above 1px on cards, list items, callouts, or alerts, sparklines and progress rings standing in for content. Monospace type is wrong unless the content is code, data, or measurement. A hard offset shadow (`box-shadow: 4px 4px 0`) is wrong unless the world is actually neobrutalist. Unicode glyphs and emoji standing in for an icon system are wrong. Draw icons from one real library at one stroke weight. When the resolved style is hand-drawn, `local/sources.md` names the four sets that fit it and the license each one carries.
 - **Cut-outs**: A circle, polygon, or radial-gradient mask approximating a photo subject's edge reads worse than no cut-out at all. Derive an alpha matte from the actual image, or ship a real cut-out asset.
 - **Browser surfaces**: The parts you did not draw still carry the design. Theme `::selection`, `caret-color`, custom scrollbars, `text-underline-offset`, and tabular numerals from the palette. This is the cheapest signal that a page was built rather than assembled, and the one models skip most reliably.
 - **Hierarchy**: Making every button primary. Use ghost buttons, text links, and secondary styles.
@@ -156,6 +156,8 @@ Describe your page the way a competitor would describe theirs. If that sentence 
 ### Reflex-Reject Aesthetic Lanes
 
 The editorial-typographic lane is now saturated: Klim-influenced, magazine-cover affectation, three rule-separated columns, italic Fraunces/Recoleta/Newsreader headline. If you find yourself reaching for this shape, you've fallen into the second-order reflex—avoiding the obvious defaults but landing on the same non-obvious default everyone else did.
+
+The hand-drawn lane is filling the same way through 2026: doodle icon sets, wobbly borders, marker headline, paper ground. It stays a real answer for a build whose subject is handmade, taught, or drafted. It becomes the third-order reflex the moment it is reached for because the default set felt generic. `data/styles.csv` row 84's `Do Not Use For` column decides which case this is.
 
 ### Cultural-Symbol Palette Guardrail
 
