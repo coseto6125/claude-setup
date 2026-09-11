@@ -3,6 +3,40 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.2 — 2026-09-11
+
+### Changed
+
+- `CLAUDE.md`, Test Discipline: "(happy path + key edge cases)" is replaced by a class
+  sentence: name each input's atypical states and each dependency's failure; every state
+  named is a test. The measured "write a test that reproduces the bug" sentence is untouched.
+- `CLAUDE.md`, Dispatch: a Haiku or Sonnet implementer gets the seven-item edge list pasted
+  into its prompt; the Haiku tier applies a rule only when the rule lists its instances; the
+  Sonnet tier gets reuse or extraction named in the brief; a count in a delegate's report
+  comes from a command's output.
+- `agents/lite-scan.md`: line numbers only from tool output, counts only from a command.
+- `skills/preflight`: user-invoked (`disable-model-invocation: true`).
+- `skills/simplify/CHECKLIST.md`, Altitude: a second site judged unaffected is a finding
+  unless the report names the consumers of its value that were checked.
+- `skills/writing-for-agents`: a "Class and instance" lever under Leading words.
+- `skills/validate-prompt-rules`: three sections — a control that preloads the deployed
+  CLAUDE.md, an agentic probe for "go and look" behaviour, and a both-ways classifier check —
+  with `preloaded.sh`, `agentic.sh` and `measurements.md`. `ab.sh` carries a note that its
+  isolation leaks `~/.claude`.
+
+### Added
+
+- `skills/context-audit` and `skills/preflight`.
+
+### Measured
+
+Rows and method in `skills/validate-prompt-rules/measurements.md`; wording provenance in
+`maintainer-notes.md`. Against a control that preloads this CLAUDE.md, 25 of 26 one-line
+design rules were saturated on opus, and an agentic plant was fixed 3/3 by the control. The
+one line that moved: the edge-case class sentence, opus 0/5 to 5/5 in abstract and instance
+form alike; haiku 0/5 to 4/5 only with the instances listed. n=5 pilots; re-probe at n≥15
+before treating any of it as settled.
+
 ## v0.1.1 — 2026-09-09
 
 ### Changed

@@ -2,7 +2,8 @@
 # Cross-model A/B harness for prompt rules.
 # usage: ab.sh <scenario-file> <ask-file> <scorer.py> <n> <arm-name>=<arm-file|EMPTY> ...
 # Runs every arm on opus, sonnet and haiku, n trials each, in parallel.
-# Isolation: empty cwd + --setting-sources project, per the validate-prompt-rules skill.
+# Isolation: empty cwd + --setting-sources project. NOTE (2026-09-02): this does NOT drop ~/.claude;
+# SKILL.md's CLAUDE_CONFIG_DIR method does. Prefer preloaded.sh / agentic.sh; keep this for legacy runs.
 set -u
 # Saved replies contain the full scenario. Keep them owner-only even when
 # AB_RAW_DIR points somewhere the directory mode does not protect.

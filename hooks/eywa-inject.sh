@@ -22,6 +22,11 @@ session_id=$(printf '%s' "$input" | jq -r '.session_id // "default"' 2>/dev/null
 transcript_path=$(printf '%s' "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
 
 [ -z "$prompt" ] && exit 0
+# A harness-authored prompt has no question in it. 40 of 162 injections in one
+# four-day sample answered a <task-notification>, and what they retrieved was
+# the notification format itself.
+harness_envelope='^[[:space:]]*<(task-notification|agent-message|teammate-message)'
+[[ "$prompt" =~ $harness_envelope ]] && exit 0
 
 # ── Preceding conversation ──
 # Most prompts cannot be searched alone: 57% of real interactive prompts are 40
