@@ -85,7 +85,7 @@ These rungs are Layer 1: what to look for. When a rung fires, or when the diff t
 
 ## Quality
 
-1. **Altitude** — a special case layered on shared infrastructure means the fix sits too shallow; name the underlying mechanism to generalize instead. A special case that also breaks a stated CLAUDE.md rule (Code Style's restructuring rule, for instance) files once, under Conventions — not here too.
+1. **Altitude** — a special case layered on shared infrastructure means the fix sits too shallow; name the underlying mechanism to generalize instead. A second site of the same pattern that the diff judges unaffected is a finding unless the report names the consumers of that site's value it checked; a symptom that looks fine at the site is not a check. A special case that also breaks a stated CLAUDE.md rule (Code Style's restructuring rule, for instance) files once, under Conventions — not here too.
 2. **Redundant state** — duplicates existing state, cacheable-derivable values, observers that could be direct calls
 3. **Parameter sprawl** — new params instead of restructuring existing ones
 4. **Copy-paste with variation** — near-duplicate blocks needing a shared abstraction (`ecp find` confirms whether one is already canonical)

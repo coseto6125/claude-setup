@@ -78,6 +78,10 @@ Hunt for passages that refactor into leading words. A triad spelled out at three
 
 You win twice: fewer tokens, and a sharper hook for the agent to hang its thinking on. Assume every document carries restatements that leading words retire, and go find them.
 
+**Class and instance.** A class sentence names the whole category ("name each input's atypical states"). An instance list names members ("empty, absent, a list where a scalar is expected"). Opus acts on the class sentence alone; haiku acts only when the instances are listed; the class sentence also covers members the list omits. Write the class sentence in the always-loaded file. Add the instance list where a haiku or sonnet reader loads the same text, such as an implementer's prompt.
+
+> Measured 2026-09-11, one plant, n=5 per arm: opus control 0/5, class-only 5/5, class+list 5/5; haiku control 0/5, class-only 0/5, class+list 4/5. Earlier the reverse: a list-only rule scored 0/6 outside its list until a class sentence was added (6/6).
+
 **Negation** is the failure mode beside this lever. A prohibition drags the forbidden behaviour into context, and makes it _more_ available, not less. _Don't think of an elephant_, and the elephant is all there is. The negation is a weak modifier, the strongly-activated concept overruns it, and the ban half-reads as an instruction to do the thing. Prompt the **positive** instead. State the target behaviour ("write one-line comments"), so you never speak the banned one. A prohibition earns its place only as a hard guardrail that you cannot phrase positively. Even then, pair it with the positive target, so attention lands on what to do. Before you rewrite an existing red line as a positive, A/B both wordings with `validate-prompt-rules`, and keep the negative if the rewrite measurably leaks.
 
 ## Sentence style

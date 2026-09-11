@@ -85,6 +85,22 @@ $ASK" --model haiku --setting-sources project \
 
 Probe on **Haiku** first — the weakest reader that loads the prompt is the stress test. For many rules — plus retries, randomized arm order, per-probe metadata, and an automated contamination gate — use `validate.sh`.
 
+## Two questions, two controls
+
+"Is this rule worth anything at all?" takes the bare control above. "Does this line add anything to what the reader already loads?" takes a control that **preloads the deployed files**: copy `~/.claude/CLAUDE.md` with its `@`-included siblings into `$CFG`, put the project `CLAUDE.md` in the probe's cwd, and run `--setting-sources user,project`. Skills do not load in `-p`; when a skill description is part of the deployed baseline, append it to the project file. `preloaded.sh` does this for a directory of probe JSONs (`scenario`, `ask`, `hit_regex`, `scope`) and a directory of `NN.A.txt` / `NN.B.txt` rule files.
+
+> Measured 2026-09-11: 26 design rules that looked useful against a bare reading were 25/26 saturated against the preloaded control on opus. The bare control answers a different question. Rows and numbers: `measurements.md`.
+
+## When the behaviour is "go and look"
+
+A scenario that pastes the code puts the plant in view, and any rule about *finding* it saturates by construction. Probe that class agentically: `agentic.sh` copies a repo snapshot into a fresh dir per run, seeds git, runs `claude -p` with tools on and `--output-format stream-json`, and leaves `diff.patch` plus the tool trace. Put the plant outside the excerpt (a second call site, a doc line, a caller in another file) and score the diff, not the prose. Budget one to ten minutes and a few dollars per opus run.
+
+> Measured 2026-09-11: the historical miss the rule targeted was fixed 3/3 by the preloaded control in a fresh session; the rule arm matched it and cost 30% more.
+
+## Before trial 1: test the classifier both ways
+
+Run `hit_regex` against one hand-written plausible hit **and** one plausible miss. Then, after the run, read two rows per cell before quoting a number: a static `Http::timeout(` versus `->timeout(`, a test class named `…BatchTest`, a `(bool)` cast copied from the excerpt each turned a real 5/5 into a reported 1/5 in one session.
+
 ## Reading the result
 
 Classify each answer against the predeclared target behavior, then evaluate two questions:
