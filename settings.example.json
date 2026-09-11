@@ -58,13 +58,26 @@
       "Bash(ecp find-schema-bindings:*)",
       "Bash(ecp find-transaction-patterns:*)"
     ],
-    "deny": [],
+    "deny": [
+      "SendFeedback"
+    ],
     "ask": [],
     "defaultMode": "bypassPermissions"
   },
   "disabledMcpjsonServers": [
     "claude_ai_Notion"
   ],
+  "skillOverrides": {
+    "dataviz": "user-invocable-only",
+    "design": "user-invocable-only",
+    "code-review": "user-invocable-only",
+    "schedule": "user-invocable-only",
+    "run": "user-invocable-only",
+    "loop": "user-invocable-only",
+    "keybindings-help": "user-invocable-only",
+    "fewer-permission-prompts": "user-invocable-only",
+    "init": "user-invocable-only"
+  },
   "hooks": {
     "PostToolUse": [
       {
@@ -345,6 +358,5 @@
   "theme": "dark",
   "autoCompactEnabled": true,
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
-  "model": "claude-fable-5-1[1m]"
+  "skipAutoPermissionPrompt": true
 }
