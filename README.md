@@ -15,12 +15,13 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `skills/` | description resident, body on invocation | 25 written here, plus 32 directories vendored from `claude-seo` |
 | `settings.example.json` | copy to `~/.claude/settings.json` | read the security notes first |
 
-### The 25 skills written here
+### The 27 skills written here
 
 | Skill | What it does | Origin |
 | --- | --- | --- |
 | `agent-routing` | Picks the runner for a piece of work, and which browser drives a page | — |
 | `authority-check` | The design questions to settle before writing code that carries authority | — |
+| `context-audit` | Audit what fills the context window, examine usage and dependencies, and recommend changes that fit the user's | — |
 | `codebase-design` | Vocabulary for deep modules: interfaces, seams, testability | mattpocock |
 | `dep-audit` | Upgrades every dependency to latest and audits the breakage against real usage | — |
 | `domain-modeling` | Ubiquitous language and ADRs | mattpocock |
@@ -33,6 +34,7 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `improve-codebase-architecture` | Scans for deepening opportunities, reports them as HTML | mattpocock |
 | `mpm` | Reads and updates the cross-session follow-ups log through the `mpm` CLI | — |
 | `peer-agent` | Runs codex or another Claude as the implementer while you gate the merge | — |
+| `preflight` | Six design questions answered in one line each before a new module; user-invoked | — |
 | `pr-finalize` | Removes a finished PR's worktree and branch | — |
 | `pr-review-multiagent` | Six-angle merge-readiness review, posted to the PR | — |
 | `python-perf` | Package defaults, class shape and the selection tables for Python | — |
@@ -87,7 +89,7 @@ The other five ship unwired, so wire them yourself or delete them. `audit-skill.
 
 **`skills/improve-codebase-architecture` produces an HTML report that loads CDN scripts.** Tailwind and Mermaid come from `cdn.tailwindcss.com` and `cdn.jsdelivr.net` with no integrity pin, and Mermaid initialises at `securityLevel: "loose"`. The report holds your repository's structure and the skill opens it in your browser.
 
-**`skills/validate-prompt-rules/route.sh` copies `.credentials.json` into a temp directory.** The A/B arms authenticate from that copy. `mktemp -d` gives the directory mode 0700 and the copy keeps the source's 0600, so another account cannot read it, and an `EXIT INT TERM` trap removes it on every exit path. It is still a second plaintext token on disk while the script runs.
+**`skills/validate-prompt-rules/route.sh`, `preloaded.sh` and `agentic.sh` copy `.credentials.json` into a temp directory.** The A/B arms authenticate from that copy. `mktemp -d` gives the directory mode 0700 and the copy keeps the source's 0600, so another account cannot read it, and an `EXIT INT TERM` trap removes it on every exit path. It is still a second plaintext token on disk while the script runs.
 
 ## The output style reaches the main session only
 

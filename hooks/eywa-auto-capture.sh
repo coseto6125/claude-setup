@@ -65,6 +65,12 @@ if [ -n "$transcript_path" ] && [ -r "$transcript_path" ]; then
 
         user_text=$(printf '%s\n' "$slice" | head -1 \
             | jq -r '.message.content // empty | if type == "string" then . else "" end' 2>/dev/null || true)
+        # A turn the harness opened — a task notification, a teammate's message —
+        # carries no knowledge of its own, and the extractor reads the envelope
+        # instead: "a task notification carries a task-id and a status field" was
+        # stored and re-injected nine times in four days.
+        harness_envelope='^[[:space:]]*<(task-notification|agent-message|teammate-message)'
+        [[ "$user_text" =~ $harness_envelope ]] && exit 0
 
         # Pull every text block from every assistant message in this turn,
         # joined in order.

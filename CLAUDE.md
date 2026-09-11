@@ -39,7 +39,7 @@
 
 ## Test Discipline
 
-- New feature ships with tests (happy path + key edge cases). **Write a test that reproduces the bug, then make it pass.**
+- New feature ships with tests. Before the test list is complete, name each input's atypical states and each dependency's failure. Every state named is a test. **Write a test that reproduces the bug, then make it pass.**
 - An infeasible test (UI / external service / manual-only) → say so with the reason, don't skip silently
 - Test files: omit shebang; naming `test_[function]_[scenario]_[expected]`
 - Tests call the actual functions — never duplicate the logic-under-test into the test (false positives when source changes)
@@ -116,7 +116,7 @@ This section is the canonical dispatch policy — skills that fan out defer to i
 
 ### What a delegate returns
 
-**Before you act on anything a sub-agent reports, re-run the check yourself.** Require the command it ran and that command's raw output. A claim you have not re-run is a lead, not a fact.
+**Before you act on anything a sub-agent reports, re-run the check yourself.** Require the command it ran and that command's raw output. A count in a report comes from a command's output; a hand tally is a guess. A claim you have not re-run is a lead, not a fact.
 
 From sonnet up, require **blind spots** too: what it did not read, run, or verify. A wrong claim gets caught on re-check; a silent gap does not.
 
@@ -139,11 +139,13 @@ Subscription-billed, so its capacity is free. Reach for it where a *different* p
 
 Always pass an explicit model matched to task difficulty. When unsure between two tiers, pick the lower one. State the chosen config plus a one-line rationale so the user can override.
 
-- **Haiku 4.5** — read-only inventory, grep/stats aggregation, single-rule application, dead-code removal, fixture sampling, per-item scoring against a fixed rubric (`subagent_type: lite-scan` when read-only suffices)
-- **Sonnet 5** — standard implementation, bounded TDD, checklist-driven review of a scoped diff
+- **Haiku 4.5** — read-only inventory, grep/stats aggregation, single-rule application when the rule lists its instances, dead-code removal, fixture sampling, per-item scoring against a fixed rubric (`subagent_type: lite-scan` when read-only suffices)
+- **Sonnet 5** — standard implementation with the reuse or extraction named in the brief, bounded TDD, checklist-driven review of a scoped diff
 - **Opus 5** — design judgment, cross-cutting architecture, ambiguous scope, security review, reverse-engineering (`subagent_type: deep-review` when read-only suffices)
 
 For read-only work name the `subagent_type` (`lite-scan`, `deep-review`), not the bare model; they add the role prompt and the tool whitelist.
+
+A Haiku or Sonnet implementer gets the edge list pasted into its prompt: empty · absent · a list where a scalar is expected · a string of only whitespace · the dependency it calls is down · the same action fires twice while the first is in flight · output another program parses.
 
 Escalate one tier when risk is high (see *When to dispatch*) or a lower-tier attempt already failed. The model x effort grid, the `effort-<level>` definitions and the per-MTok prices live in the `agent-routing` skill.
 

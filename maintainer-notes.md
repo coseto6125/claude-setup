@@ -398,3 +398,39 @@ independent cross-family reviewer", so it CAN hit. n=8 on haiku across two runs.
 
 B shipped. A scoring 0/8 is correct behaviour for A, not a defect: at Tier 1 the old rule does not
 fire by design. What the probe measures is that the new wording reaches even haiku, 7/8.
+
+## Test Discipline, first sentence reworded 2026-09-11 — pilot only (n=5), opus effect clear
+
+Old: "New feature ships with tests (happy path + key edge cases)." New: "New feature ships with tests.
+Before the test list is complete, name each input's atypical states and each dependency's failure.
+Every state named is a test." The measured second sentence ("Write a test that reproduces the bug…")
+is untouched.
+
+Probe: a real plant from a PHP package (copy the change-log keyword search to a new endpoint; the excerpt's own
+`trim()` is ASCII-only). Every arm preloaded this CLAUDE.md + the project CLAUDE.md +
+authority-check's description, isolated via CLAUDE_CONFIG_DIR. Target: the new code handles or
+tests a whitespace-only keyword.
+
+| arm | opus | haiku |
+|---|---|---|
+| control | 0/5 | 0/5 |
+| class sentence only (shipped) | 5/5 | 0/5 |
+| class sentence + seven-item edge list | 5/5 | 4/5 |
+
+Opus needs no instances; haiku needs them. The seven items therefore live in Dispatch ("A Haiku or
+Sonnet implementer gets the edge list pasted into its prompt"), not in Test Discipline. A class-level
+security sentence ("foreign value") was probed the same day: saturated on opus (control guarded the
+new query param 5/5), inert on haiku (0/5, 1/5, 0/5) — not added. Rows: session scratchpad
+`raw26/27-*`, `raw26/28-*`; ledger in `LEDGER.md` there. Re-probe at n≥15 before treating as settled.
+
+## Dispatch tier descriptions, three clauses added 2026-09-11 — from session observation, not probed
+
+- "What a delegate returns": "A count in a report comes from a command's output; a hand tally is a guess." Three sonnet classifier reports in one session hand-tallied wrong totals (one agent twice); the jsonl they wrote was correct.
+- Haiku tier: "single-rule application when the rule lists its instances." An abstract edge-case rule was 0/5 on haiku and 4/5 with its seven instances listed; an abstract security rule 0/5 either way (n=5, see the Test Discipline entry above).
+- Sonnet tier: "standard implementation with the reuse or extraction named in the brief." Round 1 preflight probe: sonnet noticed a third copy of duplicated logic and wrote "keeping the existing style" 5/5; opus extracted 8/15.
+- `agents/lite-scan.md` body: line numbers only from tool output, counts only from a command. From the memory `subagent-goes-idle-without-reporting` (haiku line numbers drift) plus the hand-tally incidents.
+Effort levels untouched: no dispatch this session used an `effort-*` type and none showed a deliberation failure; the classifier false negatives were acceptance-criterion gaps (regex not tested against a plausible miss), not effort.
+
+## Not added 2026-09-11, and preflight made user-invoked — pilot evidence
+
+Six open design questions (`preflight`) moved opus against a bare control (reuse 8/15 vs 0/15) but 26 such rules moved nothing against this CLAUDE.md preloaded (25/26 control 5/5). Rewriting the questions as action sentences dropped compliance 15/15 → 0/15. Seven action-shaped lookup lines matched control 3/3 in an agentic run and added a dependency in 2/3. So: no design/review rules added for opus; `preflight` is `disable-model-invocation: true`, value for new modules unmeasured. Untested lever: a fresh session fixed the historical miss a long session judged wrong (context cleanliness, not wording). Evidence: `skills/validate-prompt-rules/measurements.md`.
