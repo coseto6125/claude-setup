@@ -24,8 +24,8 @@ Pick the LOWEST tier the diff qualifies for; Phase-2 risk moves it up.
 | Tier | When | Dispatch |
 |------|------|----------|
 | 0 | docs / comments / lockfile-only | No review. Say so and stop. |
-| 1 | <3 files **or** <100 LOC | **Zero Claude agents** — the orchestrator self-reviews against [`CHECKLIST.md`](CHECKLIST.md). |
-| 2 | ≤10 files **and** ≤400 LOC | **One Claude agent** carrying every checklist section. |
+| 1 | <3 files **or** <100 LOC | **Zero Claude agents** — the orchestrator self-reviews against [`CHECKLIST.md`](CHECKLIST.md), plus the free third reader below. |
+| 2 | ≤10 files **and** ≤400 LOC | **One Claude agent** carrying every checklist section, plus the free third reader below. |
 | 3 | bigger, or cross-crate/cross-package, or Phase-2 HIGH risk | Parallel Claude agents, one per dimension the diff can violate. |
 
 Every tier from 1 up also runs codex — see **Cross-family** below. The tier sets how many Claude agents read the diff. A second model family reads it either way.
@@ -58,6 +58,24 @@ Every tier launches at `medium`; the `peer-agent` skill's *Model and effort* hol
 
 Launch mechanics, and how to tell a finished peer from a dead one, live in the `peer-agent` skill. A `codex` that is missing, unauthenticated, or still running when you finish is a downgrade. Report it in the summary as `cross-family skipped: <reason>`. A peer whose report you could not find is not one of those — go read the end of its log before you call it skipped.
 
+**Free third reader — Tiers 1 and 2.** Both tiers also send the whole diff to `nvidia/nemotron-3-super-120b-a12b:free`, a third model family whose capacity costs nothing:
+
+```bash
+python3 ~/.claude/skills/simplify/free-reader.py "<scratchpad>/free-brief.md" "<scratchpad>/free-review.md" &
+```
+
+Write the brief to a file first. It is the Phase-4 agent preamble with the diff pasted in full and the ecp lines dropped: this reader has no tools and no repo access, so a path it cannot open is a section it cannot review. Drop the absolute repo path with them, and say what the code is for instead — this brief leaves the machine, and the path names the user, the client and the project. Read the diff before you send it: a hunk that REMOVES a credential still carries that credential in its `-` lines.
+
+**Read its report as leads, not as findings.** Take the file:line and the claim. Discard its failure_scenario and its confidence score, and verify the location yourself. This reader does not carry the confidence protocol the Claude agents carry, so its output never enters the Phase-5 ladder on its own numbers.
+
+Measured 2026-09-11 across three trials on a diff whose defects resolve only outside the hunk window. It located four of five planted defects in every trial, from the diff alone. It also invented the failure_scenario for them in every trial: for one generator-returning function it claimed the break was `len(tags)`, then `if tags:`, then `tags.append`, at confidence 93 to 95, while the real break was a caller consuming the generator twice and printing an empty line. Three wrong scenarios, one right location, same defect. So the location is worth reading and the scenario is worth nothing.
+
+The reader missed one planted defect in all reads, with the `with` statement and the `requests.get` both in front of it: a lock held across a network call. Treat concurrency and lock scope as uncovered by this reader whatever its report says.
+
+**A second round is optional.** A third argument naming a file of context — the full current text of the files the diff touches, plus the callers `ecp impact --direction upstream` names — makes the reader re-report against it. Measured on the same trials: it corrected the invented scenario every time, and surfaced one lead it had missed in one trial of three. Pass it when you want that extra lead; skip it when you are going to verify the locations yourself anyway, which the rule above says you are.
+
+Launch exactly one, and only at Tier 1 or Tier 2. Measured 2026-09-11 against a fixture carrying four planted defects. On a 52-line diff it found all four in every run, in 40 to 95 seconds, and reported `Clean, no findings` on a control diff of real improvements. With the same four defects buried in a 2034-line diff it found 2.3 of four across three runs: it keeps the two loudest and drops the two quieter ones every time. Recall falls as the diff grows, so this reader earns its place where the diff is small and the roster is thin. Three calls in parallel leave one hanging past 200 seconds, so a Tier-3 fan-out does not buy the recall back. A `TRUNCATED` line at the end of its report means the tail is missing, not that the tail is clean. A non-zero exit prints its own reason; report it as `free reader skipped: <reason>` and carry on.
+
 **Dispatching is part of the invocation.** Reaching this skill is the request for the tier's review, so the agents that tier names need no separate approval. Launch them. A standing session rule about asking first covers agents you decide to spawn, and the tier table decided this one.
 
 Walk the dimensions yourself only when the `Agent` tool is absent from your tool set, and open the summary with `Tier <n>, run inline: Agent tool unavailable`. That is a downgrade you report, not a judgement call you justify.
@@ -87,7 +105,7 @@ Agent preamble:
 
 ## Phase 5: Aggregate and fix
 
-Wait for every reviewer, codex included, then act by confidence, scored against the anchors in [`CHECKLIST.md`](CHECKLIST.md#confidence):
+Wait for every reviewer, codex and the free reader included. Act by confidence, scored against the anchors in [`CHECKLIST.md`](CHECKLIST.md#confidence); the free reader's own scores do not count toward these bands, per its section above:
 
 - **≥70** — re-check the finding against the evidence it carries, then fix. Re-checking is one jump to the cited line or command output, not a repeat of the reviewer's search.
 - **50–69** — list in the summary as "worth a look".
