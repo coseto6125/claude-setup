@@ -2,6 +2,11 @@ __pycache__/
 *.pyc
 .DS_Store
 
+# probe and scan outputs: a skill's evidence lives in its .md, not in a run log
+results.jsonl
+.last-checked
+*.tsv.bak
+
 # live config that carries keys or machine state
 settings.json
 *.local.json
