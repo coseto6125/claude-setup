@@ -12,15 +12,13 @@ Every finding carries a score 0–100 against these anchors:
 - **75** — very likely real and reachable in production, or an explicit CLAUDE.md violation
 - **100** — certain bug, data corruption, or hard crash
 
-Score 0 for anything in these classes: a line outside the diff · anything lint or typecheck catches · a nitpick a senior engineer would let pass · a generic test-coverage / docs ask with no rule behind it · a security ask that names no unauthorised caller (the Security section sets that bar) · code already carrying `# noqa` or `# type: ignore` · a deliberate behaviour change that is the point of the change.
+Score 0 for anything in these classes: a line outside the diff, except a stale sentence that Quality's *Prose drift* rung names · anything lint or typecheck catches · a nitpick a senior engineer would let pass · a generic test-coverage / docs ask with no rule behind it · a security ask that names no unauthorised caller (the Security section sets that bar) · code already carrying `# noqa` or `# type: ignore` · a deliberate behaviour change that is the point of the change.
 
-The gate sits where the reader decides, so each skill states its own: [`simplify`](SKILL.md) fixes at 70, because a local fix is cheap to undo. `pr-review-multiagent` posts at 75, because a PR comment is public.
-
-**A finding that clears the gate carries its fix.** The fix is the concrete change: the edited line, the command to run, the block to delete. "It is small", "the code works today", and "the change is too big to apply here" are the reader's reasons to decline that fix. None of them lets the report name the problem and stop there. A finding that stays unapplied carries its fix as a proposal. A finding that never matched a rung is governed by the score-0 list above instead.
+**A finding that clears its skill's gate carries its fix.** The fix is the concrete change: the edited line, the command to run, the block to delete. "It is small", "the code works today", and "the change is too big to apply here" are the reader's reasons to decline that fix. None of them lets the report name the problem and stop there. A finding that stays unapplied carries its fix as a proposal. A finding that never matched a rung is governed by the score-0 list above instead.
 
 ## Spec (intent)
 
-Applies only when a spec source resolved; with none, record "no spec available" and move on. This axis reports on its own and is never merged into the others: code can follow every convention, pass every correctness rung, and still implement the wrong thing, so a clean sweep elsewhere must not read as spec conformance.
+Applies only when a spec source resolved; with none, record "no spec available" and move on.
 
 1. **Missing or partial requirements** — something the spec asked for that the diff doesn't deliver; quote the spec line
 2. **Scope creep** — behaviour in the diff nobody asked for; quote the hunk and name the spec section it fails to trace to
@@ -97,6 +95,7 @@ These rungs are Layer 1: what to look for. When a rung fires, or when the diff t
 10. **WHAT-comments** — delete (identifiers say it); keep only non-obvious WHY
 11. **Unverified claims** — a comment that asserts a fact about the world, not intent: "output is unchanged", "these layouts share a path". It carries the command that proves it. Run that command, mark the sentence as an assumption, or delete it
 12. **Ambient test state** — a new test reads env vars, cwd, process-global statics, or a shared test binary. Name what it reads, then pin it or remove it. A pass counts as evidence once its reason is established
+13. **Prose drift** — the diff changes behaviour, but a sentence that describes the old behaviour stays. List every name and value the diff changes: a symbol, a renamed or deleted name, a parameter, a flag, a config key, a default, a return shape, an output format, a file path. For each one, read the docstring and comments of its enclosing function, and of each caller that `ecp impact --target X --direction upstream` names. Then grep the repo's non-code text for the old and the new name: README, `docs/`, CLAUDE.md, SKILL.md, `--help` strings, example configs, error messages that give instructions. The rung is done when every listed name has a hit list that ends as a finding or as clear. A stale sentence is a finding inside the diff or outside it. The finding quotes the stale sentence and the hunk that contradicts it. Without that pair it is a generic docs ask, and scores 0. Its failure_scenario names the reader who acts on the stale sentence and what then breaks. A sentence that states the old behaviour as fact scores 75. A changelog entry for a past release records history, so it stays as written
 
 **Readability guardrail** — a fix must make the code *easier to read*, not merely shorter. Reject clarity-for-line-count trades: dense one-liners, over-clever collapses, merging distinct concerns, dropping an abstraction that earned its place.
 

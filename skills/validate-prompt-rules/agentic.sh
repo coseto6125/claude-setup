@@ -3,7 +3,9 @@
 # base/ = repo snapshot (git archive <ref> | tar -x), task.txt = the request, rules/<arm>.txt = appended rules.
 # Each run: fresh copy, git init+commit, claude -p with tools on, stream.jsonl + diff.patch + status.txt left in runs/<arm>.<i>/.
 set -u
-A="${WORK:-$PWD}"; export A   # WORK holds base/ (repo snapshot), rules/, task.txt, runs/
+[ -n "${WORK:-}" ] && [ -d "$WORK/base" ] && [ -f "$WORK/task.txt" ] || { sed -n 2p "$0" >&2; exit 2; }
+for arm in ${ARMS:-control seven codex3}; do [ "$arm" = control ] || [ -f "$WORK/rules/$arm.txt" ] || { echo "missing $WORK/rules/$arm.txt" >&2; exit 2; }; done
+A="$WORK"; export A   # WORK holds base/ (repo snapshot), rules/, task.txt, runs/
 export CLAUDE_CONFIG_DIR=$(mktemp -d); trap 'rm -rf "$CLAUDE_CONFIG_DIR"' EXIT INT TERM; printf '{}' > "$CLAUDE_CONFIG_DIR/settings.json"
 cp ~/.claude/.credentials.json ~/.claude/CLAUDE.md ~/.claude/RTK.md ~/.claude/ECP.md "$CLAUDE_CONFIG_DIR"/
 PROJ_MD="${PROJ_MD:-}"; export PROJ_MD

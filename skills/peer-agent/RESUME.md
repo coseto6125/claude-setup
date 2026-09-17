@@ -6,12 +6,13 @@ the peer dies with it. Relaunching from the brief throws away every file the pee
 
 ## Tell a cut-off run from a finished one
 
-A finished run ends with the report you asked for, then a `tokens used` line. A cut-off run ends
-inside a tool trace, most often on a `hook: PostToolUse Completed` line. Read the tail of the log
-before you conclude anything about the findings:
+A finished run holds one `tokens used` line. With stdout and stderr in one log, the report appears
+twice: in the trace before that line, and again after it, as the log's last lines. A cut-off run has
+no `tokens used` line and ends inside a tool trace, most often on a `hook: PostToolUse Completed`
+line. Check for the line before you conclude anything about the findings:
 
 ```bash
-tail -4 "$SCRATCH/codex-<task>.log"
+grep -cx 'tokens used' "$SCRATCH/codex-<task>.log"   # 1 finished, 0 cut off
 ```
 
 A log that ends mid-trace carries no verdict. Treat "no findings reported" from such a log as "no

@@ -77,7 +77,7 @@ These are properties of this configuration, not defects. Read them before you co
 
 **The permission `allow` list runs to 45 entries.** Each one is a subcommand pattern rather than a whole command family, and the widest of them (`Bash(python3:*)`, `Bash(xargs:*)`, `Bash(cat:*)`) approve an arbitrary argument to a general-purpose program. Combined with the mode above, that is the real reach. Cut the list down to what you run.
 
-**Hooks execute on every matching event.** `hooks/` holds twelve scripts and `settings.example.json` wires seven of them: `auto-etoon.sh`, `limit-worktrees.sh`, `guard-main-edit.sh`, `guard-push-simplify.sh` and `ecp-graph-nudge.sh` on `PreToolUse`, `idle-guard-stop.sh` on `Stop`, `idle-guard-submit.sh` on `UserPromptSubmit`. Read each one before you install it. `guard-main-edit.sh` enforces a rule `CLAUDE.md` only states — it refuses an edit to a file on the default branch and prints the worktree command to use instead. `guard-push-simplify.sh` blocks `git push` until `/simplify` has run in that session. `ecp-graph-nudge.sh` hands over the exact `ecp impact` command a symbol's direct callers cannot answer on their own.
+**Hooks execute on every matching event.** `hooks/` holds fourteen scripts and `settings.example.json` wires nine of them: `auto-etoon.sh`, `limit-worktrees.sh`, `guard-main-edit.sh`, `guard-push-simplify.sh` and `ecp-graph-nudge.sh` on `PreToolUse`, `idle-guard-stop.sh` on `Stop`, `idle-guard-submit.sh` on `UserPromptSubmit`, `patch-tool-persist.py` and `prune-scratchpad.sh` on `SessionStart`. Read each one before you install it. `guard-main-edit.sh` enforces a rule `CLAUDE.md` only states — it refuses an edit to a file on the default branch and prints the worktree command to use instead. `guard-push-simplify.sh` blocks `git push` until `/simplify` has run in that session. `ecp-graph-nudge.sh` hands over the exact `ecp impact` command a symbol's direct callers cannot answer on their own. `prune-scratchpad.sh` deletes every session temp directory under `$CLAUDE_CODE_TMPDIR` in which nothing changed for 14 days (`SCRATCH_KEEP_DAYS`), so a file you parked in a scratchpad is gone two weeks after its session last wrote there. Run it with `--dry-run` first to see the list.
 
 The other five ship unwired, so wire them yourself or delete them. `audit-skill.sh` belongs on `PostToolUse` for `Edit`, `Write` and `MultiEdit`, and checks a `SKILL.md` against the measurable rules the moment it is written. `worktree-symlinks.sh` is the second. The three `eywa-*.sh` scripts are the rest: they inject coding principles on `UserPromptSubmit`, capture them on `Stop`, and clear the session cache on `PreCompact`. They read `$HOME/.eywa/` and query a local server on `127.0.0.1:8788`; without that server running, `eywa-inject.sh` is a no-op.
 
@@ -113,7 +113,7 @@ Measured, not estimated: `claude -p "Reply with exactly: OK" --output-format jso
 
 The decomposition is additive: 34,987 − 9,748 − 5,137 = 20,102.
 
-These numbers were measured before the private-workspace material came out, so the `CLAUDE.md` family and the skills listing now cost a little less than the table says. Re-run the command above to get the figure for this tree.
+These numbers predate later edits to the `CLAUDE.md` family and the skills. Re-run the command above to get the figure for this tree.
 
 Per-tool schema cost, from `--disallowedTools <tool>`:
 

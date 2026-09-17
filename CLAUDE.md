@@ -109,6 +109,7 @@ This section is the canonical dispatch policy — skills that fan out defer to i
 
 - **Fan-out** — give each independent sub-goal its own acceptance criterion before dispatching it. Cap parallel agents at 20 unless the user asks for more. **Never open one of the targets yourself to calibrate the fan-out.** Calibration belongs in the acceptance criterion you write, not in your own context. Dispatch first; if the returns show the criterion was wrong, fix the criterion and re-dispatch.
 - **Adversarial** — dispatch an independent verifier when a conclusion is expensive to get wrong.
+- **Phase** — an implementer runs one phase: write, or make the tests pass, or fix the audit findings. A fresh agent takes the next phase through one hand-off file in the scratchpad. Size each phase to end under 150k tokens of context, because every turn re-reads the whole context and the spend grows with its square. A transcript that ended above 200k is the signal to split the next brief finer. Measured 2026-09-15: four implementers ran 221 to 335 turns to 370k to 471k, and 78 to 95% of their spend fell after 200k.
 
 **Risk is inferred, not looked up.** Structural signals set the floor: `ecp impact` upstream fan-in, and auth / payment / schema-migration / concurrency paths. Raise it from what the user emphasised this turn and from what the project itself guards. Take the highest; one sentence from the user ("just a prototype") lowers it.
 
@@ -146,6 +147,8 @@ Always pass an explicit model matched to task difficulty. When unsure between tw
 For read-only work name the `subagent_type` (`lite-scan`, `deep-review`), not the bare model; they add the role prompt and the tool whitelist.
 
 A Haiku or Sonnet implementer gets the edge list pasted into its prompt: empty · absent · a list where a scalar is expected · a string of only whitespace · the dependency it calls is down · the same action fires twice while the first is in flight · output another program parses.
+
+A brief names the function or the line range for every file over 200 lines it sends the agent to, so the agent reads it with `offset`/`limit` and never the whole file. It also pastes the batching instances: `cd` and the command after it are one call, and consecutive grep, sed and test runs are one call. Measured 2026-09-15: without these two lines, sonnet implementers read a 31k-token file whole four times and issued 87 to 114 single-command Bash calls each.
 
 Escalate one tier when risk is high (see *When to dispatch*) or a lower-tier attempt already failed. The model x effort grid, the `effort-<level>` definitions and the per-MTok prices live in the `agent-routing` skill.
 

@@ -3,7 +3,9 @@
 # probes/<id>.json needs scenario, ask, hit_regex, scope; rules/<NN>.<arm>.txt is injected as "RULE you follow: …" where NN = id prefix.
 # Control preloads ~/.claude/CLAUDE.md (+RTK, ECP) unless PRELOAD_USER=0. Score with score26.py-style regex over raw/.
 set -u
-S="${WORK:-$PWD}"; export S   # WORK holds probes/, rules/, raw/
+[ -n "${WORK:-}" ] && [ -d "$WORK/${PROBES_DIR:-probes}" ] || { sed -n 2p "$0" >&2; exit 2; }
+for arm in ${ARMS:-control A B}; do [ "$arm" = control ] || [ -d "$WORK/${RULES_DIR:-rules}" ] || { echo "missing $WORK/${RULES_DIR:-rules}/" >&2; exit 2; }; done
+S="$WORK"; export S   # WORK holds probes/, rules/, raw/
 export CLAUDE_CONFIG_DIR=$(mktemp -d); trap 'rm -rf "$CLAUDE_CONFIG_DIR"' EXIT INT TERM; printf '{}' > "$CLAUDE_CONFIG_DIR/settings.json"
 cp ~/.claude/.credentials.json "$CLAUDE_CONFIG_DIR"/; [ "${PRELOAD_USER:-1}" = 1 ] && cp ~/.claude/CLAUDE.md ~/.claude/RTK.md ~/.claude/ECP.md "$CLAUDE_CONFIG_DIR"/
 echo "user surface:"; ls -A "$CLAUDE_CONFIG_DIR"
