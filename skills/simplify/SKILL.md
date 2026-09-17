@@ -36,27 +36,22 @@ Every tier from 1 up also runs codex — see **Cross-family** below. The tier se
 
 **Cross-family — always.** Every tier from 1 up launches `codex` alongside its own agents. A second Claude agent carries your priors and misses what you miss. A different model family is the only reader whose mistakes are uncorrelated with yours, and its capacity is subscription-billed. Tier 0 stops before any review, so it launches nothing.
 
-Carry the brief in the launch prompt. A review is one-shot, so the brief needs no
-file of its own — `peer-agent`'s *Two ways to run a peer* covers keeping the brief
-and the report together on disk once the report lands.
-
 Pick the mode from the `peer-agent` skill's *Two ways to run a peer*: supervised through
 Orca when Orca is up, so the report arrives as a `worker_done` message you wait on;
-detached otherwise. The detached form, launched read-only from the repo root at the same
-time as the tier's agents:
+detached otherwise. The detached form runs from the repo root at the same time as the
+tier's agents. Write the brief to a file, then start this as a background Bash call:
 
 ```bash
-setsid codex exec -m gpt-6-astra -c model_reasoning_effort="medium" \
-  --sandbox read-only --skip-git-repo-check -C "$PWD" \
-  "<the brief>" \
-  < /dev/null > "<scratchpad>/codex-review.log" 2>&1 & disown
+bash ~/.claude/skills/simplify/codex-review.sh "<scratchpad>/codex-brief.md" "<scratchpad>/codex-review.md"
 ```
+
+The script launches codex read-only at `medium`, waits for its report, and ends the codex process. It returns when the review ends, so the harness's completion notification is the signal: wait for it, then read the report file. A background call you start this way is the only watcher it needs.
 
 The brief carries the diff location and what the change is for. It also carries the decisions that were settled by argument rather than measurement, what any earlier round already found, and the finding format the agent preamble names. Ask it for a **challenge list**: every way a reader could legitimately attack this diff. Tell it that "clean, no findings" is a welcome result. The challenge list is the part same-family reviewers cannot give you.
 
-Every tier launches at `medium`; the `peer-agent` skill's *Model and effort* holds that rule. A brief wider than one reader holds is split across several peers at `medium`, one per dimension, each carrying only its own dimension.
+Every tier launches at `medium`; the `peer-agent` skill's *Model and effort* holds that rule. A brief wider than one reader holds is split across several peers at `medium`, one per dimension, each carrying only its own dimension: one brief file and one report file per peer.
 
-Launch mechanics, and how to tell a finished peer from a dead one, live in the `peer-agent` skill. A `codex` that is missing, unauthenticated, or still running when you finish is a downgrade. Report it in the summary as `cross-family skipped: <reason>`. A peer whose report you could not find is not one of those — go read the end of its log before you call it skipped.
+A non-zero exit is a downgrade. Exit 2 means codex ended without a report, 3 means no report before the timeout, and 4 means codex is missing or not logged in. Report the stderr reason in the summary as `cross-family skipped: <reason>`. A failed run keeps its log at `<report>.log`: read the end of that log before you call the run skipped.
 
 **Free third reader — Tiers 1 and 2.** Both tiers also send the whole diff to `nvidia/nemotron-3-super-120b-a12b:free`, a third model family whose capacity costs nothing:
 
@@ -97,8 +92,8 @@ The preamble below carries the review rules, not just the dispatch text: scope, 
 Agent preamble:
 
 > Repo at `<absolute path>`. Diff in `<location>`. Spec at `<path or fetched issue, else "none">`. Apply every rung of the `<sections>` sections of `~/.claude/skills/simplify/CHECKLIST.md`.
-> ecp pre-pass — changed_symbols: `<list>` · impact_by_symbol: `<symbol → upstream callers>` · risk: `<level>`.
-> Review the symbols that actually changed; the graph already proved the rename-only and formatting-only sections structure-preserving. Read the enclosing function of every hunk: a bug on an unchanged line of a touched function is in scope, because the diff re-exposes it. Dig in with `ecp inspect --name X --repo .`; blast radius with `ecp impact --target X --direction upstream --repo .`; "does this already exist?" with `ecp find "<concept>" --repo .`.
+> ecp pre-pass — changed_symbols: `<list>` · impact_by_symbol: `<symbol → upstream callers>` · risk: `<level>` · commands: one `ecp impact --target <symbol> --direction upstream --repo .` per changed symbol, listed here.
+> Review the symbols that actually changed; the graph already proved the rename-only and formatting-only sections structure-preserving. That proof covers code only: *Prose drift* still searches the text for every renamed name. Read the enclosing function of every hunk: a bug on an unchanged line of a touched function is in scope, because the diff re-exposes it. Run every command the pre-pass lists and paste each output under the finding it supports; a definition question goes to `ecp inspect --name X --repo .` and a reuse question to `ecp find "<concept>" --repo .`, output pasted the same way. Measured 2026-09-15: the generic "dig in with ecp" wording produced zero ecp calls across thirteen review agents.
 > Report each finding as file:line, what and why, suggested fix, a **failure_scenario** (concrete inputs or state, and the wrong output or crash they produce), and **confidence 0–100**. A finding you cannot give a failure_scenario for is not a finding — drop it rather than lowering its confidence. Realistic-but-rare state keeps its confidence: a race, a nil on a cold-cache path, a falsy zero, a boundary the code does not exclude. Score a finding below 50 only when the code refutes it — quote the line that makes it impossible, or the guard that already handles it. Carry the command you ran and its raw output so the orchestrator re-checks without redoing your search. Close with your blind spots: what you did not read, run, or verify. Report the findings you would defend at 50 or above.
 
 **Sweep — Phase-2 HIGH risk only.** Once the reviewers return, take one more pass yourself over the diff and its enclosing functions, holding their finding list. Look only for what the list misses: moved code that dropped a guard or an anchor, a default evaluated once at definition, a lock scope that shrank, setup/teardown asymmetry in tests, a config default flipped. An empty sweep is a valid result.
@@ -107,14 +102,13 @@ Agent preamble:
 
 Wait for every reviewer, codex and the free reader included. Act by confidence, scored against the anchors in [`CHECKLIST.md`](CHECKLIST.md#confidence); the free reader's own scores do not count toward these bands, per its section above:
 
-- **≥70** — re-check the finding against the evidence it carries, then fix. Re-checking is one jump to the cited line or command output, not a repeat of the reviewer's search.
-- **50–69** — list in the summary as "worth a look".
+- **≥50, the fix gate** — re-check the finding against the evidence it carries, then fix. Re-checking is one jump to the cited line or command output, not a repeat of the reviewer's search. The 50 anchor already means the finding is real. A finding whose evidence the re-check cannot confirm is not fixed: it goes under `## Scanned, not acted on`.
 - **<50** — drop. A finding you spent a command investigating and then rejected goes under a `## Scanned, not acted on` heading instead: one line each, carrying its score and why it stays.
 
 Fix everything you can reach. Three classes stay unapplied and go to the summary as proposals, each carrying the concrete change it proposes and one line saying why it stays unapplied:
 
 - a fix that changes intended behaviour
-- a fix that reaches outside the files the diff touches
+- a fix that reaches outside the files the diff touches, except a *Prose drift* fix: rewrite that stale sentence in any file of the repo
 - a fix big enough to be its own change: a refactor, an API change, a migration
 
 A false positive at any confidence → note it and move on. After fixing, `ecp find <changed-symbol> --repo .` confirms the fixed symbols still resolve.

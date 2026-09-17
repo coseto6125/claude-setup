@@ -37,7 +37,9 @@ name, so no result from either side was trustworthy until the whole thing was un
   `run_in_background: true` call is SIGTERM'd there (exit 143), while a foreground call is
   adopted as a background task and runs to completion. The Bash `timeout` parameter does
   not raise that cap — a call carrying `timeout: 600000` is still cut at 120s. Either way
-  the completion notification describes the wrapper shell, not the peer.
+  the completion notification describes the wrapper shell, not the peer. The 120s cut may
+  no longer hold: on 2026-09-17 two `run_in_background: true` waits lived 70 minutes. The
+  foreground launch stays the recipe because it is the form measured to keep a peer alive.
 - **One log path per run.** A second launch writing the same path truncates the first
   run's log under it, and you then read a mixture of two runs as though it were one.
 - **Never `pkill -f` on a pattern that also matches the command line you are launching**
@@ -49,9 +51,9 @@ name, so no result from either side was trustworthy until the whole thing was un
   you asked for is the trap. A peer answers in its own shape: it renumbers, it writes in
   the language the brief is written in, it drops a heading it judged redundant. A grep
   for your header then returns nothing. Nothing reads exactly like a peer that died. Measured 2026-09-05: two consecutive runs were reported dead on that evidence
-  while both reports sat complete in their logs. Judge delivery by the process, then
-  read the tail: `pgrep -x codex` says whether it is still alive, and the last ~200
-  lines say whether it finished. This is the cost the supervised mode removes.
+  while both reports sat complete in their logs. Judge delivery by the CLI's own
+  finish line, then read the tail: `codex exec` writes `tokens used` once when the run
+  finishes, and the report follows that line. This is the cost the supervised mode removes.
 
 Both flags carry edges that decide whether a headless run finishes at all, and two more modes sit between them. [`SANDBOX-MODES.md`](SANDBOX-MODES.md) holds the four.
 
@@ -107,12 +109,16 @@ that case write one bounded wait loop and let it be the only watcher.
 
 When a wait loop is genuinely the only option:
 
-- **Run the loop under Monitor, not under Bash.** Bash kills a `run_in_background: true`
-  call at 120s, so the watcher dies long before the peer does, and the peer then finishes
-  unobserved. Monitor takes `timeout_ms` up to 3600000, or `persistent: true` for the
-  session.
-- **Gate on the process, not on the text.** `! pgrep -f "<the run's own token>"` is
-  decidable. A `grep` for the shape of the output is a guess wearing a condition's
+- **Run the loop in a background call: Monitor, or Bash with `run_in_background: true`.**
+  Monitor takes `timeout_ms` up to 3600000, or `persistent: true` for the session. An
+  earlier note said Bash kills a `run_in_background: true` call at 120s. Measured
+  2026-09-17: two such waits lived 70 minutes, until they were killed by hand.
+- **Gate the finish on the CLI's finish line, and the death on the process.** The CLI
+  prints `tokens used`, not the peer, so `grep -qx 'tokens used'` is decidable. Across 20
+  local codex logs, every finished run held that line once and every unfinished run held
+  none. The process alone cannot end the wait: a finished codex stayed alive 70 minutes
+  after its report. `pgrep -f "[c]odex exec.*<run>"` answers only whether the run died.
+  A `grep` for the shape of the peer's own output stays a guess wearing a condition's
   clothes.
 - **Never AND a decidable condition with a guessed one.** The guess pins the whole
   expression false forever. The loop never exits, no error is raised, and it spins
@@ -120,6 +126,36 @@ When a wait loop is genuinely the only option:
   traced back hours later to a `grep` pattern that never could have matched.
 - **Bound every loop.** Give it a deadline, and on expiry exit non-zero naming what it
   waited for. A wait that cannot fail cannot be debugged.
+
+The loop for a detached `codex exec`, where `<run>` is the token the brief carries and the
+log name repeats:
+
+```bash
+deadline=$((SECONDS + 3600))
+until grep -qx 'tokens used' "<log>"; do
+  if ! pgrep -f "[c]odex exec.*<run>" >/dev/null; then
+    grep -qx 'tokens used' "<log>" && break   # it finished between the two checks
+    echo "codex <run> died before its report" >&2; exit 2
+  fi
+  [ "$SECONDS" -lt "$deadline" ] || { echo "codex <run>: no report after 3600s" >&2; pkill -f "[c]odex exec.*<run>"; exit 3; }
+  sleep 15
+done
+# The report reaches the log after the marker, on stdout: wait until codex exits or the log holds still, 60s at most.
+size=-1
+for _ in $(seq 1 20); do
+  pgrep -f "[c]odex exec.*<run>" >/dev/null && [ "$(stat -c %s "<log>")" != "$size" ] || break
+  size=$(stat -c %s "<log>"); sleep 3
+done
+tail -n 200 "<log>"; pkill -f "[c]odex exec.*<run>" || true
+```
+
+Measured 2026-09-17: `while pgrep -f "codex exec -m gpt-6-astra"` matched its own shell and
+waited 70 minutes past a finished report.
+
+For a one-shot read-only review, `~/.claude/skills/simplify/codex-review.sh <brief> <report>`
+wraps the launch, this wait and the report extraction. It runs as a harness background call
+and exits when the review ends, so its caller waits on the harness notification instead of a
+loop. Use the loop above for a peer the script does not fit, such as a write-capable run.
 
 **A peer dies with the session that spawned it.** A crash or a teardown kills the process group,
 and the log then ends inside a tool trace with no report. The work is not lost: the peer's own

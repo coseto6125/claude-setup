@@ -3,6 +3,84 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.3 — 2026-09-17
+
+### Added
+
+- `skills/simplify/codex-review.sh`: runs the cross-family codex review as one background
+  call. It launches `codex exec` read-only, waits for the CLI's `tokens used` line, writes
+  the report that follows it once the log holds still, and ends the codex process group:
+  TERM first, KILL after 5 seconds. The report file is emptied before any check that can
+  fail and filled through a temp file, and only exit 0 means it holds this run's report
+  (an unwritable report path keeps its old content and exits 64). Exit 0 report written, 2 codex ended without a
+  report or the report could not be written, 3 timeout, 4 codex missing or not logged in,
+  64 usage or an unwritable report path. The log is deleted on success and kept on
+  failure. The caller waits on the harness notification instead of writing a loop.
+  36 checks in `skills/simplify/tests/`.
+- `hooks/prune-scratchpad.sh`, wired on `SessionStart`: deletes session temp directories
+  (`scratchpad/`, `tasks/`) under `$CLAUDE_CODE_TMPDIR` in which nothing changed for 14
+  days. The current session and anything touched inside the window are kept; a symlinked
+  project or session directory is never followed; a session whose scan errors is kept;
+  `SCRATCH_KEEP_DAYS` is read as decimal (`08` is eight days). It forks and prints
+  nothing, because hook stdout lands in the session context. `--dry-run` lists without
+  deleting. 27 checks in `hooks/tests/`. Known gap: a session idle for the whole window
+  that resumes between the scan and the delete loses what it just wrote. First run on the
+  author's machine: 770 directories, 13.2 GB.
+
+### Changed
+
+- `skills/simplify/CHECKLIST.md`, Quality rung 13 *Prose drift*: the reviewer lists every
+  name and value the diff changes, reads the docstrings and caller comments, and greps
+  README, docs, CLAUDE.md, SKILL.md, `--help` strings and example configs for the old and
+  the new name. A stale sentence outside the diff is a finding, and its fix may edit any
+  file of the repo. A changelog entry for a past release stays as written. Measured on
+  sonnet, n=5 per arm: a stale README usage line was reported at 70 or above 5/5 with the
+  rung and 1/5 without it; a stale docstring 5/5 against 2/5. Rows in
+  `skills/validate-prompt-rules/measurements.md`.
+- `skills/simplify/SKILL.md`, Phase 5: the fix gate drops from 70 to 50. The 50 anchor
+  already means a real finding, and across 30 sonnet reviews every finding scored 50 to 69
+  was real (missing tests, an unvalidated key lookup, a duplicated literal list, a stale
+  comment). A finding whose evidence the re-check cannot confirm goes under
+  "Scanned, not acted on" instead of being fixed.
+- `skills/simplify/SKILL.md`: the reviewer preamble says the graph's rename-only proof covers
+  code only, so *Prose drift* still searches the text for a renamed name.
+- `skills/simplify/SKILL.md`: the cross-family section calls `codex-review.sh` and maps its
+  exit codes to `cross-family skipped: <reason>`. The inline launch command, the run tag
+  and the wait loop are gone.
+- `skills/simplify/CHECKLIST.md`: two duplicated passages removed, the per-skill gate
+  numbers and the Spec axis's "reports on its own" sentence that `SKILL.md` already holds.
+  A/B on sonnet, n=15 per arm, showed no drop on any predeclared target (rows in
+  `skills/validate-prompt-rules/measurements.md`).
+- `skills/peer-agent/DETACHED-LAUNCH.md`, *Waiting*: a detached peer's finish is the CLI's
+  `tokens used` line, and the process only answers whether it died. Across 20 local codex
+  logs every finished run held that line once and every unfinished run held none, and a
+  finished codex stayed alive 70 minutes after its report. The section carries a bounded
+  loop with a bracketed, run-named `pgrep`: it exits 2 when codex dies without a report and
+  3 on timeout, and waits up to 60 seconds for the log to hold still before it reads the
+  report, because the report reaches the log after the marker. The launch note that Bash kills a
+  `run_in_background` call at 120s now says the cut may no longer hold (two waits lived 70
+  minutes), and keeps the foreground launch as the measured recipe.
+- `skills/peer-agent/RESUME.md`: a finished run is told by its one `tokens used` line, not by
+  the last lines of the log, since the report appears both before and after that line.
+- `skills/validate-prompt-rules`: `agentic.sh` and `preloaded.sh` exit 2 with their usage
+  line when `WORK` is unset or lacks its base inputs (`base/` and `task.txt`, or the probes
+  directory). `agentic.sh` also exits 2 naming the missing `rules/<arm>.txt` for a selected
+  arm; `preloaded.sh` checks only that the rules directory exists, and honours `PROBES_DIR`
+  and `RULES_DIR`. Before, both fell back to the current directory and started runs there.
+- `CLAUDE.md`, Dispatch: a "Phase" bullet sizes an implementer's phase to end under 150k
+  tokens of context; a brief names the line range for files over 200 lines and pastes the
+  batching instances. Evidence in `maintainer-notes.md` and
+  `skills/validate-prompt-rules/measurements.md`.
+- `settings.example.json`: regenerated; it wires `prune-scratchpad.sh`.
+- README: the hooks paragraph counts fourteen scripts and nine wired, and describes
+  `prune-scratchpad.sh`; the Token footprint note no longer claims a direction.
+
+### Removed from the published history
+
+- Private project names and one internal database port were rewritten out of every commit,
+  commit message and PR description. Tags v0.1.0 to v0.1.2 were moved to the rewritten
+  commits, so a clone made before 2026-09-17 no longer shares history with `main`.
+
 ## v0.1.2 — 2026-09-11
 
 ### Changed
