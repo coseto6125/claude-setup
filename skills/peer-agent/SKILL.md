@@ -8,26 +8,26 @@ description: Run a peer coding agent (codex, or another Claude) as the implement
 This skill covers only what is specific to driving a peer agent: the launch, the poll, the diff gate. Reviewing the diff itself is `simplify`, and worktree mechanics are `orca-cli`; both are assumed known here.
 
 You review, gate, and merge. The **peer** implements in its own worktree. The channel
-between you is asynchronous, lossy, and echo-prone — every rule below exists because
-skipping it produced a *false signal that looked exactly like success*.
+between you is asynchronous, lossy, and echo-prone. Its usual failure is a false
+signal that looks exactly like success.
 
 Treat the peer as a peer: it gets the goal and the gate, decides the implementation,
-and may refuse with reasons. CLI mechanics (worktrees, terminals, handoffs) live in
-the `orca-cli` skill; this skill is the collaboration contract on top of them.
+and may refuse with reasons.
 
 ## Two ways to run a peer
 
 **Supervised** is the default. Orca launches the peer as a worker, the peer ends
 with a `worker_done` message carrying its report, and you wait on that message.
 Delivery is then a fact the runtime states, not a shape you look for in a file.
-`ORCA` is the placeholder the `orca-cli` skill resolves (`orca-ide` on Linux, never bare `orca`: outside an Orca terminal that is the GNOME screen reader). Confirm Orca is up with `ORCA status --json`, then follow the `orchestration`
-skill: `task-create`, `dispatch --inject`, and
+`ORCA` is the placeholder the `orca-cli` skill resolves: `orca-ide` on Linux, never bare
+`orca`, which outside an Orca terminal is the GNOME screen reader. Confirm Orca is up with
+`ORCA status --json`, then follow the `orchestration` skill: `task-create`, `dispatch --inject`, and
 `check --wait --types worker_done,escalation,question --timeout-ms <n>`. A
 review-only `worker_done` reports findings and authorises no edits of yours.
-**Ack every delivery the wait returns, heartbeats included.** `check --wait` re-delivers the
+**Ack every delivery the wait returns, heartbeats included,** with `check --ack <delivery_id>` on the next wait. `check --wait` re-delivers the
 oldest unacknowledged delivery and holds the ones behind it, so a loop that only greps for
-`worker_done` reads the same heartbeat forever while the report sits queued. Measured
-2026-09-09: the task showed `completed` for 12 minutes before an `--ack` let the report through.
+`worker_done` reads the same heartbeat forever while the report sits queued, and the task
+shows `completed` the whole time.
 
 **Detached** is for an Orca that is not running, or a peer you deliberately keep
 outside it. `setsid codex exec` writes to a log, and the rest of this file covers
@@ -40,10 +40,9 @@ file per peer in the scratchpad, and name the mode that ran on its first line.
 You write that file, not the peer. You hold both halves. A read-only peer holds
 one and can write neither.
 
-A message read once lives only in your context. A compaction takes it, and takes
-the brief that explains it. The next round then re-commissions work already done,
-and a finding you did not act on has no second reader. The file is the record. The
-message is only how it arrived.
+A message read once lives only in your context. A compaction takes it with the brief
+that explains it, and the next round re-commissions work already done. The file is the
+record; the message is only how it arrived.
 
 ## The brief is the contract
 
@@ -57,8 +56,8 @@ back with no memory. Survive that by putting the standing contract in a file ins
 the peer's worktree (`<NAME>-BRIEF.md`), and keeping every sent message short.
 
 - **Send self-contained messages.** Each one states current state (what is merged, at
-  which SHA), where the brief lives, and what "done" looks like. Assume the reader
-  just woke up with amnesia, because it often did.
+  which SHA), where the brief lives, and what "done" looks like. Write for a reader
+  who just woke up with no memory.
 - **Keep the wire simple.** Parentheses and quotes inside a `--text` payload get eaten
   by the shell bridge — the peer's terminal then tries to *execute* your prompt and
   reports a syntax error. Put substance in the brief; send a short, punctuation-light
@@ -69,8 +68,7 @@ the peer's worktree (`<NAME>-BRIEF.md`), and keeping every sent message short.
   like "`git status --porcelain` is empty when you finish" reads as an instruction to
   delete the untracked brief, and a peer that obeys it leaves you with no record of what
   you commissioned. Name the exceptions in the gate, or commit the brief before you
-  launch. Measured 2026-08-23: codex deleted `SINK-BRIEF.md` and said so in its report --
-  it followed the gate exactly as written.
+  launch.
 
 ## Commission, don't dictate
 
@@ -81,11 +79,9 @@ the peer's worktree (`<NAME>-BRIEF.md`), and keeping every sent message short.
   the numbers." This converts a speculative task into a decidable one, and the
   abandonments come back with evidence instead of excuses.
 - **Grant the right to refuse.** Say explicitly that a reasoned ABANDON is an
-  acceptable deliverable. A peer that talks you out of a bad change is the system
-  working.
+  acceptable deliverable.
 - **Amend gates in the open.** When you discover your own gate was mis-specified,
   amend the brief and require the PR body to state the amendment and its rationale.
-  A silently moved goalpost is indistinguishable from a rigged one.
 
 ## Launching a detached peer
 
@@ -132,9 +128,8 @@ carries the failure signatures and the browser recipe.
 
 Each side reviews the other's diffs, and reviews them adversarially.
 
-- **Give reviewers raw data, not your summary.** A reviewer handed pooled results will
-  either rubber-stamp them or have to go dig up the per-run values anyway. Hand over
-  the raw table and let it re-derive your conclusion.
+- **Give reviewers raw data, not your summary.** Hand over the raw per-run table and let
+  the reviewer re-derive your conclusion. Pooled results get rubber-stamped.
 - **Ask for the challenge list.** "List every way a reader could legitimately attack
   this" surfaces the scoping problems — cherry-picked baseline, unmeasured
   configuration, variance hidden by a median — while they are still cheap to fix.

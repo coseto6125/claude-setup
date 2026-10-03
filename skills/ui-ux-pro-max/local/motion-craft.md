@@ -2,7 +2,7 @@
 
 Component-level motion: how one control feels under a finger or a cursor.
 
-Boundary against `data/motion.csv`: that CSV holds 16 GSAP snippets for
+Boundary against `data/motion.csv`: that CSV holds the GSAP snippets for
 page-level choreography, indexed by category (hover, scroll reveal, stagger,
 page transition, parallax, skeleton) and by intensity tier. Query it with
 `--domain gsap`. This file covers the layer beneath it, which is the physics and

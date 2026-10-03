@@ -13,11 +13,11 @@ license: MIT
 metadata:
   author: AgriciDaniel
   original_author: "Dan Colta (Pro Hub Challenge)"
-  version: "2.2.5"
+  version: "2.3.1"
   category: seo
 ---
 
-# SEO Drift Monitor (April 2026)
+# SEO Drift Monitor
 
 Git for your SEO. Capture baselines, detect regressions, track changes over time.
 
@@ -96,16 +96,16 @@ Captures the current state of a page and stores it.
 
 **Steps:**
 1. Validate URL (SSRF protection via `google_auth.validate_url()`)
-2. Fetch page via `"$HOME/.claude/skills/seo/bin/claude-seo" run fetch_page.py <URL>`
-3. Parse HTML via `"$HOME/.claude/skills/seo/bin/claude-seo" run parse_html.py <URL>`
-4. Optionally fetch CWV via `"$HOME/.claude/skills/seo/bin/claude-seo" run pagespeed_check.py <URL>` (use `--skip-cwv` to skip)
+2. Fetch page via `"$HOME/.claude/skills/seo/scripts/claude-seo" run fetch_page.py <URL>`
+3. Parse HTML via `"$HOME/.claude/skills/seo/scripts/claude-seo" run parse_html.py <URL>`
+4. Optionally fetch CWV via `"$HOME/.claude/skills/seo/scripts/claude-seo" run pagespeed_check.py <URL>` (use `--skip-cwv` to skip)
 5. Hash HTML body and schema content (SHA-256)
 6. Store snapshot in SQLite
 
 **Execution:**
 ```bash
-"$HOME/.claude/skills/seo/bin/claude-seo" run drift_baseline.py <url>
-"$HOME/.claude/skills/seo/bin/claude-seo" run drift_baseline.py <url> --skip-cwv
+"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_baseline.py <url>
+"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_baseline.py <url> --skip-cwv
 ```
 
 **Output:** JSON with baseline ID, timestamp, URL, and summary of captured elements.
@@ -127,16 +127,16 @@ Fetches the current page state and diffs it against the most recent baseline.
 
 **Execution:**
 ```bash
-"$HOME/.claude/skills/seo/bin/claude-seo" run drift_compare.py <url>
-"$HOME/.claude/skills/seo/bin/claude-seo" run drift_compare.py <url> --baseline-id 5
-"$HOME/.claude/skills/seo/bin/claude-seo" run drift_compare.py <url> --skip-cwv
+"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_compare.py <url>
+"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_compare.py <url> --baseline-id 5
+"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_compare.py <url> --skip-cwv
 ```
 
 **Output:** JSON with all triggered rules, old/new values, severity, and actions.
 
 After comparison, offer to generate an HTML report:
 ```bash
-"$HOME/.claude/skills/seo/bin/claude-seo" run drift_report.py <comparison_json_file> --output drift-report.html
+"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_report.py <comparison_json_file> --output drift-report.html
 ```
 
 ---
@@ -147,8 +147,8 @@ Shows all baselines and comparisons for a URL.
 
 **Execution:**
 ```bash
-"$HOME/.claude/skills/seo/bin/claude-seo" run drift_history.py <url>
-"$HOME/.claude/skills/seo/bin/claude-seo" run drift_history.py <url> --limit 10
+"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_history.py <url>
+"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_history.py <url> --limit 10
 ```
 
 **Output:** JSON array of baselines (newest first) with timestamps and comparison summaries.
@@ -188,7 +188,7 @@ When drift is detected, recommend the appropriate specialized skill:
 
 ## Security
 
-- **All URL fetching** goes through `"$HOME/.claude/skills/seo/bin/claude-seo" run fetch_page.py`, which enforces SSRF protection
+- **All URL fetching** goes through `"$HOME/.claude/skills/seo/scripts/claude-seo" run fetch_page.py`, which enforces SSRF protection
   (blocks private IPs, loopback, reserved ranges, GCP metadata endpoints)
 - **No curl, no subprocess HTTP calls** -- only the project's validated fetch pipeline
 - **All SQLite queries** use parameterized placeholders (`?`), never string interpolation

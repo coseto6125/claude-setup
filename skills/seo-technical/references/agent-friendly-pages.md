@@ -165,9 +165,9 @@ Chrome DevTools and look for:
 - Any `<div>` with `onclick` and no `role` / `tabindex` → custom widget that
   agents won't see.
 
-`"$HOME/.claude/skills/seo/bin/claude-seo" run render_page.py <URL> --mode auto --a11y-tree --json` loads the
+`"$HOME/.claude/skills/seo/scripts/claude-seo" run render_page.py <URL> --mode auto --a11y-tree --json` loads the
 page headlessly and captures Chromium's full accessibility tree through CDP.
-Use `"$HOME/.claude/skills/seo/bin/claude-seo" run agent_ux_check.py <URL> --json` for the bounded Agent-UX
+Use `"$HOME/.claude/skills/seo/scripts/claude-seo" run agent_ux_check.py <URL> --json` for the bounded Agent-UX
 heuristic and its explicit complete, partial, or unavailable score status.
 
 ## Last verified

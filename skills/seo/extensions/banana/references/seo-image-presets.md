@@ -123,7 +123,7 @@ preset format (see `references/presets.md` for schema details).
 
 Users can create their own presets:
 ```bash
-"$HOME/.claude/skills/seo/bin/claude-seo" run --extension banana presets.py create my-brand
+"$HOME/.claude/skills/seo/scripts/claude-seo" run --extension banana presets.py create my-brand
 ```
 
 This creates `~/.banana/presets/my-brand.json` with the full schema.

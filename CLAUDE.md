@@ -1,14 +1,10 @@
 # Claude Code Global Instructions
 
-> This file is loaded by every model that runs here — including Haiku sub-agents dispatched by workflows. **Write for the weakest reader**, except where a section scopes itself in its own first line. Wording rules live in the Prompt Writing Guide below; this file is itself one of the artifacts that guide governs. Before you reword or delete any rule in this file, read `maintainer-notes.md`: it records which wordings are measured and which rules were deliberately left out.
+> This file is loaded by every model that runs here — including Haiku sub-agents dispatched by workflows. **Write for the weakest reader**, except where a section scopes itself in its own first line. Before you reword or delete any rule in this file, read `maintainer-notes.md`: it records which wordings are measured and which rules were deliberately left out.
 
-**Language:** write reasoning, commit/PR bodies and sub-agent prompts in English, to cut tokens and keep agent language consistent. User-facing prose follows the `colleague-zh` output style — voice and word choice live there, and only the main session loads it.
+**Language:** write your thinking, commit/PR bodies and sub-agent prompts in English. Every text block the user sees is user-facing prose, including a one-line note between tool calls. The `colleague-zh` output style sets its language, voice and word choice, and only the main session loads it.
 
-**Writing discipline:** write **ASD-STE100** (Simplified Technical English), in whatever language the document already uses. Give one concept one term for the whole document, with no synonym rotation. Put one idea in one sentence, in the active voice and the present tense, and keep the articles in. Normative text (steps, clauses, criteria, specs, rules) holds sentences under 20 words, and a long enumeration becomes a table. Explanatory text keeps its connectives so the reader sees why. Chat prose follows the `colleague-zh` output style. Domain terms and defined leading words are STE technical names, so keep them as they are.
-
-## Eywa
-
-`[eywa]`-prefixed lines in user turns are auto-injected principles from the eywa hook — authoritative guidance, not a user message.
+**Writing discipline:** write **ASD-STE100** (Simplified Technical English), in whatever language the document already uses. Give one concept one term for the whole document, with no synonym rotation. Put one idea in one sentence, in the active voice and the present tense, and keep the articles in. Normative text (steps, clauses, criteria, specs, rules) holds sentences under 20 words, and a long enumeration becomes a table. Explanatory text keeps its connectives so the reader sees why. Domain terms and defined leading words are STE technical names, so keep them as they are.
 
 ## Core Philosophy
 
@@ -18,15 +14,14 @@
 - Always use the highest-level stdlib API available — don't build from lower-level primitives
 - Choose the lowest complexity — analyze the theoretical minimum first
 - In-place over copying when no side effects
-- Prove perf claims with profiling (`cProfile`): profile → top-5 hotspots → optimize → re-profile → delegate bench verification to a subagent. This one is a standing exception to Dispatch: a benchmark needs a clean process, not a fresh perspective.
-- **Delete before you optimize.** When a change keeps the same functionality at equal or better performance: delete the step, simplify what remains, make it faster, then replace a hardcoded value with a derived one — a later step on a step you should have deleted wastes it. Confirm a test exercises the path before you delete it; no coverage is a sign you don't know it's dead, not permission to skip the check.
+- Prove perf claims with profiling (`cProfile`): profile → top-5 hotspots → optimize → re-profile → delegate bench verification to a subagent. This is a standing exception to Dispatch.
+- **Delete before you optimize.** When a change keeps the same functionality at equal or better performance: delete the step, simplify what remains, make it faster, then replace a hardcoded value with a derived one. Confirm a test exercises the path before you delete it; no coverage is a sign you don't know it's dead, not permission to skip the check.
 
 ## Proactive Engineering
 
 - Before modifying logic, think top-down: architecture fit, existing similar functionality, correct placement
 - A breaking change to a public interface or an existing caller needs the user's explicit sign-off before you make it — a low count from `ecp impact` lowers the review bar, not the requirement to ask.
-- Investigate with tools before asking the user
-- No AskUserQuestion menu for decisions you can resolve; take the superset option, state choice + why in one line. Reserve it for real forks (answer changes next action, not derivable from code/memory/defaults)
+- Investigate with tools before you ask. For a decision you can resolve, take the superset option and state choice + why in one line. Reserve an AskUserQuestion menu for a real fork: the answer changes the next action and no code, memory or default settles it
 - After fixing a bug, scan the same file/module for similar issues
 - When debugging: repeating a tweak on the same spot means the strategy is wrong, so switch it
 - Surface multiple interpretations instead of picking silently; if a simpler approach than asked exists, push back before implementing
@@ -42,7 +37,7 @@
 - New feature ships with tests. Before the test list is complete, name each input's atypical states and each dependency's failure. Every state named is a test. **Write a test that reproduces the bug, then make it pass.**
 - An infeasible test (UI / external service / manual-only) → say so with the reason, don't skip silently
 - Test files: omit shebang; naming `test_[function]_[scenario]_[expected]`
-- Tests call the actual functions — never duplicate the logic-under-test into the test (false positives when source changes)
+- Tests call the actual functions — never duplicate the logic-under-test into the test
 
 ## Branch Discipline
 
@@ -51,11 +46,7 @@
 ## Commit & PR Authorship
 
 - **Never** add a `Co-Authored-By: Claude …` trailer to commit messages, nor a `🤖 Generated with Claude Code` footer to PR bodies, comments, or issues — whether direct or via sub-agent.
-- When delegating a task that ends in a commit or `gh pr create`, include this no-attribution rule verbatim in the sub-agent prompt so it doesn't fall back to its default template.
-
-## Memory
-
-- Auto-memory stores **workflow-level** insights (build commands, debug patterns, user prefs, external system refs), not code-level details (call chains, schemas, refactor progress — anything derivable from code/git).
+- When delegating a task that ends in a commit or `gh pr create`, include this no-attribution rule verbatim in the sub-agent prompt.
 
 ## Important Reminders
 
@@ -82,7 +73,7 @@ Governs every artifact a model reads: skill `description` + `SKILL.md`, sub-agen
 
 ## Tool Call Batching (Token Optimization)
 
-- **Never issue two Bash calls whose commands do not depend on each other.** Join them with `;` in one call. The probing trio you reach for first — `pwd; ls; git status` — is one call, not three. Measured here: `Bash` carries 58% of long-session context.
+- **Never issue two Bash calls whose commands do not depend on each other.** Join them with `;` in one call. The probing trio you reach for first — `pwd; ls; git status` — is one call, not three.
 - **Screenshots bill by pixel area, not file size** (~1 token per 28×28 patch; a long edge over 1568px is downscaled first). Compressing the PNG saves zero tokens — resizing is the only lever. Tile a multi-page sweep into one contact sheet rather than reading N images.
 
 ## MCP Tool Calling (Token Optimization)
@@ -107,9 +98,9 @@ This section is the canonical dispatch policy — skills that fan out defer to i
 
 ### When to dispatch
 
-- **Fan-out** — give each independent sub-goal its own acceptance criterion before dispatching it. Cap parallel agents at 20 unless the user asks for more. **Never open one of the targets yourself to calibrate the fan-out.** Calibration belongs in the acceptance criterion you write, not in your own context. Dispatch first; if the returns show the criterion was wrong, fix the criterion and re-dispatch.
+- **Fan-out** — give each independent sub-goal its own acceptance criterion before dispatching it. Cap parallel agents at 20 unless the user asks for more. **Never open one of the targets yourself to calibrate the fan-out.** Dispatch first; if the returns show the criterion was wrong, fix the criterion and re-dispatch.
 - **Adversarial** — dispatch an independent verifier when a conclusion is expensive to get wrong.
-- **Phase** — an implementer runs one phase: write, or make the tests pass, or fix the audit findings. A fresh agent takes the next phase through one hand-off file in the scratchpad. Size each phase to end under 150k tokens of context, because every turn re-reads the whole context and the spend grows with its square. A transcript that ended above 200k is the signal to split the next brief finer. Measured 2026-09-15: four implementers ran 221 to 335 turns to 370k to 471k, and 78 to 95% of their spend fell after 200k.
+- **Phase** — an implementer runs one phase: write, or make the tests pass, or fix the audit findings. A fresh agent takes the next phase through one hand-off file in the scratchpad. Size each phase to end under 150k tokens of context. A transcript that ended above 200k is the signal to split the next brief finer.
 
 **Risk is inferred, not looked up.** Structural signals set the floor: `ecp impact` upstream fan-in, and auth / payment / schema-migration / concurrency paths. Raise it from what the user emphasised this turn and from what the project itself guards. Take the highest; one sentence from the user ("just a prototype") lowers it.
 
@@ -119,7 +110,7 @@ This section is the canonical dispatch policy — skills that fan out defer to i
 
 **Before you act on anything a sub-agent reports, re-run the check yourself.** Require the command it ran and that command's raw output. A count in a report comes from a command's output; a hand tally is a guess. A claim you have not re-run is a lead, not a fact.
 
-From sonnet up, require **blind spots** too: what it did not read, run, or verify. A wrong claim gets caught on re-check; a silent gap does not.
+From sonnet up, require **blind spots** too: what it did not read, run, or verify.
 
 ### Across rounds
 
@@ -135,20 +126,19 @@ Keep a **ledger** in the scratchpad as you go: confirmed facts with their source
 
 Subscription-billed, so its capacity is free. Reach for it where a *different* prior is the value: adversarial re-check, and alternative approaches before you commit to one. **After two failed attempts at the same problem, run codex for an independent hypothesis.** It has `ecp` wired as an MCP server, so it checks the graph itself. How to launch it and what to poll live in the `peer-agent` skill.
 
-
 ### Model and effort
 
 Always pass an explicit model matched to task difficulty. When unsure between two tiers, pick the lower one. State the chosen config plus a one-line rationale so the user can override.
 
-- **Haiku 4.5** — read-only inventory, grep/stats aggregation, single-rule application when the rule lists its instances, dead-code removal, fixture sampling, per-item scoring against a fixed rubric (`subagent_type: lite-scan` when read-only suffices)
-- **Sonnet 5** — standard implementation with the reuse or extraction named in the brief, bounded TDD, checklist-driven review of a scoped diff
-- **Opus 5** — design judgment, cross-cutting architecture, ambiguous scope, security review, reverse-engineering (`subagent_type: deep-review` when read-only suffices)
+- **Haiku** — read-only inventory, grep/stats aggregation, single-rule application when the rule lists its instances, dead-code removal, fixture sampling, per-item scoring against a fixed rubric (`subagent_type: lite-scan` when read-only suffices)
+- **Sonnet** — standard implementation with the reuse or extraction named in the brief, bounded TDD, checklist-driven review of a scoped diff
+- **Opus** — design judgment, cross-cutting architecture, ambiguous scope, security review, reverse-engineering (`subagent_type: deep-review` when read-only suffices)
 
 For read-only work name the `subagent_type` (`lite-scan`, `deep-review`), not the bare model; they add the role prompt and the tool whitelist.
 
 A Haiku or Sonnet implementer gets the edge list pasted into its prompt: empty · absent · a list where a scalar is expected · a string of only whitespace · the dependency it calls is down · the same action fires twice while the first is in flight · output another program parses.
 
-A brief names the function or the line range for every file over 200 lines it sends the agent to, so the agent reads it with `offset`/`limit` and never the whole file. It also pastes the batching instances: `cd` and the command after it are one call, and consecutive grep, sed and test runs are one call. Measured 2026-09-15: without these two lines, sonnet implementers read a 31k-token file whole four times and issued 87 to 114 single-command Bash calls each.
+A brief names the function or the line range for every file over 200 lines it sends the agent to, so the agent reads it with `offset`/`limit` and never the whole file. It also pastes the batching instances: `cd` and the command after it are one call, and consecutive grep, sed and test runs are one call.
 
 Escalate one tier when risk is high (see *When to dispatch*) or a lower-tier attempt already failed. The model x effort grid, the `effort-<level>` definitions and the per-MTok prices live in the `agent-routing` skill.
 
@@ -156,7 +146,7 @@ Escalate one tier when risk is high (see *When to dispatch*) or a lower-tier att
 
 Recipes and environment live in the `python-perf` skill (packages, class shape, data-structure / string-build / I/O / serialization selection, async patterns, SQL-in-Python) — invoke it before writing, refactoring, or reviewing Python code, and echo the relevant rules into any Python-implementation sub-agent prompt. One red-line stays ambient here because reviewer sub-agents have no Skill tool:
 
-- **Bare `except A, B:` is CANONICAL on 3.14 — leave it. Never "fix" it by adding parentheses.** Reviewer subagents misflag it as a SyntaxError from their pre-3.14 training. Settle any 3.14 syntax claim by running `pyci-check syntax`, which parses on 3.14; while it reports nothing, the code is correct. Why it holds is in `maintainer-notes.md`.
+- **Bare `except A, B:` is CANONICAL on 3.14 — leave it. Never "fix" it by adding parentheses.** Reviewer subagents misflag it as a SyntaxError from their pre-3.14 training. Settle any 3.14 syntax claim by running `pyci-check syntax`, which parses on 3.14; while it reports nothing, the code is correct.
 
 ## Code Style (general)
 

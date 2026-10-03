@@ -10,9 +10,8 @@ Refresh all dependencies in a repo with evidence. The scope of one run covers ma
 
 Rules that bind the whole run:
 
-- Create a branch or worktree before the first edit. Base it on main.
+- Create a worktree on a new branch before the first edit. Base it on main.
 - Every claim you record cites a source URL, or carries the word UNVERIFIED.
-- Before you act on a finding from a helper agent, run its check yourself and keep the raw output.
 
 ## 1. Inventory
 
@@ -87,8 +86,6 @@ Give a verdict per package:
 
 - KEEP, with the reason and the datum behind it.
 - EVALUATE, with the candidate, migration cost, and a revisit trigger such as a dormancy threshold.
-
-Re-run every number you plan to publish yourself; a spot check beats a forwarded claim.
 
 Done when: every core package carries KEEP or EVALUATE backed by at least one live datum.
 

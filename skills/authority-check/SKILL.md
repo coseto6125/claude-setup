@@ -1,6 +1,6 @@
 ---
 name: authority-check
-description: Consult BEFORE writing code that carries authority — a new route or endpoint, an auth or permission check, a tenant or org lookup, a webhook handler, a model-callable tool, a fetch of a URL someone else supplied, a file upload, a query built from input, or anything that mints, reads, or grants a session or a role. Turns one design question into one line of code, so the guard ships with the feature instead of arriving as an audit finding months later. Reach here while ADDING; `simplify` reviews the diff afterwards.
+description: Consult before you write code that carries authority — a new route or endpoint, an auth or permission check, a tenant or org lookup, a webhook handler, a model-callable tool, a fetch of a URL someone else supplied, a file upload, a query built from input, or anything that mints, reads, or grants a session or a role. It puts the guard into the same commit as the feature. Reach here while adding the code; `simplify` reviews the diff afterwards.
 ---
 
 # Authority check
@@ -10,7 +10,7 @@ Two questions, asked once, before the code exists.
 1. **Who can reach this?** Name the least-privileged caller who can. Not the caller you have in mind — the least one the code permits. "Anyone with the URL" is an answer. So is "any member of any tenant".
 2. **What do they get by reaching it?** Data, an action, a spend, a fact about who exists. "Nothing" is an answer, and it ends the check.
 
-If question 2 has an answer and question 1 says "someone who should not", the fix belongs in this commit. Not a TODO, not a follow-up: **a guard costs one line now and a chain of four findings later.**
+If question 2 has an answer and question 1 says "someone who should not", **the fix belongs in this commit**, not in a TODO or a follow-up.
 
 ## What to decide, by what you are writing
 
@@ -42,4 +42,4 @@ Structural questions go to `ecp`, not to reading files: `ecp routes` for what is
 
 ## What this is not
 
-Not a review. It asks two questions about code you are about to write, and it is done. Reviewing a finished diff — every rung, every look-alike, a confidence score — is `simplify`'s job, and doing it here costs more than it catches.
+Not a review. It asks two questions about code you are about to write, and it is done. Reviewing a finished diff (every rung, every look-alike, a confidence score) is `simplify`'s job.

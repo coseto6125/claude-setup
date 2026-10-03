@@ -15,7 +15,7 @@ Then pin the **spec source**, in this order: issue references in the commit mess
 
 1. `ecp impact --baseline HEAD~1 --repo . --format json` — use the merge-base for PR reviews (`--baseline origin/main`). Not installed or not indexed → `ecp admin index --repo .`, or skip silently; the skill works without graph context.
 2. Capture `changed_symbols` (which symbols the hunks resolve to) and `impact_by_symbol` (upstream callers per changed symbol).
-3. Risk floor per global CLAUDE.md → Dispatch → *Risk is inferred*: a changed symbol with >10 upstream callers, or one on an auth / payment / schema-migration / concurrency / external-API path, is **HIGH** — surface it before reviewing, not buried in a report. What the user stressed this turn and what the repo's own CLAUDE.md guards raise it further; one sentence from the user lowers it.
+3. Risk floor, per CLAUDE.md Dispatch *Risk is inferred*: a changed symbol with >10 upstream callers, or one on an auth / payment / schema-migration / concurrency / external-API path, is **HIGH**. Tell the user before you review, not at the end of the report.
 
 ## Phase 3: Tier the dispatch
 
@@ -34,7 +34,7 @@ Every tier from 1 up also runs codex — see **Cross-family** below. The tier se
 
 **HIGH runs Tier 3.** HIGH is the top level Phase 2 assigns, so it never qualifies a diff out of the tier it just earned.
 
-**Cross-family — always.** Every tier from 1 up launches `codex` alongside its own agents. A second Claude agent carries your priors and misses what you miss. A different model family is the only reader whose mistakes are uncorrelated with yours, and its capacity is subscription-billed. Tier 0 stops before any review, so it launches nothing.
+**Cross-family — always.** Every tier from 1 up launches `codex` alongside its own agents: a different model family is the only reader whose mistakes are uncorrelated with yours. Tier 0 launches nothing.
 
 Pick the mode from the `peer-agent` skill's *Two ways to run a peer*: supervised through
 Orca when Orca is up, so the report arrives as a `worker_done` message you wait on;
@@ -53,7 +53,7 @@ Every tier launches at `medium`; the `peer-agent` skill's *Model and effort* hol
 
 A non-zero exit is a downgrade. Exit 2 means codex ended without a report, 3 means no report before the timeout, and 4 means codex is missing or not logged in. Report the stderr reason in the summary as `cross-family skipped: <reason>`. A failed run keeps its log at `<report>.log`: read the end of that log before you call the run skipped.
 
-**Free third reader — Tiers 1 and 2.** Both tiers also send the whole diff to `nvidia/nemotron-3-super-120b-a12b:free`, a third model family whose capacity costs nothing:
+**Free third reader — Tiers 1 and 2.** Both tiers also send the whole diff to `nvidia/nemotron-3-ultra-550b-a55b:free`, a third model family whose capacity costs nothing:
 
 ```bash
 python3 ~/.claude/skills/simplify/free-reader.py "<scratchpad>/free-brief.md" "<scratchpad>/free-review.md" &
@@ -61,17 +61,15 @@ python3 ~/.claude/skills/simplify/free-reader.py "<scratchpad>/free-brief.md" "<
 
 Write the brief to a file first. It is the Phase-4 agent preamble with the diff pasted in full and the ecp lines dropped: this reader has no tools and no repo access, so a path it cannot open is a section it cannot review. Drop the absolute repo path with them, and say what the code is for instead — this brief leaves the machine, and the path names the user, the client and the project. Read the diff before you send it: a hunk that REMOVES a credential still carries that credential in its `-` lines.
 
-**Read its report as leads, not as findings.** Take the file:line and the claim. Discard its failure_scenario and its confidence score, and verify the location yourself. This reader does not carry the confidence protocol the Claude agents carry, so its output never enters the Phase-5 ladder on its own numbers.
+**Read its report as leads, not as findings.** Take the file:line and the claim, verify the location yourself, and discard its failure_scenario and confidence: they never enter the Phase-5 ladder. Treat concurrency and lock scope as uncovered by this reader, whatever its report says.
 
-Measured 2026-09-11 across three trials on a diff whose defects resolve only outside the hunk window. It located four of five planted defects in every trial, from the diff alone. It also invented the failure_scenario for them in every trial: for one generator-returning function it claimed the break was `len(tags)`, then `if tags:`, then `tags.append`, at confidence 93 to 95, while the real break was a caller consuming the generator twice and printing an empty line. Three wrong scenarios, one right location, same defect. So the location is worth reading and the scenario is worth nothing.
+A third argument naming a context file (the full text of the touched files, plus the callers `ecp impact --direction upstream` names) makes it re-report against that file. It is optional; skip it when you verify the locations yourself anyway.
 
-The reader missed one planted defect in all reads, with the `with` statement and the `requests.get` both in front of it: a lock held across a network call. Treat concurrency and lock scope as uncovered by this reader whatever its report says.
+Launch exactly one, and only at Tier 1 or Tier 2: its recall falls as the diff grows, and parallel calls hang. A `TRUNCATED` line at the end of its report means the tail is missing, not clean. A non-zero exit prints its reason; report it as `free reader skipped: <reason>` and carry on.
 
-**A second round is optional.** A third argument naming a file of context — the full current text of the files the diff touches, plus the callers `ecp impact --direction upstream` names — makes the reader re-report against it. Measured on the same trials: it corrected the invented scenario every time, and surfaced one lead it had missed in one trial of three. Pass it when you want that extra lead; skip it when you are going to verify the locations yourself anyway, which the rule above says you are.
+Measured 2026-09-11 on the earlier `nemotron-3-super-120b-a12b:free`, not yet on ultra: 4 of 5 planted defects located per trial, every failure_scenario invented, a lock held across a network call missed in every read; 4 of 4 on a 52-line diff, 2.3 of 4 on a 2034-line one.
 
-Launch exactly one, and only at Tier 1 or Tier 2. Measured 2026-09-11 against a fixture carrying four planted defects. On a 52-line diff it found all four in every run, in 40 to 95 seconds, and reported `Clean, no findings` on a control diff of real improvements. With the same four defects buried in a 2034-line diff it found 2.3 of four across three runs: it keeps the two loudest and drops the two quieter ones every time. Recall falls as the diff grows, so this reader earns its place where the diff is small and the roster is thin. Three calls in parallel leave one hanging past 200 seconds, so a Tier-3 fan-out does not buy the recall back. A `TRUNCATED` line at the end of its report means the tail is missing, not that the tail is clean. A non-zero exit prints its own reason; report it as `free reader skipped: <reason>` and carry on.
-
-**Dispatching is part of the invocation.** Reaching this skill is the request for the tier's review, so the agents that tier names need no separate approval. Launch them. A standing session rule about asking first covers agents you decide to spawn, and the tier table decided this one.
+**Dispatching is part of the invocation.** The agents the tier names need no separate approval; launch them.
 
 Walk the dimensions yourself only when the `Agent` tool is absent from your tool set, and open the summary with `Tier <n>, run inline: Agent tool unavailable`. That is a downgrade you report, not a judgement call you justify.
 
@@ -93,8 +91,8 @@ Agent preamble:
 
 > Repo at `<absolute path>`. Diff in `<location>`. Spec at `<path or fetched issue, else "none">`. Apply every rung of the `<sections>` sections of `~/.claude/skills/simplify/CHECKLIST.md`.
 > ecp pre-pass — changed_symbols: `<list>` · impact_by_symbol: `<symbol → upstream callers>` · risk: `<level>` · commands: one `ecp impact --target <symbol> --direction upstream --repo .` per changed symbol, listed here.
-> Review the symbols that actually changed; the graph already proved the rename-only and formatting-only sections structure-preserving. That proof covers code only: *Prose drift* still searches the text for every renamed name. Read the enclosing function of every hunk: a bug on an unchanged line of a touched function is in scope, because the diff re-exposes it. Run every command the pre-pass lists and paste each output under the finding it supports; a definition question goes to `ecp inspect --name X --repo .` and a reuse question to `ecp find "<concept>" --repo .`, output pasted the same way. Measured 2026-09-15: the generic "dig in with ecp" wording produced zero ecp calls across thirteen review agents.
-> Report each finding as file:line, what and why, suggested fix, a **failure_scenario** (concrete inputs or state, and the wrong output or crash they produce), and **confidence 0–100**. A finding you cannot give a failure_scenario for is not a finding — drop it rather than lowering its confidence. Realistic-but-rare state keeps its confidence: a race, a nil on a cold-cache path, a falsy zero, a boundary the code does not exclude. Score a finding below 50 only when the code refutes it — quote the line that makes it impossible, or the guard that already handles it. Carry the command you ran and its raw output so the orchestrator re-checks without redoing your search. Close with your blind spots: what you did not read, run, or verify. Report the findings you would defend at 50 or above.
+> Review the symbols that actually changed; the graph already proved the rename-only and formatting-only sections structure-preserving. That proof covers code only: *Prose drift* still searches the text for every renamed name. Read the enclosing function of every hunk: a bug on an unchanged line of a touched function is in scope, because the diff re-exposes it. Run every command the pre-pass lists and paste each output under the finding it supports; a definition question goes to `ecp inspect --name X --repo .` and a reuse question to `ecp find "<concept>" --repo .`, output pasted the same way.
+> Open with the rung ledger that CHECKLIST.md defines. Report each finding as file:line, what and why, suggested fix, a **failure_scenario** (concrete inputs or state, and the wrong output or crash they produce), and **confidence 0–100**. A finding you cannot give a failure_scenario for is not a finding — drop it rather than lowering its confidence. Realistic-but-rare state keeps its confidence: a race, a nil on a cold-cache path, a falsy zero, a boundary the code does not exclude. Score a finding below 50 only when the code refutes it — quote the line that makes it impossible, or the guard that already handles it. Carry the command you ran and its raw output so the orchestrator re-checks without redoing your search. Close with your blind spots: what you did not read, run, or verify. Report the findings you would defend at 50 or above.
 
 **Sweep — Phase-2 HIGH risk only.** Once the reviewers return, take one more pass yourself over the diff and its enclosing functions, holding their finding list. Look only for what the list misses: moved code that dropped a guard or an anchor, a default evaluated once at definition, a lock scope that shrank, setup/teardown asymmetry in tests, a config default flipped. An empty sweep is a valid result.
 

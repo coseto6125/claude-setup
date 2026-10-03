@@ -78,7 +78,7 @@ Google's documentation explicitly recommends JSON-LD over Microdata and RDFa.
 | Practice Problem | Retired from rich results | Deprecation notice 2025-11-05 | Search Console / Rich Results Test support removed Jan 2026 |
 | Dataset | No Google **Search** rich result | Clarified 2025-11-05 | **Not discontinued** — Dataset markup is used only by **Dataset Search** (which still exists and consumes it), not Google Search rich results. Don't tell users it was killed. |
 
-> **Tooling-removal timeline:** for CourseInfo, EstimatedSalary, LearningVideo, SpecialAnnouncement, and VehicleListing — docs were removed 2025-09-09 and their **Search Console reporting, Rich Results Test, and appearance-filter support were removed starting January 2026**. Audits should stop telling users to validate these in the Rich Results Test / Search Console. See `skills/seo-schema/references/deprecated-types-2024-2026.md`.
+> **Tooling-removal timeline:** for CourseInfo, EstimatedSalary, LearningVideo, SpecialAnnouncement, and VehicleListing — docs were removed 2025-09-09 and their **Search Console reporting, Rich Results Test, and appearance-filter support were removed starting January 2026**. Audits should stop telling users to validate these in the Rich Results Test / Search Console. See `deprecated-types.md` beside this file.
 
 ---
 

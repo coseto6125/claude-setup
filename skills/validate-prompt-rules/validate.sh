@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Isolated A/B validation of prompt rules against a clean no-rule baseline.
-# Each probe = an isolated `claude -p` process with --setting-sources project, run from its
+# Each probe = an isolated `claude -p` process with --setting-sources project --disable-slash-commands, run from its
 # OWN empty temp dir, so no user/project CLAUDE.md leaks into any arm. Arms are labeled —
 # isolation, not blinding, is the guarantee.
 #
@@ -27,7 +27,7 @@
 #   Measured 2026-08-08 (haiku, n=10/arm): both positions scored alike at high compliance, so
 #   system-prompt is the cheaper default. Unverified where compliance is marginal.
 #
-# Env:   TRIALS=3  MODEL=haiku  MAX_JOBS=4  TIMEOUT=90  POSITION=system-prompt
+# Env:   TRIALS=3  MODEL=claude-haiku-4-5  MAX_JOBS=4  TIMEOUT=90  POSITION=system-prompt
 #        BODYDIR=./bodies — where spawn_docs looks for <id>.<variant>.md
 #        ASK — default question appended to every scenario. Override per probe with the last
 #        argument when one probe needs its own, e.g. a generative probe asking for a command
@@ -49,7 +49,7 @@ RESULTS_PATH="$PWD/results.jsonl"
 BODYDIR="${BODYDIR:-$PWD/bodies}"  # resolved before the cd below
 RESDIR="$(mktemp -d)"
 GATEDIR="$(mktemp -d)"             # empty dir for the canary gate
-# `--setting-sources project` alone does NOT drop ~/.claude — measured 2026-09-02,
+# `--setting-sources project --disable-slash-commands` alone does NOT drop ~/.claude — measured 2026-09-02,
 # four canary runs each recited the user's ECP.md. CLAUDE_CONFIG_DIR moves the whole
 # user surface to a directory we built, so every arm below shares one empty baseline
 # while the project source still carries a claude-md arm's own CLAUDE.md.
@@ -58,14 +58,15 @@ printf '{}' > "$CLEANCFG/settings.json"
 cp "$HOME/.claude/.credentials.json" "$CLEANCFG"/ 2>/dev/null   # auth, not a setting-source
 export CLAUDE_CONFIG_DIR="$CLEANCFG"
 # The two things that would put a rule into every arm. The CLI writes its own
-# state here as it runs (.claude.json, projects/, sessions/); those carry no rules.
+# state here as it runs (.claude.json, projects/, sessions/, skills/synced/). The synced
+# skills load unless every call passes --disable-slash-commands, which every call below does.
 for leak in CLAUDE.md skills; do
   [ -e "$CLEANCFG/$leak" ] && { echo "ISOLATION FAILED — $CLEANCFG/$leak exists" >&2; exit 1; }
 done
 trap 'rm -rf "$RESDIR" "$GATEDIR" "$CLEANCFG"' EXIT
 
 TRIALS="${TRIALS:-3}"             # floor for a smoke test — raise before acting on a deletion
-MODEL="${MODEL:-haiku}"           # weakest deployed reader = stress test; reconfirm null results on every deployed model
+MODEL="${MODEL:-claude-haiku-4-5}" # full ID, never an alias: an alias moves at a release. Probe the deployed reader
 MAX_JOBS="${MAX_JOBS:-4}"         # concurrent workers (rate-limit guard)
 TIMEOUT="${TIMEOUT:-90}"
 POSITION="${POSITION:-system-prompt}"
@@ -77,7 +78,7 @@ CANARY_RE="${CANARY_RE:-[Yy]es|ECP}"
 # ── contamination gate: prove the baseline is clean BEFORE spending trials ──
 canary=""
 for _ in 1 2; do
-  canary=$(cd "$GATEDIR" && timeout "$TIMEOUT" claude -p "$CANARY_Q" --model "$MODEL" --setting-sources project 2>/dev/null)
+  canary=$(cd "$GATEDIR" && timeout "$TIMEOUT" claude -p "$CANARY_Q" --model "$MODEL" --setting-sources project --disable-slash-commands 2>/dev/null)
   [ -n "$canary" ] && break
 done
 if [ -z "$canary" ]; then
@@ -102,14 +103,14 @@ $ask"
     d="$(mktemp -d)"                       # per-probe dir: a claude-md arm cannot leak into a sibling
     if [ -z "$wording" ]; then
       ans=$(cd "$d" && timeout "$TIMEOUT" claude -p "$prompt" --model "$MODEL" \
-              --setting-sources project 2>/dev/null); rc=$?
+              --setting-sources project --disable-slash-commands 2>/dev/null); rc=$?
     elif [ "$POSITION" = claude-md ]; then
       printf '%s\n' "$wording" > "$d/CLAUDE.md"
       ans=$(cd "$d" && timeout "$TIMEOUT" claude -p "$prompt" --model "$MODEL" \
-              --setting-sources project 2>/dev/null); rc=$?
+              --setting-sources project --disable-slash-commands 2>/dev/null); rc=$?
     else
       ans=$(cd "$d" && timeout "$TIMEOUT" claude -p "$prompt" --model "$MODEL" \
-              --setting-sources project --append-system-prompt "$wording" 2>/dev/null); rc=$?
+              --setting-sources project --disable-slash-commands --append-system-prompt "$wording" 2>/dev/null); rc=$?
     fi
     rm -rf "$d"
     [ "$rc" -eq 0 ] && [ -n "$ans" ] && break

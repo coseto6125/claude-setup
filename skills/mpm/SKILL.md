@@ -23,7 +23,7 @@ If you open a PR without checking the log first, you have skipped the one rule.
 `mpm` finds the log automatically by walking up from the current directory to the
 nearest `.claude/FOLLOWUPS.md` — like git finding `.git`. So **inside any repo,
 just run `mpm <cmd>`** and it targets that repo's log. Pass `--dir <path-to-.claude>`
-only to point at a DIFFERENT repo's log than the one you're standing in:
+only to point at another repo's log:
 
 ```
 mpm list --status open                          # this repo's log (auto-found)
@@ -48,17 +48,11 @@ Reach for these first, and let `--help` supply the flags:
 
 **graph direction — ignore the words "upstream/downstream" in the request, decide by meaning:** "what depends on / is blocked on / waits for X" → `--direction up`. "what X itself needs / depends on" → `--direction down`.
 
-## Write (re-renders both markdown files; prints the affected id)
+## Write: four constraints `--help` does not tell you
 
-```
-The two that carry a convention `--help` cannot tell you:
-  `add --scope` says what the work is AND why it matters, in one sentence.
-  `done --pr <N>` is the normal close; `--branch <b> --commit <sha>` is the one for work that never became a PR.
-```
+Every write re-renders both markdown files and prints the affected id.
 
-## Three hard constraints (these are where calls go wrong)
-
-1. **`done` needs exactly one of `--pr` or `--branch`** — never zero, never both. PR resolution → `--pr <N>`. Branch-only → `--branch <name> --commit <sha>`.
+1. **`done` needs exactly one of `--pr` or `--branch`**, never zero and never both. `--pr <N>` is the normal close; `--branch <name> --commit <sha>` is for work that never became a PR.
 2. **`add` requires `--category` and `--scope`.** Everything else is optional. `--scope` is one sentence: what's deferred *and why it matters*.
 3. **Targets of `supersede --by`, `block --on`, `link` must be existing ids.** Run `mpm list`/`mpm show` first if unsure the id exists.
 4. **`ambiguous id <id>: N entries share it`** means the log has a duplicate id (a real data bug). Run `mpm validate` to see all duplicates, then resolve by editing the markdown — mpm can't disambiguate for you.

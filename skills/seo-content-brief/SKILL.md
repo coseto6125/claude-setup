@@ -143,9 +143,9 @@ Read `references/keyword-density.md` for the full rules. Summary:
 - No brand name at the end (it's already in the title)
 - No quotes (Google truncates at quotes)
 
-## Information Gain (non-negotiable)
+## Information Gain
 
-Every brief must specify EXACTLY what new value this content adds that no current ranking page provides. Must be specific:
+Every brief names the specific new value this content adds that no current ranking page provides. Must be specific:
 - Proprietary data or original research
 - Case studies with real outcomes
 - Expert quotes or first-hand experience

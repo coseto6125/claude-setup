@@ -12,6 +12,41 @@ The style's frontmatter needs `keep-coding-instructions: true`. Without it the C
 
 Verified after the move: a headless run answers `# Output Style: colleague-zh` when asked for that heading.
 
+### English drift in long sessions (2026-09-25)
+
+Transcript scan, main-session `.jsonl` files modified 2026-09-20 to 09-25 (claude-opus-5-5 era), turns where the user wrote Chinese. A text block counts as English when CJK characters are under 5% of Latin letters, after code is stripped.
+
+| position | before compaction | after compaction |
+| --- | --- | --- |
+| progress note between tool calls | 28/529 (5.3%) | 75/1010 (7.4%) |
+| last text block of a turn | 7/711 (1.0%) | 15/643 (2.3%) |
+
+13 of 98 sessions hit it. 90 of 125 English blocks follow a Bash result. The drift is sticky: once one block is English, most later blocks in that session are English too. Typical block: "Now the tests. First the Messenger start URL ...".
+
+Changes: the Language line said "write reasoning ... in English", which a progress note matches. It now says "thinking" and names the progress note as user-facing. The style gained a "Language holds for the whole session" paragraph. `hooks/lang-anchor.sh` re-states the `language` setting on every UserPromptSubmit and on SessionStart `compact`. None of the three is A/B measured: the drift needs a long context that `claude -p` does not reproduce. Re-run `python3 ~/.claude/scripts/lang-drift-scan.py <since-date>` on later sessions and compare against the table.
+
+### lang-anchor after compaction (2026-10-02)
+
+Same scan rule, 402 session files modified 2026-09-26 to 10-02. Each post-compaction block is split by whether lang-anchor's SessionStart reminder followed that compaction's summary.
+
+| position | progress note | last text block of a turn |
+| --- | --- | --- |
+| before compaction | 33/570 (5.8%) | 2/361 (0.6%) |
+| after compaction, reminder followed | 25/972 (2.6%) | 2/771 (0.3%) |
+| after compaction, no reminder | 95/392 (24.2%) | 26/165 (15.8%) |
+
+Re-counted 2026-10-03 on the same 402 files. The first count (2.4% / 2.6% / 26.1% for progress notes) read a loaded skill body as the user's prompt: that row is user-role, English and `isMeta: true`, so every block after a skill load until the next real prompt fell out of the scan. A reply with no language of its own (`y`, `/compact`) flipped the session to "user wrote English" the same way. The scanner now skips `isMeta` rows and keeps the last prompt's language for a prompt under 10 letters or one that starts with `/`. The 2026-09-25 table above has the same undercount. One blind spot remains: an English sentence that quotes a few Chinese terms passes the 5% CJK bar and counts as Chinese.
+
+The same scan split by trigger (all positions, 2026-09-26 on): a block right after the agent wrote an English PR, commit, issue or `.md` file drifted no more than others (progress notes 2/40 against 112/1437, last blocks 0/75 against 28/1116). A block in a turn that loaded a skill drifted a little more as a progress note (22/190, 11.6%, against 7.8%), and the same as a last block (1/38). The sample is small: no trigger is established.
+
+Every compaction without the reminder predates `lang-anchor.sh` (2026-09-25 17:37); every later one has it. The summaries stay mostly English (about 1k CJK characters against 10k+ Latin letters each). So the reminder after the summary is enough, and the summary language can stay English. This is observational, not an A/B: the two groups come from different days and tasks. Keep the SessionStart `compact` hook of lang-anchor; removing it is the change this table warns against.
+
+### Drift-triggered note (token-saver, 2026-10-03)
+
+Two sessions on 2026-10-02 drifted with every scheduled reminder present: lang-anchor on each prompt and notification, and the per-request output_style reminder. So token-saver now reacts to the drift itself. A main-loop text block with 60+ Latin letters and under 15% CJK sets `langDrift` (the scanner counts under 5%; the wider bar also catches an English note that quotes a Chinese term, 5 of 7 blocks in the 5 to 15% band were English); while it is set, the output_style reminder comes back with one sentence that names the drift; a Chinese block (10+ CJK characters) clears it. Verified live with `claude -p` on claude-haiku-4-5-20251001: reminder dropped, then 236 chars after a scripted English note, then dropped after a Chinese one. Not A/B measured: `-p` does not drift on its own. Judge it with the 2026-10-09 scan (FU-2026-10-02-1cadf62b5435).
+
+A `claude -p` A/B on the same day could not reproduce drift in any arm, including one with every language reminder removed (0/5): the model wrote most per-step notes in thinking blocks, not text.
+
 ## Commit & PR Authorship
 
 Red line — keep the negative wording; a positive rephrase here weakens the constraint (verified: reworded variant let a model re-add the footer).
@@ -438,3 +473,22 @@ Six open design questions (`preflight`) moved opus against a bare control (reuse
 ## Dispatch, "Phase" bullet and the brief lines (2026-09-15)
 
 Source: the 22 sub-agent transcripts of one client-project session, usage summed per turn. Four implementers ran 221 to 335 turns to a final context of 370k to 471k; 78 to 95% of their spend (cache reads at 0.1x) fell after the context passed 200k. Reviewers that ended at 73k to 211k cost $0.7 to $14 each. The 150k phase target is chosen, not measured: the agent cannot see its own context and the main session sees nothing until it returns, so the split is planned in the brief, and the 200k line is only the after-the-fact signal. The "names the function or line range" and batching-instance lines come from the same transcripts: one 31k-token source file read whole four times, 87 to 114 single-command Bash calls per implementer. A/B 2026-09-15, isolated `claude -p`, control = CLAUDE.md without the new lines, rule injected via `--append-system-prompt`, n=5 per arm, hit scored by regex on the reply. Phase bullet (probe: plan the dispatch for a six-tab cut): opus control 2/5 (both hits were "handoff" in the merge sense, not a phase split), A 5/5; sonnet control 0/5, A 5/5. Keep. Line-range line (probe: write the brief for a change in two large files, sizes stated): opus control 5/5, so a no-op for an opus brief-writer when the scenario states the sizes; sonnet control 0/5, A 5/5. Kept for the weaker reader; the opus probe is leading and does not measure the real-brief case. Batching-instance line: opus control 4/5, A 5/5; sonnet control 1/5, A 5/5. Keep. The simplify preamble reword was probed too (list the first six commands): old and new wording both 5/5 on opus and sonnet, so a no-tools probe cannot see the difference; the zero-call result comes from the thirteen agentic transcripts, and only an agentic run can retest it.
+
+## 2026-09-23 pass for claude-opus-5-5
+
+Moved out of `CLAUDE.md` as provenance, not instruction: the two "Measured 2026-09-15" sentences of the Phase bullet and the brief lines (rows in the section above), and "`Bash` carries 58% of long-session context" from Tool Call Batching (source not recorded). Removed the duplicate "Chat prose follows the `colleague-zh` output style" from Writing discipline: the Language line carries it. Removed the Eywa section: the hooks are off.
+
+Not added: "Start each rule's trigger with a moment the reader can see ..., never a category" in the Prompt Writing Guide. Leave-one-out, preloaded, n=5, two in-passing probes (backup before risky migrations, e2e for big changes): claude-opus-5-5 5/5 in both arms on both probes. claude-haiku-4-5 with the line 1/5 and 3/5, without it 3/5 and 5/5: with the line, haiku copied the scenario's category word ("risky", "large") into the trigger more often. The lever lives in `writing-for-agents`, which the main session loads for a rule change.
+
+### Second pass, same day: judged for claude-opus-5-5, not measured
+
+On the user's instruction, a wording measured on claude-opus-5 is no longer frozen: it is re-judged for the current reader, with the word count held level or lower. `CLAUDE.md` 2403 -> 2269 words. Cut: rationale clauses (the Language line's "to cut tokens", the Phase bullet's "spend grows with its square", the blind-spots "a silent gap does not", the Test Discipline "false positives", the benchmark "clean process", the delete-first "wastes it", the Python pointer to this file), the "Calibration belongs in the acceptance criterion" restatement, and the Memory section, which the harness's own auto-memory instructions already state. Merged the two ask-the-user bullets in Proactive Engineering. Red lines and every sentence that closes an escape stay word for word. `ECP.md` 540 -> 498 words: "The reflex" now opens on a moment ("Before you open source files or dispatch an Explore agent ...") instead of "Wanting to explore code". Pre-pass copies: session f9b48292 scratchpad `cmd/CLAUDE.md.orig`, `cmd/CLAUDE.md.pre-pass2`.
+
+### `except A, B:` red line re-checked 2026-09-23
+
+Leave-one-out, preloaded `CLAUDE.md`, claude-haiku-4-5, n=5: a review of a new file in a `requires-python = ">=3.14"` project. With the red line, haiku left `except ValueError, OSError:` alone 5/5. Without it, haiku flagged it 5/5 as "Python 2 except syntax" and proposed the parenthesised form, even with the 3.14 pin in view. Both arms found the planted aliasing bug 5/5. Keep the rule. The haiku result settles it, so the other models were not run.
+
+## simplify provenance, moved out of the skill 2026-09-23
+
+- Reviewer preamble lists one `ecp impact` command per changed symbol because, measured 2026-09-15, the generic "dig in with ecp" wording produced zero ecp calls across thirteen review agents.
+- Free reader (then `nemotron-3-super-120b-a12b:free`), measured 2026-09-11, three trials: located 4 of 5 planted defects from the diff alone, invented every failure_scenario (three different wrong breaks for one generator defect, confidence 93-95), missed a lock held across `requests.get` every time. A context-file second round fixed the scenario every time and added one lead in one trial of three. 52-line diff 4/4 in 40-95 s, clean on a control diff; 2034-line diff 2.3/4; three parallel calls left one hanging past 200 s.

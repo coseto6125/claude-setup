@@ -59,7 +59,19 @@ Industry vertical:
 
 ## Output
 
-Report: Local SEO Score (0-100) with dimension breakdown, business type detected (brick-and-mortar / SAB / hybrid), industry vertical detected with industry-specific findings, NAP consistency audit (source comparison table), GBP optimization checklist (detected vs missing), review health snapshot (rating, count, velocity, response rate), citation presence status (Tier 1 directories), local schema validation (correct subtype, property completeness), location page quality (if multi-location), top 10 prioritized actions (Critical > High > Medium > Low), and a limitations disclaimer (what could not be assessed without paid tools).
+Report:
+
+- Local SEO Score (0-100) with dimension breakdown
+- Business type detected (brick-and-mortar / SAB / hybrid)
+- Industry vertical detected with industry-specific findings
+- NAP consistency audit (source comparison table)
+- GBP optimization checklist (detected vs missing)
+- Review health snapshot (rating, count, velocity, response rate)
+- Citation presence status (Tier 1 directories)
+- Local schema validation (correct subtype, property completeness)
+- Location page quality (if multi-location)
+- Top 10 prioritized actions (Critical > High > Medium > Low)
+- A limitations disclaimer (what could not be assessed without paid tools)
 
 - findings file: `findings/local.md` — GBP, NAP, reviews, local schema, citation, and location-page findings
 - `audit-data.json` category: Local SEO

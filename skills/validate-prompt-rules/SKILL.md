@@ -5,113 +5,166 @@ description: Use when testing whether a prompt rule (CLAUDE.md, system prompt, o
 
 # Validate Prompt Rules
 
-A rule in CLAUDE.md is a *claim* that the model behaves differently because of it — often false: the model ignores it (loses to a prior), or already does it without it. You can't tell by reading. Run an isolated A/B comparison against a clean baseline.
+A rule in a prompt is a *claim* that the model behaves differently because of the rule. The claim is often false: the model ignores the rule because a prior wins, or the model already does it without the rule. Reading cannot tell you which. Run an isolated A/B comparison against a clean baseline.
 
-**Core principle: the conclusion is only as clean as the no-rule baseline. If the "without the rule" arm still loads the prompt, every conclusion is contaminated** — and the usual isolation flags don't actually disable CLAUDE.md.
+**Core principle: the conclusion is only as clean as the no-rule baseline.** If the "without the rule" arm still loads the rule, every conclusion is contaminated.
 
-## When to Use
+## When to use
 
-- Is a rule worth its tokens, or already the model's default?
-- Before deleting a rule ("the model does this anyway")
-- Before rewording one (does the new wording preserve behavior? does a positive rewrite weaken a red-line?)
-- Verifying a rule survives the weakest reader — Haiku sub-agents inherit CLAUDE.md too
+- Before you delete a rule because "the model does this anyway".
+- Before you reword, shorten or move a rule that carries a measurement.
+- Before you rewrite a red line as a positive.
+- After a model release, for each rule whose status was measured on the previous model.
+- When two arms tie and the baseline may load the rule.
 
-## The trap: which isolation actually works
+## Isolation
 
-`~/.claude/CLAUDE.md` is a **user setting-source**, not a dynamic system-prompt section. Only `--setting-sources` removes it:
+`~/.claude/CLAUDE.md` is a **user setting-source**. Skills load in `-p` too. Only this combination removes both:
 
 | Attempt | Result |
 |---|---|
-| `--system-prompt "..."` | replaces the *default* prompt, not the user source → **CLAUDE.md still loads** |
-| `--exclude-dynamic-system-prompt-sections` | CLAUDE.md isn't a dynamic section → **still loads** |
-| `HOME=/tmp/empty` | drops CLAUDE.md *and* `~/.credentials.json` → **auth breaks** |
-| `--setting-sources project` from an empty dir | drops the project source, **leaks `~/.claude`** — measured below |
-| **`CLAUDE_CONFIG_DIR=<dir you built>` + `--setting-sources user`** | ✅ the user source is that directory, so an empty one loads nothing; copy `.credentials.json` into it and auth survives |
-
-> Measured: an agent whose control used `--system-prompt` got identical 0/10-vs-0/10 arms and wrongly concluded "no effect"; the real signal only appeared under `--setting-sources project` — which is cleaner than `--system-prompt`, and still not clean.
-
-> Measured 2026-09-02: under `--setting-sources project` from an empty dir, four runs of the canary below each recited `~/.claude/ECP.md`'s command table, and three opened with "No." A gate that reads the Yes/No token passes a contaminated control three times in four.
-
-## First: confirm isolation
-
-A contaminated control fakes "no effect", so build the isolation you can assert rather than one you interrogate. `CLAUDE_CONFIG_DIR` **is** the user-source root, so a directory you built holds every user file the run can see:
+| `--system-prompt "..."` | replaces the *default* prompt, not the user source: **CLAUDE.md still loads** |
+| `--exclude-dynamic-system-prompt-sections` | CLAUDE.md is not a dynamic section: **still loads** |
+| `HOME=/tmp/empty` | drops CLAUDE.md *and* `~/.credentials.json`: **auth breaks** |
+| `--setting-sources project` from an empty dir | leaked `~/.claude` 4/4 on 2026-09-02 |
+| an empty `CLAUDE_CONFIG_DIR` without `--disable-slash-commands` | the CLI writes `skills/synced/` into it during the run, and 25 bundled and claude.ai skills load (2.1.280) |
+| **`CLAUDE_CONFIG_DIR=<dir you built>` + `--setting-sources user` + `--disable-slash-commands`** | the user source is that directory, and no skill loads. Copy `.credentials.json` into it, and auth survives |
 
 ```bash
 CFG=$(mktemp -d); printf '{}' > "$CFG"/settings.json
-cp ~/.claude/.credentials.json "$CFG"/ 2>/dev/null      # auth, not a setting-source
-ls -A "$CFG"                                            # the whole user surface: assert what is here
-(cd "$(mktemp -d)" && CLAUDE_CONFIG_DIR="$CFG" claude -p "..." \
-   --model haiku --setting-sources user --strict-mcp-config --mcp-config '{"mcpServers":{}}')
+cp ~/.claude/.credentials.json "$CFG"/                  # auth, not a setting-source
+(cd "$(mktemp -d)" && CLAUDE_CONFIG_DIR="$CFG" claude -p "..." --model claude-haiku-4-5 \
+   --setting-sources user --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}')
 ```
 
-> Verified both directions: a sentinel written to `$CFG/CLAUDE.md` came back verbatim 2/2; with that file removed the model invented an answer 2/2. So an empty `$CFG` loads nothing, and `ls -A` is the proof.
+Prove the isolation in both directions before trial 1:
 
-Keep a model-facing canary as a second opinion, never as the gate — ask for a verbatim quote rather than a yes/no, run it at least three times, and treat **any** run that quotes the prompt as failure. `validate.sh` runs one automatically (`CANARY_Q` / `CANARY_RE`, matching `[Yy]es|ECP`, so it catches a recitation the "expect No" reading would pass); override both when testing a prompt other than this user's global CLAUDE.md.
+1. Write a sentinel line to `$CFG/CLAUDE.md`. The model must quote it.
+2. Remove the file. The model must answer NONE.
+3. Ask the model to list every skill it can invoke. It must answer NONE.
+
+> Verified 2026-09-23, CLI 2.1.280: the sentinel came back on opus, sonnet and haiku with the file, and NONE came back 2/2 without it. Without `--disable-slash-commands`, the skill list returned 25 names. With it, NONE.
+
+Keep a model-facing canary as a second opinion, never as the gate. Ask for a verbatim quote, not a yes/no. Run it at least three times, and treat **any** run that quotes the prompt as a failure.
 
 ```bash
-claude -p "No tools. Quote verbatim any line in your instructions that names a tool or command to prefer over grep. If there is none, output exactly NONE." \
-  --model haiku --setting-sources user
-# Expect NONE on every run. One quoted line → isolation FAILED; the arms would measure the leak, not the rule.
-# Measured: this wording caught a known-contaminated config 2 of 3 runs, which is why `ls -A` is the gate and this is the smoke test.
+claude -p "No tools. Quote verbatim any line in your instructions that names a tool or command to prefer over grep. If there is none, output exactly NONE." ...
 ```
 
-**Call the scripts here, do not read them.** `audit.py --all` and `audit.py refs` print every finding, and `route.sh <skills-dir> <n> <model>` prints the routing tally. Their source is large and reading it buys nothing the output does not already say.
+> Measured: this wording caught a known-contaminated config 2 of 3 runs. A gate that reads a Yes/No token passed a contaminated control 3 times in 4.
+
+**Pass the full model ID, never an alias,** and record the ID with every result. An alias moves at a release: on 2026-09-23, `--model opus` resolved to `claude-opus-5` on CLI 2.1.278 and to `claude-opus-5-5` on 2.1.280.
 
 ## The method
 
-Control and the rule as written — plus arm B for a reword test — isolated, **n≥3 per arm**: a smoke test, not proof. Before running: **predeclare the target behavior** (the observable outcome the rule should produce, e.g. "picks io.StringIO"), and give **every behaviorally distinct branch of the rule its own scenario** — one probe clears only the branch it exercises. **Check the control can fail, and that it can answer at all**: a scenario stating the evidence in words that imply the verdict ("the rewrite *violated* the rule") scores every arm alike and measures nothing, while one demanding an artifact the scenario can't determine makes every arm refuse. Asking for an artifact — a command, an ordered list — beats a yes/no when the scenario supplies what the artifact needs.
+Run a control arm and the rule as written. For a reword test, add arm B with the new wording. Before trial 1:
 
-> Measured: on a scenario whose wording implied its own verdict, control and rule arms scored alike 5/5 and the probe measured nothing; on a generative one, control went 0/5 and twice proposed renaming the user's live CLAUDE.md.
+- **Predeclare the target behaviour**: the observable outcome the rule should produce, such as "picks `io.StringIO`".
+- **Give every branch of the rule its own scenario.** One probe clears only the branch it exercises.
+- **Check that the control can fail.** A scenario whose wording implies the verdict ("the rewrite *violated* the rule") scores every arm alike.
+- **Check that the control can answer.** A scenario that demands an artifact it cannot determine makes every arm refuse.
+- **Ask for one artifact**, such as a command, a rule text or an ordered list. A single-slot ask matches deployment. A multi-slot ask ("conclusion and next action") finds secondary points and inflates the hit rate.
+- **Probe the case the rule might break**, not only the case it targets.
 
-Inject the rule via `--append-system-prompt` into an otherwise-clean process — you control the exact wording, nothing else leaks:
+> Measured: on a scenario whose wording implied its own verdict, control and rule arms scored alike 5/5. On a generative one, the control went 0/5. A multi-slot ask turned a 1/5 into a 5/5.
+
+Inject a rule with `--append-system-prompt` into an otherwise clean process. Inject a whole skill as the body the Skill tool delivers: the skill text first, then the scenario, in the prompt.
 
 ```bash
-(cd "$(mktemp -d)" || exit 1   # empty dir — no project CLAUDE.md leaks into any arm
+(cd "$(mktemp -d)" || exit 1
 SCN="You build a string from 200 pieces. What do you use?"
 ASK="Report ONLY the single key decision this situation forces, as one short clause. No explanation, no tools."
+ISO=(--setting-sources user --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}')
+# control
+CLAUDE_CONFIG_DIR="$CFG" claude -p "SITUATION: $SCN
 
-# control — bare default, no rule
-claude -p "SITUATION: $SCN
+$ASK" --model claude-haiku-4-5 "${ISO[@]}"
+# A (B: the reworded rule)
+CLAUDE_CONFIG_DIR="$CFG" claude -p "SITUATION: $SCN
 
-$ASK" --model haiku --setting-sources project
-
-# A — rule as written  (B: same, with the reworded rule, for reword tests)
-claude -p "SITUATION: $SCN
-
-$ASK" --model haiku --setting-sources project \
+$ASK" --model claude-haiku-4-5 "${ISO[@]}" \
   --append-system-prompt "RULE you follow: build strings >100 pieces with io.StringIO"
 )
 ```
 
-Probe on **Haiku** first — the weakest reader that loads the prompt is the stress test. For many rules — plus retries, randomized arm order, per-probe metadata, and an automated contamination gate — use `validate.sh`.
+**Probe on the model that reads the artifact in deployment.** The main session reads `CLAUDE.md` and skills. A sub-agent reads its brief, and `CLAUDE.md` when it is a Claude Code agent. Add haiku when a haiku sub-agent reads the same text. A null on one model is no deletion licence for a rule that another model reads.
 
-## Two questions, two controls
+> Measured: a rule was inert on haiku (5/15 against a 4/15 control) and load-bearing on claude-opus-5 (14/15 against 8/15). The reverse also occurred: inert on opus, 0/6 to 6/6 on haiku.
 
-"Is this rule worth anything at all?" takes the bare control above. "Does this line add anything to what the reader already loads?" takes a control that **preloads the deployed files**: copy `~/.claude/CLAUDE.md` with its `@`-included siblings into `$CFG`, put the project `CLAUDE.md` in the probe's cwd, and run `--setting-sources user,project`. Skills do not load in `-p`; when a skill description is part of the deployed baseline, append it to the project file. `preloaded.sh` does this for a directory of probe JSONs (`scenario`, `ask`, `hit_regex`, `scope`) and a directory of `NN.A.txt` / `NN.B.txt` rule files. Set `WORK` to the directory that holds `probes/`, and `rules/` for any arm other than control, before you call it.
+## Three questions, three controls
 
-> Measured 2026-09-11: 26 design rules that looked useful against a bare reading were 25/26 saturated against the preloaded control on opus. The bare control answers a different question. Rows and numbers: `measurements.md`.
+| Question | Arms |
+|---|---|
+| Is this rule worth anything at all? | bare control against the rule alone |
+| Does this line add to what the reader already loads? | **preloaded** control: the deployed files load in every arm |
+| Is this section load-bearing inside its document? | **leave-one-out**: A = the whole document, B = the document minus the section. Use the bare control only as a saturation check |
+
+For the preloaded control, copy `~/.claude/CLAUDE.md` and its `@`-included siblings into `$CFG`. Put the project `CLAUDE.md` in the probe's cwd, and run `--setting-sources user,project`. When a skill description is part of the deployed baseline, append it to the project file. `preloaded.sh` runs this design.
+
+> Measured 2026-09-11 on claude-opus-5: 26 design rules that looked useful against a bare reading were 25/26 saturated against the preloaded control. Measured 2026-08-21: a punctuation guardrail looked like a no-op against a bare control, which was clean 10/10. Removed from its own document, the output was clean 0/10. The other paragraphs made the pressure that the guardrail resists.
+
+When the preloaded files already state the answer, every arm copies it, and the probe measures the preload. To test a general lever of a document, pick a scenario domain that the preload does not cover.
+
+> Measured 2026-09-23 on claude-opus-5-5: two probes on CSV splitting and on codex escalation scored 5/5 in all three arms, because the preloaded `CLAUDE.md` holds both rules word for word.
 
 ## When the behaviour is "go and look"
 
-A scenario that pastes the code puts the plant in view, and any rule about *finding* it saturates by construction. Probe that class agentically: `agentic.sh` copies a repo snapshot into a fresh dir per run, seeds git, runs `claude -p` with tools on and `--output-format stream-json`, and leaves `diff.patch` plus the tool trace. Set `WORK` to the directory that holds `base/`, `task.txt`, and `rules/<arm>.txt` for each arm other than control, before you call it. Put the plant outside the excerpt (a second call site, a doc line, a caller in another file) and score the diff, not the prose. Budget one to ten minutes and a few dollars per opus run.
+A scenario that pastes the code puts the plant in view, and any rule about *finding* the plant saturates by construction. Probe that class agentically. `agentic.sh` copies a repo snapshot into a fresh dir per run, seeds git, and runs `claude -p` with tools on. It leaves `diff.patch` and the tool trace. Put the plant outside the excerpt (a second call site, a doc line, a caller in another file), and score the diff, not the prose. Budget one to ten minutes and a few dollars per opus run.
 
-> Measured 2026-09-11: the historical miss the rule targeted was fixed 3/3 by the preloaded control in a fresh session; the rule arm matched it and cost 30% more.
+> Measured 2026-09-11: the historical miss the rule targeted was fixed 3/3 by the preloaded control in a fresh session. The rule arm matched it and cost 30% more.
 
-## Before trial 1: test the classifier both ways
+## The classifier
 
-Run `hit_regex` against one hand-written plausible hit **and** one plausible miss. Then, after the run, read two rows per cell before quoting a number: a static `Http::timeout(` versus `->timeout(`, a test class named `…BatchTest`, a `(bool)` cast copied from the excerpt each turned a real 5/5 into a reported 1/5 in one session.
+Before trial 1, run the classifier against one hand-written plausible hit **and** one plausible miss.
+
+After the run, read two rows per cell before you quote a number. A format the classifier did not expect turns a real hit into a miss.
+
+> Measured: a static `Http::timeout(` versus `->timeout(`, a test class named `…BatchTest`, and a copied `(bool)` cast each turned a real 5/5 into a reported 1/5. On 2026-09-23, "change the sentence back" missed a `revert|restore` pattern, and a negated "do not judge whether it is risky" tripped a `risky` miss pattern.
+
+When every arm hits on content, a form metric such as length can still separate the arms. Report it as a secondary result. A form metric never decides a content question.
+
+## How many trials
+
+Start at n=5. Add trials in steps, and stop at the first step where the arms separate cleanly:
+
+| Step | Clean separation |
+|---|---|
+| n=5 | the arms differ by 4 or more trials |
+| n=7, then n=10 | the arms differ by half of n or more |
+| n=15 | the arms differ by 5 or more trials |
+
+- **Add trials to the same run.** `preloaded.sh` keeps finished trials, so run it again with a larger `N`.
+- **Take the next step** when the gap is smaller than the table asks, or when the result decides the deletion of a measured rule.
+- **Stop at n=15.** A gap that is still smaller is unsettled. Sharpen the scenario, or report the rule as unsettled.
+- **Compare arms inside one run.** One identical haiku arm scored 9/15, 4/15 and 7/15 in three runs of the same input.
+- **Count the rows before you read a result.** A failed call must count as an error, never as a miss. A run where nothing executed looks like a clean null.
 
 ## Reading the result
 
-Classify each answer against the predeclared target behavior, then evaluate two questions:
+Classify each answer against the predeclared target. Then read the **control arm first**:
 
-1. **Effect** — read the **control arm first**, then the rule arm. Three outcomes:
-   - **Control hit the target** — the probe is saturated and measured nothing. Fix the scenario; the arms say nothing about the rule either way.
-   - **Control missed, rule arm hit** — effect.
-   - **Both alike, and the control could have failed** — **"no effect detected for this model and probe set"**: grounds to nominate the rule for deletion, not proof of redundancy. Before actually deleting, raise n and reconfirm on **every model that loads the rule in deployment** — a rule can be inert on Haiku yet load-bearing on Opus, or vice versa.
-2. **Compliance** — do rule-arm outcomes match the target? A rule can be echoed yet overridden by a strong prior — effect without compliance means strengthen the wording, or accept it won't hold on this model.
+- **Control hit the target**: the probe is saturated and measured nothing. Fix the scenario. The arms say nothing about the rule either way.
+- **Control missed, rule arm hit**: effect.
+- **Both alike, and the control could have failed**: **"no effect detected for this model and probe set"**. That is grounds to nominate the rule for deletion, not proof of redundancy. Before you delete, raise n and confirm again on **every model that loads the rule in deployment**.
 
-**Reword test:** compare arms A and B the same way. A discordant B trial (even 1/n) is a signal to add trials or sharpen the scenario before shipping the rewrite — red-line rules that fight a strong prior often need the blunt negative ("never X"), and a leaked rephrase shows up exactly this way.
+Then check **compliance**: do the rule-arm outcomes match the target? A rule can be echoed yet overridden by a strong prior. Effect without compliance means strengthen the wording, or accept that it does not hold on this model.
 
-> Measured: a red-line's positive rewrite let Haiku violate it in 1/3 trials while the blunt negative held 3/3.
+A sentence can be inert alone and load-bearing in combination with another. Test a removal against the document as shipped, not against the sentence alone.
 
+**Reword test:** compare arms A and B the same way. A discordant B trial, even 1/n, is a signal to add trials or sharpen the scenario before you ship the rewrite. A red line that fights a strong prior often needs the blunt negative ("never X"), and a leaked rephrase shows up exactly this way.
+
+> Measured: a red line's positive rewrite let haiku violate it in 1/3 trials, while the blunt negative held 3/3.
+
+## Scripts
+
+**Call the scripts, do not read them.** The output is the whole contract.
+
+| Script | Design |
+|---|---|
+| `validate.sh` | many rules or documents, bare control, retries, contamination gate, `results.jsonl` |
+| `preloaded.sh` | preloaded control, probe JSONs (`scenario`, `ask`, `hit_regex`, `scope`), rule files or whole skill bodies per arm |
+| `agentic.sh` | "go and look", tools on, scores a diff |
+| `route.sh <skills-dir> <n> <model>` | skill-description routing, swaps the whole skills tree |
+| `ab.sh`, `tourney.sh` | legacy: `--setting-sources project` isolation, kept for old runs |
+
+Rows and numbers behind this file: `measurements.md`.

@@ -15,14 +15,12 @@ Layer 1 says **what to look for**. Layer 3 says **how to prove it**, and which l
 1. **Once per session** — run every **Repo probe** in one batched call. A probe with no hits deletes that surface for this repo: record it absent and never open its file again this session.
 2. **Per review** — for each surface still standing, check its **Diff trigger** against the diff. An untripped trigger means the file stays shut.
 3. Read only the depth files whose trigger fired. Verify the diff against that file's checks.
-4. Before reporting anything, check it against that file's **Known-safe** table. A shape listed there is a false positive, and reporting it costs the reader more than the finding is worth.
-5. In the report, name what you skipped and which filter skipped it: absent from the repo, or untouched by the diff. A reader who disagrees with a skip can then say so.
-
-Step 1 is cheap and rarely eliminates much on a mature codebase. Step 2 is what keeps a review proportionate.
+4. Before reporting anything, check it against that file's **Known-safe** table. A shape listed there is a false positive.
+5. In the report, name what you skipped and which filter skipped it: absent from the repo, or untouched by the diff.
 
 ## Reach for ecp first
 
-Every question this review asks is structural — which routes exist, what reaches this sink, who calls this guard. That is the graph's job, so `ecp` answers it in one query where an Explore agent reads a hundred files. Text questions — a header name, an env key, a config literal — stay with grep.
+Structural questions (which routes exist, what reaches this sink, who calls this guard) go to `ecp`. Text questions (a header name, an env key, a config literal) stay with grep.
 
 | Security question | Command |
 |---|---|
@@ -35,11 +33,11 @@ Every question this review asks is structural — which routes exist, what reach
 | Does this statement shape exist anywhere? | `ecp pattern -p 'requests.get($URL)' --lang py` |
 | What did this diff move? | `ecp review --since origin/main` — runs impact, egress, shape-check and resolver-diff in one shot |
 
-Three traps, each cost a real query here:
+Five traps, each of which cost a real query here:
 
 - **`--callers-of` needs the qualified name.** `start_web` is rejected; `KnowledgePipeline.start_web` resolves. `ecp find <name> --mode fuzzy` gives you the owner.
-- **`ecp impact` caller counts are a lower bound** — the resolver suppresses ambiguous bare calls. A suspiciously small blast radius for a guard function gets a `grep` before you trust it.
-- **`found:false` with a `result` field is a stale graph, not a real miss.** Reindex before you report "no such route".
+- **`ecp impact` caller counts are a lower bound.** Grep a guard function whose blast radius looks too small.
+- **`found:false` with a `result` field is a stale graph.** Reindex before you report "no such route".
 - **`ecp pattern` reads expressions and statements, not JSX attributes.** `highlight($A, $B)` matches inside `.tsx`; `dangerouslySetInnerHTML={{ __html: $X }}` returns `total: 0` in a file that plainly has four. Any `total: 0` you could have found with grep is a pattern-language limit, so confirm every empty pattern result with one grep before you record a surface absent.
 - **A loose probe matches the mitigation and calls it the surface.** Grepping `pickle` returns every `np.save(..., allow_pickle=False)` — the control, counted as the vulnerability. Probe for the dangerous call, not for the topic's vocabulary.
 
@@ -47,9 +45,9 @@ Three traps, each cost a real query here:
 
 Two filters, and they do different amounts of work.
 
-The **repo probe** answers "does this codebase have the surface at all". On a young or narrow repo it eliminates several outright. **On a mature product it mostly returns present**, so treat a present result as "not eliminated", never as "worth reading".
+The **repo probe** answers "does this codebase have the surface at all". On a mature product it mostly returns present, so read a present result as "not eliminated", never as "worth reading".
 
-The **diff trigger** is the filter that earns its keep on every review: it says what has to appear in the diff before the depth file is worth opening. Run the probes once per session; apply the trigger per review.
+The **diff trigger** says what has to appear in the diff before the depth file is worth opening. It is the filter that does the work on every review.
 
 | Surface | Repo probe | Diff trigger — open the file when the diff… | Depth file | Rung |
 |---|---|---|---|---|
@@ -67,15 +65,13 @@ The **diff trigger** is the filter that earns its keep on every review: it says 
 | Cross-origin surface | `grep -rn "Access-Control-Allow\|postMessage" <src>` | changes a CORS header, a cookie attribute, an embed, or a frame message | [`cross-origin.md`](cross-origin.md) | — |
 | Errors and logs | none — present in every repo | adds an error path, widens an `except`, or logs near a credential or caller data | [`errors-and-logs.md`](errors-and-logs.md) | — |
 
-A probe that returns present for any repo of its language is a bad probe, not a present surface. Three were fixed for exactly that: counting occurrences of `API_KEY`, of `max_tokens`, and of `logger.` said nothing about whether the codebase has the surface. If a probe you run here never eliminates anything across several repos, say so and narrow it.
-
-The last five carry no Layer-1 rung on purpose. A rung costs every security-touching diff; a depth file costs only a diff that trips its trigger. Breadth belongs down here, where it is free until it is needed.
+A probe that returns present for any repo of its language is a bad probe, not a present surface: counting `API_KEY`, `max_tokens` or `logger.` says nothing. If a probe here never eliminates anything across several repos, say so and narrow it.
 
 ## The one inherited rule this skill overrides
 
 Public security-review skills tell the reviewer to skip a path that needs prior authentication, and to note the auth requirement instead. That rule suits a single-tenant service, where an authenticated caller reaches only their own data.
 
-**In a multi-tenant product the authenticated caller sits inside the threat model.** An org owner, a member, and a paying customer each hold a session, and each is the attacker against the tenant next door. So an authenticated path stays in scope here, and a finding states the role it needs as a precondition — never as a dismissal.
+**In a multi-tenant product the authenticated caller sits inside the threat model.** An org owner, a member and a paying customer each hold a session, and each is the attacker against the tenant next door. An authenticated path stays in scope, and a finding states the role it needs as a precondition, never as a dismissal.
 
 ## Provenance
 

@@ -30,9 +30,11 @@ DataForSEO MCP tools.
 
 ### Output conventions
 
-Tables for comparative data · scores as `XX/100` · priority Critical > High > Medium > Low ·
-label the source `DataForSEO (live)` so it is distinguishable from static HTML analysis ·
-include timestamps for time-sensitive data such as SERP positions and backlink counts.
+- Tables for comparative data.
+- Scores as `XX/100`.
+- Priority order Critical > High > Medium > Low.
+- Label the source `DataForSEO (live)`, so it stays distinct from static HTML analysis.
+- Timestamps on time-sensitive data, such as SERP positions and backlink counts.
 
 ## Output
 

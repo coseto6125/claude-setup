@@ -12,16 +12,13 @@ license: MIT
 compatibility: "Requires Firecrawl MCP server"
 metadata:
   author: AgriciDaniel
-  version: "2.2.5"
+  version: "2.3.1"
   category: seo
 ---
 
 # Firecrawl Extension for Claude SEO
 
-This skill requires the Firecrawl extension to be installed:
-```bash
-./extensions/firecrawl/install.sh
-```
+This skill requires the Firecrawl MCP server and `FIRECRAWL_API_KEY`. If its tools are absent from this session, ask the user to add the server to their Claude Code config.
 
 **Check availability:** Before using any Firecrawl tool, verify the MCP server
 is connected by checking if `firecrawl_scrape` or any Firecrawl tool
@@ -59,7 +56,7 @@ metadata, and links for all discovered pages.
 2. **Section-focused crawl**: Use `includePaths` to audit only `/blog/*` or `/products/*`
 3. **Broken link detection**: Crawl with `["links"]` format, check all hrefs for 404s
 4. **Content inventory**: Extract all page titles, meta descriptions, H1s at scale
-5. **SPA/JS-rendered sites**: Firecrawl renders JavaScript, solving the Issue #11 problem
+5. **SPA/JS-rendered sites**: Firecrawl renders JavaScript, so SPA content is captured
 
 **Example orchestration for `/seo audit`:**
 ```
@@ -191,7 +188,7 @@ When Firecrawl is available during `/seo audit`:
 
 | Error | Cause | Resolution |
 |-------|-------|-----------|
-| `FIRECRAWL_API_KEY not set` | MCP not configured | Run `./extensions/firecrawl/install.sh` |
+| `FIRECRAWL_API_KEY not set` | MCP not configured | Ask the user to add the Firecrawl MCP server and set `FIRECRAWL_API_KEY` |
 | `402 Payment Required` | Credits exhausted | Check usage at firecrawl.dev/app, upgrade plan |
 | `429 Too Many Requests` | Rate limited | Wait 60s, reduce crawl concurrency |
 | `408 Timeout` | Page too slow to render | Increase `timeout`, try without JS rendering |
@@ -200,4 +197,4 @@ When Firecrawl is available during `/seo audit`:
 **Graceful fallback:** If Firecrawl is unavailable, inform the user and suggest:
 1. Use `fetch_page.py` for single-page analysis (no API cost)
 2. Use `WebFetch` tool for basic HTML retrieval
-3. Install Firecrawl: `./extensions/firecrawl/install.sh`
+3. Ask the user to add the Firecrawl MCP server to their Claude Code config

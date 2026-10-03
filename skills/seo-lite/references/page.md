@@ -12,7 +12,7 @@
 - External links: to authoritative sources, reasonable count
 
 ### Content Quality
-- Word count vs page type minimums (see quality-gates.md)
+- Word count vs page type minimums (see `~/.claude/skills/seo/references/quality-gates.md`)
 - Readability: Flesch Reading Ease score, grade level
 - Keyword density: natural (1-3%), semantic variations present
 - E-E-A-T signals: author bio, credentials, first-hand experience markers

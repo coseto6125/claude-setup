@@ -442,6 +442,28 @@ test('homepage should not have accessibility violations', async ({ page }) => {
 - Error tracking
 - Search and segment sessions
 
+## Bug Capture for a Coding Agent
+
+A UI bug reported in prose loses the position, the state and the timing. A
+capture tool keeps all three and hands the agent one Markdown file.
+
+### MarkuprPlus
+**Website:** https://www.markuprplus.com/ · **Source:** https://github.com/hashfunction/MarkuprPlus (MIT)
+
+**How it works:**
+- The reporter records one window, narrates the bug, and draws a mark on each finding
+- Whisper transcribes on the device, and each mark becomes one annotated screenshot plus its narration
+- The output is one structured Markdown report, path copied to the clipboard
+
+**Surfaces:**
+- Desktop app: macOS and Windows only
+- CLI, any platform with Node 20.9 and ffmpeg: `npx markuprplus analyze ./recording.mov`
+- MCP server for Claude Code, Cursor, Codex, Windsurf: `npx --yes --package markuprplus markuprplus-mcp`
+
+**Best for:** a client or a tester who cannot write the bug report the agent needs. On WSL, record on the Windows side and run the CLI in Linux.
+
+Checked 2026-09-22.
+
 ## Accessibility Testing Checklist
 
 ### Automated Testing (15 minutes)
@@ -522,6 +544,7 @@ test('homepage should not have accessibility violations', async ({ page }) => {
 | Browser | BrowserStack | Web | Paid | Cross-browser |
 | Usability | UserTesting | Web | Paid | User research |
 | Analytics | Hotjar | Web | Free/Paid | Behavior analysis |
+| Bug capture | MarkuprPlus | macOS/Windows app, CLI, MCP | Free | Handing UI bugs to a coding agent |
 
 ## Resources
 

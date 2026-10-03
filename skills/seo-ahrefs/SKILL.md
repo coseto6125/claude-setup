@@ -2,19 +2,18 @@
 name: seo-ahrefs
 description: Ahrefs API analyst (extension). Reads referring domains, backlinks, organic keywords, and content explorer data via the tested @ahrefs/mcp@0.0.11 server. Pairs with seo-backlinks for multi-source confidence weighting.
 metadata:
-  version: "2.2.5"
-compatibility: "Tested with @ahrefs/mcp@0.0.11 (installed by extensions/ahrefs/install.sh)."
+  version: "2.3.1"
+compatibility: "Tested with @ahrefs/mcp@0.0.11 (the user adds the Ahrefs MCP server to their Claude Code config)."
 disable-model-invocation: true
 ---
 
 # seo-ahrefs
 
 Live Ahrefs data via the tested `@ahrefs/mcp@0.0.11` server.
-Package check (2026-07-10): verify the current Ahrefs MCP package source before changing this tested version.
 
 ## Prerequisites
 
-- Run `extensions/ahrefs/install.sh` (Linux/macOS) or `install.ps1` (Windows) before using this skill.
+- The Ahrefs MCP tools must be present in this session. If they are absent, ask the user to add the Ahrefs MCP server to their Claude Code config.
 - An Ahrefs API token (https://ahrefs.com/api).
 - Node 18+ on `$PATH` for the MCP server.
 
@@ -47,7 +46,7 @@ provide the install command above.
 
 Ahrefs API usage is metered per unit. Before running a batch (>= 50 URLs):
 
-1. Estimate cost with `"$HOME/.claude/skills/seo/bin/claude-seo" run dataforseo_costs.py` (the cost-tracker module is generic and supports Ahrefs unit accounting).
+1. Estimate units from the Ahrefs plan's published per-row pricing. No script in `seo/scripts` covers Ahrefs.
 2. Surface the estimate to the orchestrator.
 3. Log actual cost after each call.
 

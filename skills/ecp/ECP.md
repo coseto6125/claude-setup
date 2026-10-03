@@ -1,5 +1,9 @@
 # ECP — Egent Code Plexus (structural code intelligence)
 
+For computed-value changes, use `ecp flow --file <path> --line <n> --column <n>` to check consumers.
+Use `--subject return` for function results and `--direction backward` for origins.
+Calls alone do not prove value dependency. Check unresolved boundaries and refresh results after source changes.
+
 **Usage**: symbol-level code graph for AI agents. Sub-30ms queries; answers "who/what/impact", not "where's this string".
 
 ## The reflex
@@ -15,7 +19,8 @@
 | Find a definition (function / class / type)          | `ecp find <name>` / `ecp inspect --name <name>`  | grep |
 | Who calls / depends on X (before refactor/rename)   | `ecp impact --target <name> --direction upstream` | grep |
 | Blast radius of a diff                               | `ecp impact --baseline <ref>`                    | manual trace |
-| Routes / API contracts / event topics                | `ecp routes` / `ecp contracts` / `ecp find-event-mirrors` | grep |
+| How A reaches B (the route, not just the endpoints)  | `ecp path <from> <to>`                           | `ecp cypher` |
+| Routes / API contracts / event topics                | `ecp routes` / `ecp contracts` / `ecp heuristics event-mirrors` | grep |
 | Understand any indexed repo's internals              | `ecp impact` / `ecp inspect` / `ecp cypher`      | Explore agent |
 | Cross-repo / arbitrary graph query                   | `ecp cypher '<query>'`                           | —    |
 | String literal / config key / fs layout / vendored   | grep / glob                                      | ecp  |

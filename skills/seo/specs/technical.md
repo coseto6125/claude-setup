@@ -6,7 +6,7 @@ Crawlability, indexability, security, URL structure, mobile, rendering.
 
 1. Fetch the page or pages and analyse the HTML source.
 2. Check sitemap availability with
-   `"$HOME/.claude/skills/seo/bin/claude-seo" run sitemap_discovery.py <URL> --json`.
+   `"$HOME/.claude/skills/seo/scripts/claude-seo" run sitemap_discovery.py <URL> --json`.
    A robots.txt declaration is not a passing result unless the helper validates it; continue
    through the common fallbacks when a declaration is stale.
 3. Analyse meta tags, canonical tags, and security headers.

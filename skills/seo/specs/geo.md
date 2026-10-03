@@ -26,8 +26,20 @@ Generative Engine Optimization: AI crawler accessibility, llms.txt, passage-leve
 
 ### AI crawlers to check in robots.txt
 
-- Allow for AI search visibility: GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot.
-- Optional block (training only): CCBot, anthropic-ai, cohere-ai.
+Report each bot against the one capability it governs:
+
+| Bot | Governs | Not |
+|---|---|---|
+| OAI-SearchBot | ChatGPT Search citability | |
+| GPTBot | OpenAI training | ChatGPT Search |
+| Claude-SearchBot | Claude search citability | |
+| ClaudeBot | Anthropic training | Claude search |
+| PerplexityBot | Perplexity citability | |
+| Google-Extended | Gemini and Vertex training and grounding | Google Search, AI Overviews (Googlebot governs those) |
+| Applebot-Extended | Apple Intelligence training | Siri, Spotlight, Safari (Applebot governs those) |
+
+- Allow for AI search visibility: OAI-SearchBot, Claude-SearchBot, PerplexityBot.
+- Optional block (training only): CCBot, ClaudeBot, Google-Extended, Applebot-Extended, cohere-ai.
 
 ### Key citability signals
 
@@ -50,7 +62,14 @@ Only 11% of domains are cited by both ChatGPT and Google AI Overviews, so platfo
 
 ## Output
 
-Report: GEO Readiness Score (0-100) with dimension breakdown, AI Crawler Access Status (allowed/blocked per crawler), llms.txt status (present/missing/malformed), brand mention analysis (Wikipedia, Reddit, YouTube, LinkedIn), top 5 highest-impact changes with effort estimates, and platform-specific scores (Google AIO, ChatGPT, Perplexity, Bing Copilot).
+Report:
+
+- GEO Readiness Score (0-100) with dimension breakdown
+- AI Crawler Access Status (allowed/blocked per crawler)
+- `llms.txt` status (present/missing/malformed)
+- Brand mention analysis (Wikipedia, Reddit, YouTube, LinkedIn)
+- Top 5 highest-impact changes with effort estimates
+- Platform-specific scores (Google AIO, ChatGPT, Perplexity, Bing Copilot)
 
 - findings file: `findings/geo.md` — AI crawler access, llms.txt, citability, entity, and platform visibility findings
 - `audit-data.json` category: AI Search Readiness

@@ -50,7 +50,7 @@ INP replaced FID on March 12, 2024. FID was removed from Chrome's field-data too
 
 ### Performance tooling (2025-2026)
 
-Lighthouse 13.4.1 (July 2026, latest stable): Lighthouse 13.0 (Oct 2025) migrated performance audits to insight-based audits aligned with the DevTools Performance panel and removed legacy audits (first-meaningful-paint, font-size, third-party-facades); the performance score is metric-based and was NOT re-weighted. 13.2.0-13.3.0 added and default-enabled a new Agentic Browsing category (Chrome 150+; fractional pass-ratio, not 0-100 — see `skills/seo-technical/references/agent-friendly-pages.md`). Version 13.4.1 enabled that category through the PSI API and requires Node.js 22.19 or newer for the CLI.
+Lighthouse 13.4.1 (July 2026) is the latest stable. Lighthouse 13.0 (Oct 2025) moved performance audits to insight-based audits that match the DevTools Performance panel, and removed the legacy audits (first-meaningful-paint, font-size, third-party-facades). The performance score is metric-based and was not re-weighted. 13.2.0-13.3.0 added and default-enabled a new Agentic Browsing category (Chrome 150+; fractional pass-ratio, not 0-100 — see `skills/seo-technical/references/agent-friendly-pages.md`). Version 13.4.1 enabled that category through the PSI API and requires Node.js 22.19 or newer for the CLI.
 
 PageSpeed Insights / PSI API v5 run Lighthouse 13.x. The PWA category was removed in Lighthouse 12; do not expect or parse a `pwa` category. Lighthouse 13.4.1 enabled the agentic-browsing category through the PSI API.
 

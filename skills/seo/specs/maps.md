@@ -68,7 +68,19 @@ Load on demand:
 
 ## Output
 
-Report: Maps Health Score (0-100) with dimension breakdown, capability tier detected (Tier 0 or Tier 1), geo-grid heatmap with SoLV percentage (if Tier 1), GBP profile completeness score with field-by-field breakdown, review health snapshot (rating, count, velocity, response rate, cross-platform), competitor landscape (count in radius, top competitors by rating/reviews), cross-platform presence status (Google, Bing, Apple, OSM), generated LocalBusiness JSON-LD (if schema missing), top 10 prioritized actions (Critical > High > Medium > Low), cost report (DataForSEO credits consumed, if applicable), and a limitations disclaimer (what could not be assessed at current tier).
+Report:
+
+- Maps Health Score (0-100) with dimension breakdown
+- Capability tier detected (Tier 0 or Tier 1)
+- Geo-grid heatmap with SoLV percentage (if Tier 1)
+- GBP profile completeness score with field-by-field breakdown
+- Review health snapshot (rating, count, velocity, response rate, cross-platform)
+- Competitor landscape (count in radius, top competitors by rating/reviews)
+- Cross-platform presence status (Google, Bing, Apple, OSM)
+- Generated LocalBusiness JSON-LD (if schema missing)
+- Top 10 prioritized actions (Critical > High > Medium > Low)
+- Cost report (DataForSEO credits consumed, if applicable)
+- A limitations disclaimer (what could not be assessed at current tier)
 
 - findings file: `findings/maps.md` — Maps visibility, GBP completeness, review, competitor, and cross-platform NAP findings
 - `audit-data.json` category: Maps Visibility

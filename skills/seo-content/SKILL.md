@@ -1,16 +1,18 @@
 ---
 name: seo-content
 description: >
-  Content quality and E-E-A-T analysis with AI citation readiness assessment.
-  Use when user says "content quality", "E-E-A-T", "content analysis",
-  "readability check", "thin content", or "content audit".
+  Content quality and E-E-A-T analysis with AI citation readiness assessment,
+  plus last-mile draft cleanup (AI-typical phrasing and invisible Unicode
+  watermark characters). Use when user says "content quality", "E-E-A-T",
+  "content analysis", "readability check", "thin content", "content audit",
+  "humanize", "AI phrasing", "remove watermarks", or "invisible characters".
 user-invocable: true
 disable-model-invocation: true
 argument-hint: "[url]"
 license: MIT
 metadata:
   author: AgriciDaniel
-  version: "2.2.5"
+  version: "2.3.1"
   category: seo
 ---
 
@@ -87,7 +89,7 @@ Compare against page type minimums:
 
 ### Keyword Optimization
 - Primary keyword in title, H1, first 100 words
-- Natural density (1-3%)
+- Primary keyword used naturally; flag stuffing, with no numeric density target
 - Semantic variations present
 - No keyword stuffing
 
@@ -131,11 +133,37 @@ Google's raters assess low-quality, scaled, copied, or AI-generated main content
 - No author attribution
 - Factual inaccuracies
 
-> **Helpful Content System (March 2024):** The Helpful Content System was merged into Google's core ranking algorithm during the March 2024 core update. It no longer operates as a standalone classifier. Helpfulness signals are now weighted within every core update. The same principles apply (people-first content, demonstrating E-E-A-T, satisfying user intent), but enforcement is continuous rather than through separate HCU updates. Google now also documents **continuous, smaller unannounced core updates** between major ones (changelog 2025-12-09).
+> **Helpful Content System (March 2024):** The Helpful Content System was merged into Google's core ranking algorithm during the March 2024 core update. Helpfulness signals are weighted within every core update. The same principles apply (people-first content, demonstrating E-E-A-T, satisfying user intent), but enforcement is continuous rather than through separate HCU updates. Google now also documents **continuous, smaller unannounced core updates** between major ones (changelog 2025-12-09).
 
 > **Gen-AI optimization is SEO (Google docs, 2026-06-29):** the official "optimizing for generative AI features" guide states you do **not** need new AI files, markup, Markdown, content chunking, or AI-specific rewrites; chasing inauthentic "mentions" is unhelpful. AEO/GEO is rebranded SEO rooted in core ranking/quality.
 
 > **Honest scoping (Google docs, 2026-06-05):** per "Using third-party SEO tools, services, and advice," no tool guarantees rankings and third-party tools have no access to Google's internal ranking data. claude-seo's scores are **heuristics**, not Google-internal signals, so say so in reports, and validate GEO/AEO findings against Google's official guidance (Search Console is the first-party source).
+
+## Draft Cleanup: AI Phrasing & Invisible Watermarks
+
+For "humanize this", "remove watermarks", or "clean up this draft", run the
+bundled cleanup script on the user's own content:
+
+```bash
+"$HOME/.claude/skills/seo/scripts/claude-seo" run content_humanize.py draft.md -o cleaned.md
+cat draft.md | "$HOME/.claude/skills/seo/scripts/claude-seo" run content_humanize.py --json
+```
+
+Two deterministic passes, both logged in the JSON output:
+
+1. **Invisible characters** (`invisible_removed`): strips zero-width
+   codepoints, directional marks/overrides, Unicode tag characters (hidden
+   text smuggling), and normalizes exotic spaces. Emoji sequences (ZWJ,
+   variation selectors next to emoji) are preserved.
+2. **AI-typical phrasing** (`changes`): conservative 1:1 swaps from the
+   replacement table ("delve into" → "explore", etc.). Nothing is
+   paraphrased or added.
+
+Scope honesty: statistical watermarks (SynthID-style token-probability
+schemes) live in word choice, not codepoints. No tool reliably detects or
+removes them; do not claim otherwise in reports. This cleanup is for
+editing the user's own drafts, not for laundering third-party content —
+decline requests to strip provenance from content the user doesn't own.
 
 ## AI Citation Readiness (GEO signals)
 
@@ -150,12 +178,12 @@ Optimize for AI search engines (ChatGPT, Perplexity, Google AI Overviews):
 
 ### AI Search Visibility & GEO (2025-2026)
 
-**Google AI Mode** is Google's conversational AI search surface. Google's last official model naming for AI Mode / AI Overviews is a custom version of **Gemini 2.5**. Treat third-party AI Mode usage, citation, and link-share figures as methodology-dependent unless primary-sourced, and optimize for both AI Mode and AI Overviews (see the `seo-geo` skill).
+**Google AI Mode** is Google's conversational AI search surface. Treat third-party AI Mode usage, citation, and link-share figures as methodology-dependent unless primary-sourced, and optimize for both AI Mode and AI Overviews (see the `seo-geo` skill).
 
 **Key optimization strategies for AI citation:**
 - **Structured answers:** Clear question-answer formats, definition patterns, and step-by-step instructions that AI systems can extract and cite
 - **First-party data:** Original research, statistics, case studies, and unique datasets are highly cited by AI systems
-- **Schema markup:** Article and other relevant structured content. FAQPage no longer produces Google FAQ rich results; use QAPage only for genuine user Q&A where appropriate
+- **Schema markup:** Article and other relevant structured content. FAQPage produces no Google FAQ rich results; use QAPage only for genuine user Q&A where appropriate
 - **Topical authority:** AI systems preferentially cite sources that demonstrate deep expertise. Build content clusters, not isolated pages
 - **Entity clarity:** Ensure brand, authors, and key concepts are clearly defined with structured data (Organization, Person schema)
 - **Multi-platform tracking:** Monitor visibility across Google AI Overviews, AI Mode, ChatGPT, Perplexity, and Bing Copilot, not just traditional rankings. Treat AI citation as a standalone KPI alongside organic rankings and traffic.

@@ -11,6 +11,7 @@ Evaluate content quality: E-E-A-T signals, readability, content depth, AI citati
 5. Assess AI citation readiness (quotable facts, structured data, clear hierarchy).
 6. Check content freshness and update signals.
 7. Flag potential AI-generated content quality issues per the Sept 2025 QRG criteria.
+8. Check title and description pairs for templated metadata (see below).
 
 E-E-A-T scoring should run against `extracted_text` rather than `content`: trafilatura strips navigation chrome, footers, and cookie banners, so author bios and main-content trust signals score correctly without dilution.
 
@@ -55,6 +56,20 @@ The Helpful Content System (March 2024) was merged into Google's core ranking al
 
 - Programmatically generated pages: defer to the `seo-programmatic` sub-skill.
 - Comparison page content standards: see `seo-competitor-pages`.
+
+### Templated metadata
+
+Unique body copy does not clear a site of templated metadata. Bulk jobs generate metadata far more often than body copy, and their typical output is a description that restates its title and then appends a stock CTA. The check is a deterministic string comparison. It does not claim that any Google update targets this pattern.
+
+Check the whole site, not one page. Collect `{url, title, description}` objects while you crawl, then run:
+
+```
+"$HOME/.claude/skills/seo/scripts/claude-seo" run metadata_template.py --pairs-file metadata.json --json
+```
+
+For a single page, pass `--title "<title>" --description "<desc>"` instead of `--pairs-file`.
+
+Report `site_risk`, `templated_ratio` and `shared_cta_phrases`. One closing CTA repeated across many pages is the strongest single sign of a bulk job. `templated_metadata` is a High finding. `description_echoes_title`, `brand_suffix_in_description` and `description_duplicates_title` are secondary.
 
 ## Output
 

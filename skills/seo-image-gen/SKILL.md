@@ -8,7 +8,7 @@ license: MIT
 compatibility: "Requires nanobanana MCP server"
 metadata:
   author: AgriciDaniel
-  version: "2.2.5"
+  version: "2.3.1"
   category: seo
 ---
 
@@ -25,13 +25,13 @@ the standalone AI image generation skill for Claude Code.
 
 This skill has two components with distinct roles:
 - **SKILL.md** (this file): Handles interactive `/seo image-gen` commands for generating images
-- **Agent** (`agents/seo-image-gen.md`): Audit-only analyst spawned during `/seo audit` to assess existing OG/social images and produce a generation plan (never auto-generates)
+- **Audit dimension** (`../seo/specs/image-gen.md`): Audit-only analyst spawned during `/seo audit` to assess existing OG/social images and produce a generation plan (never auto-generates)
 
 ## Prerequisites
 
-This skill requires the banana extension to be installed:
+This skill requires the banana MCP server. If its tools are absent from this session, set it up with:
 ```bash
-./extensions/banana/install.sh
+"$HOME/.claude/skills/seo/scripts/claude-seo" run --extension banana setup_mcp.py --key YOUR_KEY
 ```
 
 **Check availability:** Before using any image generation tool, verify the MCP server
@@ -76,7 +76,7 @@ For every generation request:
    - Use `${CLAUDE_SKILL_DIR}` as the installed skill root
    - Load `${CLAUDE_SKILL_DIR}/references/prompt-engineering.md` for the 6-component system
    - Apply domain mode emphasis (Subject 30%, Style 25%, Context 15%, etc.)
-   - Be SPECIFIC and VISCERAL: describe what the camera sees
+   - Write concrete, sensory detail: describe what the camera sees
 5. **Generate** via `gemini_generate_image` MCP tool
 6. **Post-generation SEO checklist** (see below)
 
@@ -84,7 +84,7 @@ For every generation request:
 
 If the user mentions a brand or has SEO presets configured:
 ```bash
-"$HOME/.claude/skills/seo/bin/claude-seo" run --extension banana presets.py list
+"$HOME/.claude/skills/seo/scripts/claude-seo" run --extension banana presets.py list
 ```
 Load matching preset and apply as defaults. Also check `${CLAUDE_SKILL_DIR}/references/seo-image-presets.md`
 for SEO-specific preset templates.
@@ -122,7 +122,7 @@ After every successful generation, guide the user on:
 
 Image generation costs money. Be transparent:
 - Show estimated cost before generating (especially for batch)
-- Log every generation: `"$HOME/.claude/skills/seo/bin/claude-seo" run --extension banana cost_tracker.py log --model MODEL --resolution RES --prompt "brief"`
+- Log every generation: `"$HOME/.claude/skills/seo/scripts/claude-seo" run --extension banana cost_tracker.py log --model MODEL --resolution RES --prompt "brief"`
 - Run `cost_tracker.py summary` if user asks about usage
 
 Pricing is not hard-coded. Check current Google pricing at
@@ -142,13 +142,13 @@ https://ai.google.dev/gemini-api/docs/pricing, store dated values in
 
 | Error | Resolution |
 |-------|-----------|
-| MCP not configured | Run `./extensions/banana/install.sh` or `"$HOME/.claude/skills/seo/bin/claude-seo" run --extension banana setup_mcp.py --key YOUR_KEY` |
+| MCP not configured | Run `"$HOME/.claude/skills/seo/scripts/claude-seo" run --extension banana setup_mcp.py --key YOUR_KEY` |
 | API key invalid | New key at https://aistudio.google.com/apikey |
 | Rate limited (429) | Wait 60s, retry. Check current free-tier limits before batch operations |
 | `IMAGE_SAFETY` | Rephrase prompt - see `references/prompt-engineering.md` Safety section |
-| MCP unavailable | Fall back: `"$HOME/.claude/skills/seo/bin/claude-seo" run --extension banana generate.py --prompt "..." --aspect-ratio "16:9" --model "$NANOBANANA_MODEL"` |
-| CSV batch input | Plan first: `"$HOME/.claude/skills/seo/bin/claude-seo" run --extension banana batch.py --csv requests.csv --model "$NANOBANANA_MODEL"` |
-| Extension not installed | Show install instructions: `./extensions/banana/install.sh` |
+| MCP unavailable | Fall back: `"$HOME/.claude/skills/seo/scripts/claude-seo" run --extension banana generate.py --prompt "..." --aspect-ratio "16:9" --model "$NANOBANANA_MODEL"` |
+| CSV batch input | Plan first: `"$HOME/.claude/skills/seo/scripts/claude-seo" run --extension banana batch.py --csv requests.csv --model "$NANOBANANA_MODEL"` |
+| Extension not installed | Show the `setup_mcp.py` command from Prerequisites |
 
 ## Cross-Skill Integration
 

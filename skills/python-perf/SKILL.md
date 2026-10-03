@@ -7,7 +7,7 @@ description: Python design thinking and performance recipes — package defaults
 
 Environment is per-project: the active `.venv` (uv-managed) decides the Python version — 3.13 and 3.14 are both in use, so check before relying on 3.14-only syntax. Lint/format comes from the project's own ruff setup; don't assume a hook or editor config.
 
-Examples are Python, but the selection logic (data-structure / string-build / I/O / SQL trade-offs) generalizes to other languages. When delegating Python implementation to a sub-agent, echo the relevant recipe lines into its prompt — sub-agents without the Skill tool cannot load this file. The 3.14 `except A, B:` red-line lives in the global CLAUDE.md (kept ambient so reviewer sub-agents see it); do not restate it here.
+When delegating Python implementation to a sub-agent, echo the relevant recipe lines into its prompt: a sub-agent without the Skill tool cannot load this file.
 
 ## Syntax
 
@@ -30,7 +30,7 @@ Examples are Python, but the selection logic (data-structure / string-build / I/
 - Concurrency: CPU bound `ProcessPoolExecutor` · I/O bound `async/await` · blocking I/O `asyncio.to_thread()` · CPU+I/O mix async + ProcessPool for the CPU part · <10 tasks `asyncio.gather` · >10 `asyncio.Semaphore(N)` · complex flow Queue+worker · shared data `multiprocessing.shared_memory`
 - asyncio Queue+worker shutdown: end via sentinel (never a timeout); on the sentinel, `queue.task_done()` BEFORE `break`
 - I/O: large file `open(file, buffering=65536)` · random access `mmap.mmap()` · async `aiofiles`. JSON `msgspec` > stdlib · compression `zstd` > `gzip` · stream `zlib.compressobj()`. Pickle `pickle.HIGHEST_PROTOCOL`; built-in objects only `marshal` (faster than pickle)
-- Serialization default is `msgspec.msgpack` (binary): several× faster encode+decode and a smaller file than JSON, and `msgspec.Struct` decodes it with no model change — so reaching for `json` is the deviation that needs a reason, not the default. Drop to JSON only when a human must read/diff the bytes or another system requires it. Reflex to flip when you see `json.dumps`/`msgspec.json.encode` on machine-only data — especially a per-write full-file rewrite (save-on-every-mutation), where the JSON cost compounds every write.
+- Serialization default is `msgspec.msgpack` (binary): several× faster than JSON, a smaller file, and `msgspec.Struct` decodes it with no model change. Use JSON only when a human must read or diff the bytes, or another system requires it. Flip `json.dumps` / `msgspec.json.encode` on machine-only data to msgpack, above all in a full-file rewrite on every mutation.
 - itertools: flatten `chain.from_iterable(nested)` (or `tkinter._flatten()`, 2-5× faster private API) · unpack args `starmap(func, args_iter)` · batching `batched(data, n)` (3.12+) · stop on condition `takewhile(predicate, iterable)`
 - Packages — default to these over their common equivalents: sanic (not FastAPI/Flask), msgspec (not pydantic nor stdlib json), loguru (not logging), polars (not pandas), psqlpy (not asyncpg/psycopg), aiohttp (not requests/httpx), fastcounter (not collections.Counter), uvloop, zstd (not gzip), aiofiles, cachebox, async-lru, bm25s-j, faiss-cpu, hnswlib, jax[cpu], protobuf
 

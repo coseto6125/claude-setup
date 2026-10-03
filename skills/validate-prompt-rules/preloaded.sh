@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# usage: WORK=<dir with probes/ rules/> PROJ_MD=<project CLAUDE.md> ARMS="control A B" MODELS=opus N=5 JOBS=8 bash preloaded.sh
-# probes/<id>.json needs scenario, ask, hit_regex, scope; rules/<NN>.<arm>.txt is injected as "RULE you follow: …" where NN = id prefix.
+# usage: WORK=<dir with probes/ rules/> PROJ_MD=<project CLAUDE.md> ARMS="control A B" MODELS=claude-opus-5-5 N=5 JOBS=8 bash preloaded.sh
+# probes/<id>.json needs scenario, ask, hit_regex, scope. An arm's text comes from $WORK/<arm>.md when that file exists: the
+# whole body (frontmatter stripped) goes before the scenario, as the Skill tool delivers it. Otherwise rules/<NN>.<arm>.txt
+# is injected as "RULE you follow: …" where NN = id prefix. Pass full model IDs: an alias moves at a model release.
 # Control preloads ~/.claude/CLAUDE.md (+RTK, ECP) unless PRELOAD_USER=0. Score with score26.py-style regex over raw/.
 set -u
 [ -n "${WORK:-}" ] && [ -d "$WORK/${PROBES_DIR:-probes}" ] || { sed -n 2p "$0" >&2; exit 2; }
-for arm in ${ARMS:-control A B}; do [ "$arm" = control ] || [ -d "$WORK/${RULES_DIR:-rules}" ] || { echo "missing $WORK/${RULES_DIR:-rules}/" >&2; exit 2; }; done
+for arm in ${ARMS:-control A B}; do [ "$arm" = control ] || [ -f "$WORK/$arm.md" ] || [ -d "$WORK/${RULES_DIR:-rules}" ] || { echo "missing $WORK/${RULES_DIR:-rules}/" >&2; exit 2; }; done
 S="$WORK"; export S   # WORK holds probes/, rules/, raw/
 export CLAUDE_CONFIG_DIR=$(mktemp -d); trap 'rm -rf "$CLAUDE_CONFIG_DIR"' EXIT INT TERM; printf '{}' > "$CLAUDE_CONFIG_DIR/settings.json"
 cp ~/.claude/.credentials.json "$CLAUDE_CONFIG_DIR"/; [ "${PRELOAD_USER:-1}" = 1 ] && cp ~/.claude/CLAUDE.md ~/.claude/RTK.md ~/.claude/ECP.md "$CLAUDE_CONFIG_DIR"/
@@ -13,7 +15,7 @@ PROJ_MD="${PROJ_MD:-}"; export PROJ_MD   # project CLAUDE.md to seed each probe 
 mkdir -p "$S/raw"
 JOBS_F=$(mktemp)
 for p in ${PROBES:-$(cd "$S/${PROBES_DIR:-probes}" && ls *.json | sed "s/\.json$//")}; do
-  for arm in ${ARMS:-control A B}; do for m in ${MODELS:-opus}; do for i in $(seq 1 "${N:-5}"); do
+  for arm in ${ARMS:-control A B}; do for m in ${MODELS:-claude-opus-5-5}; do for i in $(seq 1 "${N:-5}"); do
     printf '%s\t%s\t%s\t%s\n' "$p" "$arm" "$m" "$i" >> "$JOBS_F"; done; done; done; done
 run_one() {
   IFS=$'\t' read -r p arm m i <<< "$1"
@@ -22,11 +24,15 @@ run_one() {
   scn=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["scenario"])' "$j")
   ask=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["ask"])' "$j")
   n=${p%%-*}
-  extra=(); if [ "$arm" != control ]; then extra=(--append-system-prompt "RULE you follow: $(cat "$S/${RULES_DIR:-rules}/$n.$arm.txt")"); fi
-  d=$(mktemp -d); [ -n "$PROJ_MD" ] && cp "$PROJ_MD" "$d/CLAUDE.md"
-  (cd "$d" && timeout 300 claude -p "SITUATION: $scn
+  pre=""; extra=(); if [ -f "$S/$arm.md" ]; then pre="$(awk 'NR==1 && /^---$/{fm=1; next} fm && /^---$/{fm=0; next} !fm' "$S/$arm.md")
 
-$ask" --model "$m" --setting-sources user,project --strict-mcp-config --mcp-config '{"mcpServers":{}}' "${extra[@]}" > "$out.tmp" 2>"$out.err")
+---
+
+"; elif [ "$arm" != control ]; then extra=(--append-system-prompt "RULE you follow: $(cat "$S/${RULES_DIR:-rules}/$n.$arm.txt")"); fi
+  d=$(mktemp -d); [ -n "$PROJ_MD" ] && cp "$PROJ_MD" "$d/CLAUDE.md"
+  (cd "$d" && timeout 300 claude -p "${pre}SITUATION: $scn
+
+$ask" --model "$m" --setting-sources user,project --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' "${extra[@]}" > "$out.tmp" 2>"$out.err")
   rc=$?; if [ $rc -eq 0 ] && [ -s "$out.tmp" ]; then mv "$out.tmp" "$out"; rm -f "$out.err"; echo "ok  $p $arm $m $i"; else echo "ERR $p $arm $m $i rc=$rc"; fi
   rm -rf "$d"
 }
