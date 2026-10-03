@@ -1,0 +1,6 @@
+{
+  "name": "token-saver",
+  "version": "0.1.0",
+  "description": "Defer rarely used skill descriptions and the Claude Docs MCP instructions, and drop duplicated fields from four tool results",
+  "types": "./types/index.d.ts"
+}

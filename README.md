@@ -13,6 +13,7 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `agents/` | on dispatch | effort-pinned and role-scoped sub-agent definitions |
 | `hooks/` | per the events in `settings.example.json` | shell hooks |
 | `skills/` | description resident, body on invocation | 30 written here, plus 32 directories vendored from `claude-seo` |
+| `mods/token-saver/` | every session, through `env.CLAUDE_CODE_PLUGIN_DIRS` in `settings.example.json` | a mod that trims the session prompt; `claude plugin test mods/token-saver` runs its 56 checks |
 | `settings.example.json` | copy to `~/.claude/settings.json` | read the security notes first |
 
 ### The 30 skills written here
@@ -56,11 +57,13 @@ The `mattpocock` rows started as [mattpocock/skills](https://github.com/mattpoco
 
 ```bash
 git clone <this repo> ~/claude-setup
-cp -r ~/claude-setup/{CLAUDE.md,RTK.md,ECP.md,maintainer-notes.md,agents,hooks,output-styles,skills} ~/.claude/
+cp -r ~/claude-setup/{CLAUDE.md,RTK.md,ECP.md,maintainer-notes.md,agents,hooks,mods,output-styles,skills} ~/.claude/
 cp ~/claude-setup/settings.example.json ~/.claude/settings.json
 ```
 
 Then edit `~/.claude/settings.json`: replace `<YOUR_CONTEXT7_API_KEY>`, and expand `$HOME` in the hook paths if your shell does not.
+
+Mods are an early-access Claude Code feature. `mods/token-saver/.claude-plugin/types/` is generated on your machine and not shipped, so `tsconfig.json` resolves only after that directory exists. The mod runs without it. To turn the mod off, remove `CLAUDE_CODE_PLUGIN_DIRS` from `env`.
 
 `settings.example.json` is this machine's `settings.json` with that one key blanked and `$HOME` put back where the absolute path was. It sets `modelSettings` rather than `model`, so it pins an effort level per model and leaves the model itself to whatever the CLI last selected. Add `"model": "opus[1m]"` if you want it fixed.
 

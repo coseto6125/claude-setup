@@ -3,6 +3,23 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.5 — 2026-10-04
+
+### Added
+
+- `mods/token-saver`: the mod that `settings.example.json` already loads through
+  `env.CLAUDE_CODE_PLUGIN_DIRS`. Until now that path pointed at a directory this repo did
+  not ship. The mod does these things:
+  - It shortens the listing descriptions of rarely used skills.
+  - It withholds the Claude Docs MCP instructions until the first Docs call.
+  - It drops duplicated fields from Write, Edit, TaskStop and SendMessage results.
+  - It drops the per-request output-style reminder, except when the last text block
+    drifted to English.
+  - It drops the token-budget reminder until less than 20% of the budget is left.
+
+  `claude plugin test mods/token-saver` runs 56 checks. The generated
+  `.claude-plugin/types/` directory is not shipped.
+
 ## v0.1.4 — 2026-10-04
 
 ### Added
