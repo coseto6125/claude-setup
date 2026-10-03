@@ -1,5 +1,9 @@
 # ECP — Egent Code Plexus (structural code intelligence)
 
+For computed-value changes, use `ecp flow --file <path> --line <n> --column <n>` to check consumers.
+Use `--subject return` for function results and `--direction backward` for origins.
+Calls alone do not prove value dependency. Check unresolved boundaries and refresh results after source changes.
+
 **Usage**: symbol-level code graph for AI agents. Sub-30ms queries; answers "who/what/impact", not "where's this string".
 
 ## The reflex
@@ -15,7 +19,8 @@
 | Find a definition (function / class / type)          | `ecp find <name>` / `ecp inspect --name <name>`  | grep |
 | Who calls / depends on X (before refactor/rename)   | `ecp impact --target <name> --direction upstream` | grep |
 | Blast radius of a diff                               | `ecp impact --baseline <ref>`                    | manual trace |
-| Routes / API contracts / event topics                | `ecp routes` / `ecp contracts` / `ecp find-event-mirrors` | grep |
+| How A reaches B (the route, not just the endpoints)  | `ecp path <from> <to>`                           | `ecp cypher` |
+| Routes / API contracts / event topics                | `ecp routes` / `ecp contracts` / `ecp heuristics event-mirrors` | grep |
 | Understand any indexed repo's internals              | `ecp impact` / `ecp inspect` / `ecp cypher`      | Explore agent |
 | Cross-repo / arbitrary graph query                   | `ecp cypher '<query>'`                           | —    |
 | String literal / config key / fs layout / vendored   | grep / glob                                      | ecp  |
@@ -24,7 +29,7 @@ Fall back to grep or an Explore agent only when the target is non-code text, or 
 
 ## Before any refactor / rename / signature change
 
-`ecp impact --target <symbol> --direction upstream` to see callers. The count and module list decide how much to say. CLAUDE.md's public-interface rule decides whether to ask at all.
+`ecp impact --target <symbol> --direction upstream` to see callers. A breaking change to a public interface or an existing caller needs the user's sign-off at any caller count. The count and the modules decide how much to say when you ask, not whether to ask.
 
 ## Reading output — five tells
 
@@ -32,6 +37,6 @@ High-signal, with five narrow failure modes. Spot the tell, cross-check, trust t
 
 - **`found:false` + a `result` field (or `l2.warm-attach`/`note:` on stderr)** → provisional, not a real miss: HEAD's graph isn't built yet, a sibling commit's is attached. Rerun or `ecp admin index --force --repo .`. No `result` field → trustworthy — and a trustworthy miss means *report "doesn't exist"*, never synthesize a caller list / blast radius for a symbol ecp couldn't find.
 - **`ecp impact` caller counts are a lower bound** → the resolver suppresses ambiguous bare calls to common names. Suspiciously low count → `grep` the call sites before trusting a refactor's blast radius.
-- **A hook's `ecp graph hits` block is the d=1 slice, not an impact report** → it names direct callers only. Blast radius, cross-file callers and entry points need the `ecp impact --direction upstream` the block hands you. Accepting the free slice as the answer is how a rename ships with an unseen caller.
+- **The hook's `ecp graph hits` block lists direct (d=1) callers only** → a preview, not the blast radius. Before a refactor, run the `ecp impact` command it prints.
 - **Known gaps, by design** → function-body locals (dropped), Java `record`, PHP `trait use`, C# `operator`/`event`/`indexer`. `ecp summary` lists per-repo BlindSpots.
 - **Surprising output has a root cause** → read the definition / reindex / `grep` before calling it a bug. Doc-comment inference ≠ verification; a passing unit test ≠ the pipeline uses that path.

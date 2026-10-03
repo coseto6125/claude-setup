@@ -12,10 +12,10 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `output-styles/colleague-zh.md` | main session only | voice and language for user-facing prose |
 | `agents/` | on dispatch | effort-pinned and role-scoped sub-agent definitions |
 | `hooks/` | per the events in `settings.example.json` | shell hooks |
-| `skills/` | description resident, body on invocation | 25 written here, plus 32 directories vendored from `claude-seo` |
+| `skills/` | description resident, body on invocation | 30 written here, plus 32 directories vendored from `claude-seo` |
 | `settings.example.json` | copy to `~/.claude/settings.json` | read the security notes first |
 
-### The 27 skills written here
+### The 30 skills written here
 
 | Skill | What it does | Origin |
 | --- | --- | --- |
@@ -23,6 +23,7 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `authority-check` | The design questions to settle before writing code that carries authority | — |
 | `context-audit` | Audit what fills the context window, examine usage and dependencies, and recommend changes that fit the user's | — |
 | `codebase-design` | Vocabulary for deep modules: interfaces, seams, testability | mattpocock |
+| `decider-2b` | Calls and tunes a local Decider-2B endpoint, and measures whether a prompt change helped | — |
 | `dep-audit` | Upgrades every dependency to latest and audits the breakage against real usage | — |
 | `domain-modeling` | Ubiquitous language and ADRs | mattpocock |
 | `ecp` | Structural code queries: definitions, callers, blast radius, routes | — |
@@ -33,11 +34,13 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `grilling` | Stress-tests a plan, decision or idea on request | mattpocock |
 | `improve-codebase-architecture` | Scans for deepening opportunities, reports them as HTML | mattpocock |
 | `mpm` | Reads and updates the cross-session follow-ups log through the `mpm` CLI | — |
+| `notebooklm` | Hands a large external read to NotebookLM through the `nlm` CLI, so only its answers enter context | — |
 | `peer-agent` | Runs codex or another Claude as the implementer while you gate the merge | — |
 | `preflight` | Six design questions answered in one line each before a new module; user-invoked | — |
 | `pr-finalize` | Removes a finished PR's worktree and branch | — |
 | `pr-review-multiagent` | Six-angle merge-readiness review, posted to the PR | — |
 | `python-perf` | Package defaults, class shape and the selection tables for Python | — |
+| `rust-perf` | Rust performance measurement and the Rust traps that pass review | — |
 | `simplify` | The code review skill on this machine | — |
 | `to-questionnaire` | Turns a decision you cannot answer into a questionnaire for someone else | mattpocock |
 | `to-spec` | Turns the conversation into a spec in the issue tracker | mattpocock |

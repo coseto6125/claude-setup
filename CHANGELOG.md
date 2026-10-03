@@ -3,6 +3,47 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.4 — 2026-10-04
+
+### Added
+
+- `skills/decider-2b`, `skills/notebooklm`, `skills/rust-perf`.
+- `skills/writing-for-agents/SMALL-MODELS.md`.
+- `hooks/lang-anchor.sh`, wired on `UserPromptSubmit` and on `SessionStart` with the
+  `compact` matcher: it re-states the `language` setting, because long sessions drift to
+  English after English tool output. `maintainer-notes.md` holds the transcript counts.
+- `skills/ui-ux-pro-max`: data files with their provenance record, and tests for the data
+  contracts and the catalog refresh.
+
+### Changed
+
+- A prompt audit against `claude-opus-5-5` on every file here:
+  - Pressure wording now runs at normal volume: all-caps `MANDATORY`, `MUST NOT` and `EVERY`
+    in the seo skills, `to-spec`'s "LONG" story list, and the one `MUST` in the context7 rule.
+  - Contradictions between files are resolved:
+    - `ECP.md` now defers to `CLAUDE.md` on when to ask before a breaking change.
+    - `pr-review-multiagent`, `agent-routing` and `dep-audit` follow the Dispatch rules in
+      `CLAUDE.md`.
+    - `to-spec` and `to-tickets` apply the `ready-for-agent` label only when a label
+      vocabulary was named.
+    - `seo-content` and `seo-content-brief` agree on keyword density.
+    - `seo-programmatic` has one set of thresholds.
+  - Names that no longer resolve are fixed: `seo-performance`, `seo-google psi`, the
+    `extensions/*/install.sh` installers, `SECURITY.md`, the `humanizer` exemption row,
+    and the recipe pointer in `peer-agent/SANDBOX-MODES.md`.
+  - The `seo` orchestrator describes audit dimensions as `specs/<dimension>.md` driven
+    agents throughout. It no longer claims both a sub-agent roster and none.
+  - History narration and dated headings are gone from the skill bodies.
+- `skills/seo`: claude-seo v2.3.1. The launcher moved from `bin/claude-seo` to
+  `scripts/claude-seo`.
+- `skills/ecp`: regenerated from the current `ecp` release, which adds `ecp flow` and
+  `ecp path`.
+
+### Removed
+
+- `skills/ecp/adoption.sh`, `skills/ecp/_shared/cli/find-schema-bindings.md` and
+  `find-transaction-patterns.md`: they are not in the current `ecp` release.
+
 ## v0.1.3 — 2026-09-17
 
 ### Added

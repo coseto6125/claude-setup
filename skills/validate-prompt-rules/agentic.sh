@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: WORK=<dir> PROJ_MD=<project CLAUDE.md> ARMS="control seven" N=3 JOBS=3 MODEL=opus bash agentic.sh
+# usage: WORK=<dir> PROJ_MD=<project CLAUDE.md> ARMS="control seven" N=3 JOBS=3 MODEL=claude-opus-5-5 bash agentic.sh
 # base/ = repo snapshot (git archive <ref> | tar -x), task.txt = the request, rules/<arm>.txt = appended rules.
 # Each run: fresh copy, git init+commit, claude -p with tools on, stream.jsonl + diff.patch + status.txt left in runs/<arm>.<i>/.
 set -u
@@ -16,8 +16,8 @@ run_one() {
   (cd "$d/repo" && git init -q && git add -A && git -c user.email=a@b -c user.name=pilot commit -qm base)
   extra=(); [ "$arm" != control ] && extra=(--append-system-prompt "RULES you follow:
 $(cat "$A/rules/$arm.txt")")
-  (cd "$d/repo" && timeout 1500 claude -p "$(cat "$A/task.txt")" --model "${MODEL:-opus}" --dangerously-skip-permissions --max-turns 80 \
-     --setting-sources user,project --strict-mcp-config --mcp-config '{"mcpServers":{}}' --output-format stream-json --verbose "${extra[@]}" > "$d/stream.jsonl" 2> "$d/err.txt")
+  (cd "$d/repo" && timeout 1500 claude -p "$(cat "$A/task.txt")" --model "${MODEL:-claude-opus-5-5}" --dangerously-skip-permissions --max-turns 80 \
+     --setting-sources user,project --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' --output-format stream-json --verbose "${extra[@]}" > "$d/stream.jsonl" 2> "$d/err.txt")
   echo "rc=$?" > "$d/DONE"; (cd "$d/repo" && git diff > "$d/diff.patch"; git status --short > "$d/status.txt"); echo "done $arm $i $(cat $d/DONE)"
 }
 export -f run_one

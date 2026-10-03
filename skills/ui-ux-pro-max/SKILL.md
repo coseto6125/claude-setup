@@ -1,17 +1,20 @@
 ---
 name: ui-ux-pro-max
-description: "UI/UX design intelligence backed by a searchable local database (84 styles, 192 palettes, 74 font pairings, 192 product types, 99 UX guidelines, 105 icon entries, 16 GSAP motion presets, 25 chart types, 22 stacks) plus a routed registry of external component sources (beUI, 21st, Watermelon, HeroUI Pro, ThreeUI, Fluid Functionalism, tweakcn, GSAP, DESIGN.md). Use when building UI — pages, components, landing pages, dashboards, color/typography/layout/animation systems — or when critiquing an existing design, mockup, or deployed interface for usability, accessibility (WCAG 2.1/2.2), visual hierarchy, and design-system consistency."
+description: "UI/UX design intelligence: a searchable local database of styles, palettes, font pairings, product types, UX guidelines, icons, GSAP motion presets and chart types for 22 stacks, plus a registry of external component sources (beUI, 21st, Watermelon, HeroUI Pro, ReUI, ThreeUI, Fluid Functionalism, tweakcn, GSAP, GlideCN, lucide-animated, DESIGN.md). Use when building UI — pages, components, landing pages, dashboards, color/typography/layout/animation systems — or when critiquing an existing design, mockup, or deployed interface for usability, accessibility (WCAG 2.1/2.2), visual hierarchy, and design-system consistency."
 ---
 
 # UI/UX Pro Max - Design Intelligence
 
-Searchable database of UI/UX design rules with priority-based recommendations: 84 styles, 192 color palettes, 74 font pairings, 192 product types with reasoning rules, 99 UX guidelines, 105 icon entries, 16 GSAP motion presets, 25 chart types, and 22 technology stacks.
+A searchable database of UI/UX design rules with priority-based recommendations. The row counts live in `data/`; query it rather than recalling it.
 
-## When to Apply
+## When to apply
 
-This skill has two branches. Pick one before doing anything else:
+Pick one branch before you do anything else:
 
-- **Build** — the task creates or changes how something looks, feels, moves, or is interacted with: new pages, new/refactored components, color–typography–spacing–layout systems, animation, responsive behavior. Continue to `## Step 0: Route by what you are making
+- **Build**: the task creates or changes how something looks, feels, moves or responds: a new page, a new or refactored component, a color, typography, spacing or layout system, animation, responsive behavior. Continue at Step 0.
+- **Critique**: the task judges an existing design, mockup or deployed interface. Go to **Design Critique** below.
+
+## Step 0: Route by what you are making
 
 Read the row that matches, load what it names, then continue through the Build
 Workflow. This file is the only always-loaded layer; everything it points at
@@ -19,15 +22,15 @@ loads on demand.
 
 | Making | Search | Then read | Reference source |
 |---|---|---|---|
-| One control: button, input, select, modal, tabs, toast, agent progress state | `--domain ux` + `--stack <stack>` | `local/design-patterns-library.md`, `local/motion-craft.md` | Fluid Functionalism, beUI |
+| One control: button, input, select, modal, tabs, toast, agent progress state | `--domain ux` + `--stack <stack>` | `local/design-patterns-library.md`, `local/motion-craft.md` | Fluid Functionalism, beUI, lucide-animated for an icon that moves |
 | One page section: hero, pricing, feature block, footer | `--domain landing` | `local/anti-patterns.md` | 21st, Watermelon blocks |
 | A whole landing or marketing page | `--design-system` | `local/anti-patterns.md`, `local/web-delivery-checklist.md` | Watermelon showcases, 21st templates |
-| A dashboard or data-dense app screen | `--design-system --density 8`, then `--domain chart` | `local/design-patterns-library.md`, `local/cognitive-load.md` | HeroUI Pro, Watermelon dashboards |
-| Motion: scroll choreography, page transition, 3D or shader hero | `--domain gsap`, plus `--stack threejs` for 3D | `local/motion-craft.md` | GSAP, ThreeUI |
+| A dashboard or data-dense app screen | `--design-system --density 8`, then `--domain chart` | `local/design-patterns-library.md`, `local/cognitive-load.md` | HeroUI Pro, ReUI, Watermelon dashboards |
+| Motion: scroll choreography, page transition, 3D or shader hero | `--domain gsap`, plus `--stack threejs` for 3D | `local/motion-craft.md` | GSAP, ThreeUI, GlideCN for a route change |
 | A theme or token system: colors, radius, type scale | `--domain color`, then `--domain typography` | `local/wcag-checklist.md` | tweakcn |
 | A hand-drawn or doodle surface | `--domain style "hand-drawn sketch"` | `local/sources.md`, `local/anti-patterns.md` | Oreo Doodle, Sketchy, khushmeen, dddoodle |
 | A design system meant to outlive this session | `--design-system --persist` | `local/design-md.md` | DESIGN.md spec |
-| A poster, flyer, or any print piece | this skill covers screens. Route to the `design` skill for artboards | | |
+| A poster, flyer, or any print piece | this skill covers screens. For artboards, tell the user to run `/design` | | |
 
 Rows compose: a landing page with a 3D hero reads both rows.
 
@@ -38,7 +41,7 @@ its license terms.
 
 ## Rule Categories by Priority
 
-Work priority 1→10 when deciding what to fix first. Query full rule text with `--domain <domain>`; the complete text of all 99 guidelines lives in `references/quick-reference.md`, read on demand.
+Work priority 1→10 when deciding what to fix first. Query full rule text with `--domain <domain>`. The complete checklist lives in `references/quick-reference.md`; read it on demand.
 
 | Priority | Category | Impact | Domain | Key Checks | Anti-Patterns |
 |----------|----------|--------|--------|------------|---------------|
@@ -201,4 +204,4 @@ When the artifact under review is a live URL or a buildable web project, measure
 
 ## Upgrading from upstream
 
-`data/`, `scripts/`, and `references/` are pulled wholesale from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) and carry no local edits — replace them as a unit. `local/` and this file are local work with no upstream equivalent. That covers the critique branch, the web delivery checklist, the Lighthouse verification (`lighthouse-verify.md` + `lighthouse_ab.py`), the Step 0 router, and the reference layer: `sources.md`, `motion-craft.md`, `design-md.md`, and the Production Tells section of `anti-patterns.md`. The invocation paths here are absolute because this installs as a user skill, not a plugin (`${CLAUDE_PLUGIN_ROOT}` is unset).
+`data/`, `scripts/` and `references/` come unedited from `.claude/skills/ui-ux-pro-max/` in [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill). Replace them as a unit, then run `scripts/validate_data.py` and check that every `search.py` flag this file uses still exists. `local/` and this file are local work with no upstream equivalent. Paths are absolute because this installs as a user skill, where `${CLAUDE_PLUGIN_ROOT}` is unset. Last synced: upstream `dcc40ff`, 2026-09-23.

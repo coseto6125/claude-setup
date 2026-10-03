@@ -4,7 +4,7 @@ Analyse a domain's backlink profile using free and paid sources, merged with con
 
 ## Steps
 
-1. Check credentials: `"$HOME/.claude/skills/seo/bin/claude-seo" run backlinks_auth.py --check --json`.
+1. Check credentials: `"$HOME/.claude/skills/seo/scripts/claude-seo" run backlinks_auth.py --check --json`.
 2. Determine tier: 0 = Common Crawl + verify, 1 = + Moz, 2 = + Bing, 3 = + DataForSEO.
 3. Run every source available at the detected tier for the target domain.
 4. Merge results with confidence weighting.

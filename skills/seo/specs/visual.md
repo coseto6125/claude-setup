@@ -2,20 +2,12 @@
 
 Capture screenshots, test mobile rendering, and analyze above-the-fold content using Playwright.
 
-## Prerequisites
-
-Before capturing screenshots, ensure Playwright and Chromium are installed:
-
-```bash
-pip install playwright && playwright install chromium
-```
-
 ## Steps
 
 1. Capture a desktop screenshot (1920x1080) and a mobile screenshot (375x812, iPhone viewport) with:
    ```bash
-   "$HOME/.claude/skills/seo/bin/claude-seo" run capture_screenshot.py URL --all --output screenshots/
-   "$HOME/.claude/skills/seo/bin/claude-seo" run render_page.py URL --mode auto --a11y-tree --json
+   "$HOME/.claude/skills/seo/scripts/claude-seo" run capture_screenshot.py URL --all --output screenshots/
+   "$HOME/.claude/skills/seo/scripts/claude-seo" run render_page.py URL --mode auto --a11y-tree --json
    ```
 2. Analyze above-the-fold content: is the primary CTA visible?
 3. Check for visual layout issues and overlapping elements.

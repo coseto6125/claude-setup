@@ -6,7 +6,7 @@ Detect regressions in on-page SEO elements by comparing current page state again
 
 ## Steps
 
-1. **Baseline**: capture current SEO state (title, meta, canonical, robots, headings, schema, OG tags, CWV, status code) with `"$HOME/.claude/skills/seo/bin/claude-seo" run drift_baseline.py <url>`. Store with SHA-256 content hashes in SQLite.
+1. **Baseline**: capture current SEO state (title, meta, canonical, robots, headings, schema, OG tags, CWV, status code) with `"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_baseline.py <url>`. Store with SHA-256 content hashes in SQLite.
 2. **Compare**: fetch current state with `drift_compare.py <url>`, run 17 comparison rules across 3 severity levels (CRITICAL, WARNING, INFO). Report all triggered rules with old/new values.
 3. **History**: query SQLite for all baselines and comparisons for a URL with `drift_history.py <url>`. Show a timeline.
 4. Generate an HTML report on request with `drift_report.py <file> --output report.html`.

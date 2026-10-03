@@ -1,6 +1,6 @@
 # codex sandbox modes
 
-Reached from [`SKILL.md`](SKILL.md) when a run needs a mode other than the two recipes there: `--sandbox read-only` for a peer that judges, `--dangerously-bypass-approvals-and-sandbox` for a peer that must produce a change.
+Reached from [`SKILL.md`](SKILL.md) and [`DETACHED-LAUNCH.md`](DETACHED-LAUNCH.md) when a run needs a mode other than the two recipes in DETACHED-LAUNCH.md: `--sandbox read-only` for a peer that judges, `--dangerously-bypass-approvals-and-sandbox` for a peer that must produce a change.
 
 - **`--dangerously-bypass-approvals-and-sandbox` drops the sandbox *and* the approval prompts.** A
   detached peer needs the second half: one that stops on an approval it cannot show anyone has not
@@ -26,8 +26,7 @@ Reached from [`SKILL.md`](SKILL.md) when a run needs a mode other than the two r
 Verifying what a page renders — a design cut, an editor screen, a layout after a change — needs a
 browser. A browser needs a writable temp directory and the network. `--sandbox read-only` gives
 neither, and the run does not stop: the peer keeps going, reasons from the source instead, and hands
-back a report whose findings never touched the page. Measured 2026-09-05 on two audits: both came
-back with every observable row marked unverified.
+back a report whose findings never touched the page.
 
 The signatures, so you recognise them in a log rather than reading them as a refusal:
 

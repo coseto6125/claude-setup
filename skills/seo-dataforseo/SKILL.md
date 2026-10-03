@@ -14,7 +14,7 @@ license: MIT
 compatibility: "Requires DataForSEO MCP server"
 metadata:
   author: AgriciDaniel
-  version: "2.2.5"
+  version: "2.3.1"
   category: seo
 ---
 
@@ -27,10 +27,7 @@ across 9 API modules with 79+ MCP tools.
 
 ## Prerequisites
 
-This skill requires the DataForSEO extension to be installed:
-```bash
-./extensions/dataforseo/install.sh
-```
+This skill requires the DataForSEO MCP server. If its tools are absent from this session, ask the user to add the server to their Claude Code config.
 
 **Check availability:** Before using any DataForSEO tool, verify the MCP server
 is connected by checking if `serp_organic_live_advanced` or any DataForSEO tool
@@ -49,7 +46,7 @@ DataForSEO charges per API call. Be efficient:
 
 **Before every DataForSEO MCP call**, run cost estimation:
 ```
-"$HOME/.claude/skills/seo/bin/claude-seo" run dataforseo_costs.py check <endpoint> [--count N]
+"$HOME/.claude/skills/seo/scripts/claude-seo" run dataforseo_costs.py check <endpoint> [--count N]
 ```
 
 - If `"status": "approved"` → proceed with the API call
@@ -58,7 +55,7 @@ DataForSEO charges per API call. Be efficient:
 
 **After each API call completes**, log the cost:
 ```
-"$HOME/.claude/skills/seo/bin/claude-seo" run dataforseo_costs.py log <endpoint> <actual_cost>
+"$HOME/.claude/skills/seo/scripts/claude-seo" run dataforseo_costs.py log <endpoint> <actual_cost>
 ```
 
 **User commands for cost management:**
@@ -376,7 +373,7 @@ Additional DataForSEO MCP tools are available for internal use but do not have d
 
 When DataForSEO MCP tools are available, other claude-seo skills can leverage live data:
 
-- **seo-audit**:Spawn `seo-dataforseo` agent for real SERP, backlink, on-page, and listings data
+- **seo-audit**:Spawn the `dataforseo` dimension for real SERP, backlink, on-page, and listings data
 - **seo-technical**:Use `on_page_instant_pages` / `on_page_lighthouse` for real crawl data, `domain_analytics_technologies_domain_technologies` for stack detection
 - **seo-content**:Use `kw_data_google_ads_search_volume`, `dataforseo_labs_bulk_keyword_difficulty`, `dataforseo_labs_search_intent` for real keyword metrics, `content_analysis_summary` for content quality
 - **seo-page**:Use `serp_organic_live_advanced` for real SERP positions, `backlinks_summary` for link data
@@ -386,7 +383,7 @@ When DataForSEO MCP tools are available, other claude-seo skills can leverage li
 
 ## Error Handling
 
-- **MCP server not connected**: Report that DataForSEO extension is not installed or MCP server is unreachable. Suggest running `./extensions/dataforseo/install.sh`
+- **MCP server not connected**: Report that DataForSEO extension is not installed or MCP server is unreachable. Ask the user to add the DataForSEO MCP server to their Claude Code config
 - **API authentication failed**: Report invalid credentials. Suggest checking DataForSEO API login/password in MCP config
 - **Rate limit exceeded**: Report the limit hit and suggest waiting before retrying
 - **No results returned**: Report "no data found" for the query rather than guessing. Suggest broadening the query or checking location/language codes

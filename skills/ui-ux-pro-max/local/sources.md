@@ -32,7 +32,11 @@ file carries it.
 | Dashboards and templates as whole pages | Watermelon | free |
 | 3D hero, shader background, WebGL motion | ThreeUI | free tier |
 | A shadcn theme that is not the default one | tweakcn | free |
-| Scroll choreography, SVG morph, timeline, page transition | GSAP | free |
+| Scroll choreography, SVG morph, timeline, in-page transition | GSAP | free |
+| Route transition between pages in Next.js or React Router, zero layout shift | GlideCN | free, MIT |
+| An icon that moves on hover or on a state change, in a project already on Lucide | lucide-animated | free, MIT |
+| Kanban board, drag-and-drop list, or product UI without a paid tier | ReUI | free tier, MIT core |
+| An animated React block that beUI lacks | Great UI | free, custom license |
 | Hand-drawn icons, or doodle decoration for a sketch-style build | Asset sources, below | free, mixed |
 | A design system an agent can reload next session | DESIGN.md, see `local/design-md.md` | free |
 
@@ -201,6 +205,106 @@ replaced wholesale from upstream. Ship SplitText without the fallback.
 Query `--domain gsap` first; `local/motion-craft.md` sets the boundary between those
 presets and this file. Fetch `https://gsap.com/docs/v3/` only for a plugin the presets
 do not cover.
+
+### lucide-animated - lucide-animated.com
+
+467 Lucide icons that animate, one file per icon, React plus `motion`. MIT, 8.1k
+stars, last push 2026-08-22. Each icon ships as a shadcn registry item, so the
+project owns the code.
+
+| Surface | Endpoint |
+|---|---|
+| Agent index | `https://lucide-animated.com/llms.txt` |
+| Operating guide | `https://lucide-animated.com/skill.md` |
+| Icon list | `https://lucide-animated.com/icons/llms.txt` |
+| One icon, markdown | `https://lucide-animated.com/icons/{slug}.md` |
+| Registry item | `https://lucide-animated.com/r/{slug}.json` |
+| MCP server | `https://lucide-animated.com/mcp` (Streamable HTTP: `search_icons`, `list_icons`, `get_icon`) |
+| Install | `npx shadcn@latest add "https://lucide-animated.com/r/{slug}.json"` |
+
+Reach for it when the project already renders Lucide and one icon must report a
+state change: a bell that rings on a new message, a check that draws on success.
+The icon carries its own `motion` dependency, so add it only where that package
+is already in the bundle. Gate every animated icon behind
+`prefers-reduced-motion`. `data/icons.csv` stays Phosphor; this source answers
+the motion question, not the icon-set question.
+
+Checked 2026-09-22.
+
+### ReUI - reui.io
+
+shadcn registry from Keenthemes: 22 primitives, 1,149 free component examples,
+543 premium blocks, 638 icons. Core repo MIT, 3.5k stars, last push 2026-09-16.
+Premium blocks need a license key, and the rule at the top of this file governs
+them: read the public page, write your own.
+
+| Surface | Endpoint |
+|---|---|
+| Agent index | `https://reui.io/llms.txt` |
+| MCP server and agent skill | `https://reui.io/docs/mcp`, `https://reui.io/docs/agent-skills` |
+| Registry item | `https://reui.io/r/{slug}.json` |
+| Kanban primitive | `https://reui.io/docs/components/base/kanban` |
+| Kanban variants | `npx shadcn@latest add @reui/c-kanban-1` through `@reui/c-kanban-6` |
+
+Reach for it when the work is a product surface and HeroUI Pro is the paid
+answer: a task board, a pipeline, a sortable list. The kanban runs on
+`@dnd-kit/core` and `@dnd-kit/sortable`, with drag overlay, source placeholder
+and cross-column move already handled. Pair a kanban with the keyboard rules in
+`local/wcag-checklist.md`: every drag has a keyboard path or the board fails.
+
+Checked 2026-09-22.
+
+### GlideCN - glidecn.vercel.app
+
+Route transitions for Next.js App Router, Pages Router, React Router and
+TanStack. 68 transitions in seven families (Flow, Portal, Paper, Mask, Spatial,
+Dynamic, Experimental). MIT. New and small: 1 star, one author, last push
+2026-09-17. Judge it as a mechanism to borrow, not as a dependency to trust for
+years.
+
+The mechanism is two parts. A `FrozenRouter` holds the exiting page tree in
+place while the entering page mounts, so the swap causes no layout shift. Each
+transition is one `framer-motion` variant triple (`initial`, `animate`, `exit`)
+on compositor properties only: `transform`, `opacity`, `filter`, `clip-path`.
+The CLI copies both into `components/glidecn/`, so the project owns the code.
+Reduced motion is respected by default.
+
+| Surface | Endpoint |
+|---|---|
+| Agent index | `https://glidecn.vercel.app/llms.txt` |
+| Architecture | `https://glidecn.vercel.app/docs` |
+| Catalog | `https://glidecn.vercel.app/transition`, one page per slug at `/transition/{slug}` |
+| Transition source | `https://github.com/MYSELF-SAYAN/glidecn/tree/main/cli/templates/transitions` |
+| Install | `npx glidecn-cli init`, then `npx glidecn-cli add {slug}` |
+
+Reach for it when a Next.js or React Router site changes route and the exit of
+the old page must animate. GSAP owns the transition inside one page. On a
+static or multi-page site, take the variant triple from the transition source
+and write it as `::view-transition-old(root)` and `::view-transition-new(root)`
+keyframes over the View Transitions API. Same properties, no React.
+
+Checked 2026-09-22.
+
+### Great UI - great-ui.com
+
+Animated React components: React, Tailwind, Motion, shadcn registry format.
+221 stars, last push 2026-09-19. It publishes no `llms.txt`.
+
+**The license is not MIT.** The README badge says MIT. The `LICENSE` file is a
+custom agreement: free for personal and commercial products, and it forbids
+redistribution as a UI kit, template or component library. Name that license
+when you deliver.
+
+| Surface | Endpoint |
+|---|---|
+| Registry index | `https://great-ui.com/r/registry.json` |
+| Source | `https://github.com/Saurabh-2607/GreatUI` |
+
+Reach for it after beUI, which covers the same ground with a larger set, a
+plain MIT license and an agent index. Great UI answers the case where beUI
+lacks the one block you need.
+
+Checked 2026-09-22.
 
 ### Taste Skill - github.com/Leonxlnx/taste-skill
 

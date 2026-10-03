@@ -30,16 +30,15 @@ live session registry, so an empty `overlaps` means those targets do not collide
 each other. To cover work already in flight, add the targets other agents currently
 hold to the same `--targets` list.
 
-Caller sets are a lower bound, since the resolver suppresses ambiguous bare calls to
-common names. For a common symbol name, grep the call sites before trusting a clean
-result.
+`plan` inherits the lower-bound caller counts that `ECP.md` describes for `ecp impact`.
+For a common symbol name, grep the call sites before you trust a clean result.
 
 To collect what the other agents hold, treat Orca's task specs as the roster and
 `ecp peers status` as evidence of who is actively touching code. The listing runs
-narrower than the work in flight: it reports the sessions that hold a dirty surface and
-acted in this repo recently, so a clean worktree, a session quiet past the liveness
-window, and an agent editing this repo by absolute path from another cwd are all absent
-from it. (Needs ecp 0.9.1 or later.)
+narrower than the work in flight. It reports only sessions that hold a dirty surface and
+acted in this repo recently. A clean worktree, a session quiet past the liveness window,
+and an agent that edits this repo by absolute path from another cwd are absent from it.
+(Needs ecp 0.9.1 or later.)
 
 `ecp peers status --pairs` answers a coarser question than `plan`: it reports two
 sessions holding an overlay entry for the same file, since the manifest does not record
@@ -99,19 +98,17 @@ the guide only when Orca itself changed, so the usual run costs one status call.
 
 ## Anything that needs a browser
 
-Wanting to see a page IS the trigger. The moment the thought forms — render this URL,
-screenshot the dev server, check how the page looks, does this layout overflow — the
+The trigger is the wish to see a page. The moment the thought forms (render this URL,
+screenshot the dev server, check how the page looks, does this layout overflow), the
 browser is Orca's embedded one, reached through `orca-cli`.
 
 **Never hand-write a Playwright script, and never launch a browser binary directly.**
-Drive Orca's embedded browser through `orca-cli` instead. The `playwright` MCP entry
-was removed on 2026-08-15 because the embedded browser covers the work, and re-creating
-it by hand re-imports the 1,155 MB of playwright-mcp and headless-Chrome RSS that
-removal released. `~/.claude/maintainer-notes.md` records the decision.
+The `playwright` MCP entry is gone; `~/.claude/maintainer-notes.md`
+records why.
 
-Route by what holds the pixels, not by whether the target feels Orca-managed. Judging
-"is this Orca's business?" is the step that fails: a local dev server reads as plain
-shell work and the browser rule never fires.
+Route by what holds the pixels, not by whether the target feels Orca-managed. The
+question "is this Orca's business?" is the step that fails: a local dev server reads as
+plain shell work, and the browser rule never fires.
 
 - A URL, a local dev server, a web app, a rendered document → `orca-cli`, embedded browser.
 - A desktop window, a webview, an app that is not a page → `computer-use`.
@@ -119,17 +116,16 @@ shell work and the browser rule never fires.
 ## Reaching codex
 
 `ListAgents` reports Claude Code sessions only, so every channel to codex runs through
-Orca. `ecp peers` is the one layer that can see codex and Claude at once, since
-`resolve_session_id` accepts `ECP_SESSION_ID` ahead of every host-specific variable.
-Codex exports no session id of its own, so give it one when the terminal is created:
+Orca. `ecp peers` is the one layer that sees codex and Claude at once. Codex exports
+`CODEX_THREAD_ID` to its shell and ecp reads it, so any launch form enrolls codex as one
+stable peer (codex-cli 0.155.1, 2026-09-23). To address it by a name instead of its id,
+launch it with one:
 
 ```bash
-ORCA terminal create --worktree active \
-  --command 'ECP_SESSION_ID=<stable-name> ECP_AGENT_NAME=<stable-name> codex' --json
+ORCA terminal create --worktree active --command 'ECP_AGENT_NAME=<name> codex' --json
 ```
 
-Without it, each ecp call under codex falls back to a per-process id and enrolls as a
-fresh dead session.
+`worktree create --agent codex` forwards no per-call arguments, so it cannot carry a name.
 
 ## Model and effort
 
@@ -137,8 +133,8 @@ fresh dead session.
 
 Two knobs are adjustable. Thinking is not one of them.
 
-- **model** — the per-call `model` param on the Agent tool, or the agent definition's frontmatter. Inherit is reserved for tasks that genuinely need the session's top-tier model.
-- **effort** — no per-call param on the Agent tool. Set it through agent-definition frontmatter. The generic `effort-<level>` definitions in `~/.claude/agents/` carry no model binding, so they compose with the per-call `model` param into a full model x effort grid; the per-call `model` overrides the frontmatter. Verified live. `lite-scan` and `deep-review` add role prompts and tool whitelists on top. Only Workflow `agent()` has a true per-call `effort`. New definitions register at session start, not mid-session.
+- **model** — the per-call `model` param on the Agent tool, or the agent definition's frontmatter. Pass it on every call; name `opus` when the task needs the top tier.
+- **effort** — no per-call param on the Agent tool. Set it through agent-definition frontmatter. The generic `effort-<level>` definitions in `~/.claude/agents/` carry no model binding, so they compose with the per-call `model` param into a full model x effort grid; the per-call `model` overrides the frontmatter. `lite-scan` and `deep-review` add role prompts and tool whitelists on top. Only Workflow `agent()` has a true per-call `effort`. New definitions register at session start, not mid-session.
 - **thinking** — fixed. Sub-agents inherit the session's extended-thinking toggle, and "think hard" or "ultrathink" keywords in a prompt do not change any budget. Adapt through model and effort only.
 
-Per-MTok list prices, input/output: Haiku 4.5 $1/$5 · Sonnet 5 $2/$10 (the planned 2026-09-01 rise to $3/$15 was cancelled) · Opus 5 $5/$25 · Fable 5.1 $10/$50, cache reads $0.25 (0.025x; every other model reads at 0.1x). Verified 2026-09-11 against platform.claude.com/docs/en/about-claude/pricing.
+Per-MTok list prices, input/output: Haiku $1/$5 · Sonnet $2/$10 · Opus $4/$20, cache reads $0.20 (0.05x) · Fable 5.1 $10/$50, cache reads $0.25 (0.025x); every other model reads cache at 0.1x. Source: platform.claude.com/docs/en/about-claude/pricing (2026-09-11); Haiku, Sonnet and Opus re-checked in the bundled `claude-api` skill (2026-09-25).

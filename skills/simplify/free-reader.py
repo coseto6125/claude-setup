@@ -21,7 +21,7 @@ import sys
 import urllib.error
 import urllib.request
 
-MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
+MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 ROUND2 = """Here is the full current text of the files this diff touches, plus the callers of the symbols it changes. You said you could not see them.
 
 {context}
@@ -51,8 +51,9 @@ def api_key() -> str | None:
     Return the OpenRouter key for MODEL, from the environment or the local store.
 
     The store holds several providers whose keys share a prefix, so the key is
-    chosen by matching the provider to the endpoint and the model rather than
-    by scanning the file for the first thing that looks like a key.
+    chosen by matching the provider to the endpoint rather than by scanning
+    the file for the first thing that looks like a key. An OpenRouter key
+    serves every model, so the store's per-provider model list is not checked.
     """
     if (key := usable(os.environ.get("OPENROUTER_API_KEY"))) is not None:
         return key
@@ -66,11 +67,6 @@ def api_key() -> str | None:
         return None
     for provider in providers.values():
         if not isinstance(provider, dict) or HOST not in str(provider.get("baseUrl", "")):
-            continue
-        models = provider.get("models")
-        if not isinstance(models, list):
-            continue
-        if not any(m.get("id") == MODEL for m in models if isinstance(m, dict)):
             continue
         if (key := usable(provider.get("apiKey"))) is not None:
             return key

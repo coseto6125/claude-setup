@@ -15,11 +15,11 @@ license: MIT
 compatibility: "DataForSEO MCP for Tier 1+, Google Maps API for Tier 2"
 metadata:
   author: AgriciDaniel
-  version: "2.2.5"
+  version: "2.3.1"
   category: seo
 ---
 
-# Maps Intelligence (March 2026)
+# Maps Intelligence
 
 Maps platform analysis for local businesses. Works with external APIs to assess
 how a business appears on Google Maps, Bing Places, Apple Maps, and OpenStreetMap.
@@ -235,7 +235,7 @@ Load on-demand as needed (do NOT load all at startup):
 Generate `MAPS-ANALYSIS-{domain}.md` with:
 
 1. **Maps Health Score: XX/100** with dimension breakdown table
-2. **Capability tier detected** (Tier 0 or Tier 1) with explanation of what's available
+2. **Capability tier detected** (Tier 0, 1 or 2) with explanation of what's available
 3. **Geo-grid heatmap** (Tier 1): ASCII grid with SoLV percentage and average rank
 4. **GBP profile audit**: field-by-field scoring with industry-specific weights
 5. **Review intelligence**: velocity chart, rating distribution, response rate, cross-platform comparison

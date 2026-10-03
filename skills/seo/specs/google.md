@@ -4,7 +4,7 @@ Fetch Google API SEO data: CWV field data via CrUX, indexation status via GSC, a
 
 ## Steps
 
-1. Check credentials: `"$HOME/.claude/skills/seo/bin/claude-seo" run google_auth.py --check --json`.
+1. Check credentials: `"$HOME/.claude/skills/seo/scripts/claude-seo" run google_auth.py --check --json`.
 2. Determine tier: 0 = API key, 1 = + service account, 2 = + GA4.
 3. Execute the tier-appropriate analysis below.
 4. After completing data collection at any tier, offer to generate a PDF report (see Report generation).
@@ -35,7 +35,7 @@ Fetch Google API SEO data: CWV field data via CrUX, indexation status via GSC, a
 The report uses the enterprise template: white cover, navy accents, Times New Roman, charts at 85% width, Google logo on title page. No `page-break-inside: avoid` (it causes white gaps).
 
 ```bash
-"$HOME/.claude/skills/seo/bin/claude-seo" run google_report.py --type full --data data.json --domain DOMAIN --format pdf --json
+"$HOME/.claude/skills/seo/scripts/claude-seo" run google_report.py --type full --data data.json --domain DOMAIN --format pdf --json
 ```
 
 Report types: `cwv-audit`, `gsc-performance`, `indexation`, `full`. Before presenting, verify `"review": {"status": "PASS"}` in the JSON output.

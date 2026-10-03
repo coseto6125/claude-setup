@@ -7,7 +7,7 @@ argument-hint: "[command] [url]"
 license: MIT
 metadata:
   author: AgriciDaniel
-  version: "2.2.5"
+  version: "2.3.1"
   category: seo
 ---
 
@@ -15,14 +15,19 @@ metadata:
 
 **Invocation:** `/seo $1 $2` where `$1` is the command and `$2` is the URL or argument.
 
-**Runtime:** Run bundled Python tools through `"$HOME/.claude/skills/seo/bin/claude-seo" run <script.py>`. Plugin
-installs expose this command automatically. Repository users run
-`./bin/claude-seo`; manual installers rewrite the command to the isolated
-launcher path. Never invoke bundled scripts with a bare Python interpreter.
+**Runtime:** Run bundled Python tools through
+`"$HOME/.claude/skills/seo/scripts/claude-seo" run <script.py>`. That is the single
+canonical form used by every skill and agent. Claude Code expands
+`${CLAUDE_PLUGIN_ROOT}` to the installed plugin directory, so the launcher is
+found without any `PATH` entry; the repository ships no top-level `bin/`
+directory because hosted marketplaces reject one. Repository users run
+`./scripts/claude-seo`; manual installers rewrite the canonical form to
+`"$HOME/.claude/skills/seo/scripts/claude-seo"`. Never invoke bundled scripts
+with a bare Python interpreter.
 
 Comprehensive SEO analysis across all industries (SaaS, local services,
 e-commerce, publishers, agencies). Orchestrates 24 sub-skills (21 core + 1 framework
-integration + 2 extension mirrors) and 18 sub-agents. A separate optional Firecrawl
+integration + 2 extension mirrors); audit dimensions run as `general-purpose` agents driven by `specs/<dimension>.md`. A separate optional Firecrawl
 extension is also installable (see "Optional Extensions" below).
 
 ## Quick Reference
@@ -62,18 +67,22 @@ extension is also installable (see "Optional Extensions" below).
 ## Runtime Setup
 
 Run setup only when the user explicitly invokes `/seo setup` or explicitly asks
-to repair dependencies. Execute `"$HOME/.claude/skills/seo/bin/claude-seo" setup`, report core and Chromium
+to repair dependencies. Execute
+`"$HOME/.claude/skills/seo/scripts/claude-seo" setup`, report core and Chromium
 status separately, and do not fall back to global or user package installation.
-For diagnosis, execute `"$HOME/.claude/skills/seo/bin/claude-seo" doctor --json`; its output intentionally omits
-absolute paths and environment values. If any `"$HOME/.claude/skills/seo/bin/claude-seo" run` command reports
-that setup is required, suggest `/seo setup` and do not improvise a `pip install`.
+For diagnosis, execute
+`"$HOME/.claude/skills/seo/scripts/claude-seo" doctor --json`; its output
+intentionally omits absolute paths and environment values. If any
+`"$HOME/.claude/skills/seo/scripts/claude-seo" run` command reports that setup is
+required, suggest `/seo setup` and do not improvise a `pip install`.
 
 ## Orchestration Logic
 
 When the user invokes `/seo audit`, delegate to subagents in parallel.
 
 **How to spawn one.** Every dimension runs the same way: an Agent call with
-`subagent_type: general-purpose`, `model: sonnet`, and this prompt shape.
+`subagent_type: general-purpose` and this prompt shape. Pass `model: opus` for `content`,
+`geo`, `sxo`, `cluster` and `drift`, which need judgment, and `model: sonnet` for every other dimension.
 
 ```
 Read ~/.claude/skills/seo/specs/analyst.md, then read ~/.claude/skills/seo/specs/<dimension>.md.
@@ -88,14 +97,14 @@ filename, and audit-data category.
 
 1. Detect business type (SaaS, local, ecommerce, publisher, agency, other)
 2. Always spawn: `technical`, `content`, `schema`, `sitemap`, `performance`, `visual`, `geo`
-3. If Google API credentials detected (`"$HOME/.claude/skills/seo/bin/claude-seo" run google_auth.py --check`), also spawn `google`
+3. If Google API credentials detected (`"$HOME/.claude/skills/seo/scripts/claude-seo" run google_auth.py --check`), also spawn `google`
 4. If local business detected, also spawn `local`
 5. If local business detected AND DataForSEO MCP available, also spawn `maps`
-6. If backlink APIs detected (`"$HOME/.claude/skills/seo/bin/claude-seo" run backlinks_auth.py --check`), also spawn `backlinks`
+6. If backlink APIs detected (`"$HOME/.claude/skills/seo/scripts/claude-seo" run backlinks_auth.py --check`), also spawn `backlinks`
 7. If Firecrawl MCP available, use `firecrawl_map` to discover all site URLs before analysis
 8. If content strategy signals detected (blog, pillar pages, topic clusters), also spawn `cluster`
 9. If e-commerce detected, also spawn `ecommerce`
-10. If drift baseline exists for this URL (`"$HOME/.claude/skills/seo/bin/claude-seo" run drift_history.py <url>`), also spawn `drift`
+10. If drift baseline exists for this URL (`"$HOME/.claude/skills/seo/scripts/claude-seo" run drift_history.py <url>`), also spawn `drift`
 11. Always include `sxo` in full audits (search experience applies to all sites)
 12. Collect results and generate unified report with SEO Health Score (0-100)
 13. **Synthesize via the 10-principle framework** (see "Synthesis Methodology" below), walk PERCEIVE → ANALYZE → VALIDATE → ACT before bucketing findings into Critical / High / Medium / Low
@@ -103,7 +112,7 @@ filename, and audit-data category.
 15. **Offer PDF report**: "Generate a professional PDF report? Use `/seo google report full`"
 
 For individual commands, load the relevant sub-skill directly.
-After any analysis command completes, offer to generate a PDF report via `"$HOME/.claude/skills/seo/bin/claude-seo" run google_report.py`.
+After any analysis command completes, offer to generate a PDF report via `"$HOME/.claude/skills/seo/scripts/claude-seo" run google_report.py`.
 
 ## Synthesis Methodology
 
@@ -143,7 +152,7 @@ Hard rules:
 - WARNING at 30+ location pages (enforce 60%+ unique content)
 - HARD STOP at 50+ location pages (require user justification)
 - Never recommend HowTo schema (deprecated Sept 2023)
-- FAQ schema: Google retired FAQ rich results for ALL sites on May 7, 2026 (no SERP feature anymore; supersedes the Aug 2023 gov/health restriction). Flag existing FAQPage at Info (not Critical); do not claim confirmed AI/LLM citation benefit; do not recommend removal; do not recommend new FAQPage for Google SERP benefit; use QAPage for genuine user Q&A
+- FAQ schema: Google retired FAQ rich results for ALL sites on May 7, 2026. Flag existing FAQPage at Info (not Critical); do not claim confirmed AI/LLM citation benefit; do not recommend removal; do not recommend new FAQPage for Google SERP benefit; use QAPage for genuine user Q&A
 - All Core Web Vitals references use INP, never FID
 
 ## Community Footer
@@ -259,22 +268,21 @@ Every sub-skill is user-invoked only, so it is absent from the Skill tool. To ru
 
 ### Optional Extensions
 
-The following ship in `extensions/` rather than `skills/` and require a separate
-installer to activate (see each extension's `install.sh`/`install.ps1`):
+The following need a backend before they work: an MCP server in the Claude Code
+config (firecrawl, dataforseo, ahrefs, banana), an API key in the `env` block of
+`~/.claude/settings.json` (bing, profound, seranking), or the `unlighthouse` npm
+package. Each sub-skill's Prerequisites names its check:
 
 All optional extensions are reachable through `/seo` subcommands once
 installed: firecrawl, dataforseo, and image-gen, plus `/seo ahrefs`,
 `/seo bing`, `/seo profound`, `/seo seranking`, and `/seo unlighthouse`.
-Each installs as its own sub-skill, so the model also auto-routes to their
-descriptions without the `/seo` prefix.
 
-- **seo-firecrawl** -- Full-site crawling and site mapping via Firecrawl MCP. Install
-  via `extensions/firecrawl/install.sh` (Unix) or `extensions/firecrawl/install.ps1`
-  (Windows). Once installed, invoke via `/seo firecrawl <command>`.
+- **seo-firecrawl** -- Full-site crawling and site mapping via Firecrawl MCP. Needs the
+  Firecrawl MCP server in the Claude Code config. Once it is connected, invoke via `/seo firecrawl <command>`.
 
-## Subagents
+## Audit dimensions (specs/)
 
-For parallel analysis during audits:
+Each dimension runs as a `general-purpose` agent driven by `specs/<dimension>.md`, using the spawn recipe in Orchestration Logic:
 - `seo-technical` -- Crawlability, indexability, security, CWV
 - `seo-content` -- E-E-A-T, readability, thin content
 - `seo-schema` -- Detection, validation, generation

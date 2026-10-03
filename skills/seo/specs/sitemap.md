@@ -5,7 +5,7 @@ Discover, validate, and generate XML sitemaps, and gate programmatic page sprawl
 ## Steps
 
 1. Discover candidates with
-   `"$HOME/.claude/skills/seo/bin/claude-seo" run sitemap_discovery.py <url> --json`.
+   `"$HOME/.claude/skills/seo/scripts/claude-seo" run sitemap_discovery.py <url> --json`.
    Use only validated `found` entries, and keep declared failures as findings.
 2. Validate XML format and URL status codes.
 3. Check for deprecated tags: `priority` and `changefreq`, both ignored by Google.
@@ -65,6 +65,10 @@ value · AI-generated mass content.
 - findings file: `findings/sitemap.md`
 - `audit-data.json` category: Sitemap
 
-Report: pass/fail per validation check, missing pages (crawled but absent from the sitemap),
-extra pages (in the sitemap but 404 or redirected), quality gate warnings where they apply, and
-generated sitemap XML when creating a new one.
+Report:
+
+- Pass or fail per validation check
+- Missing pages: crawled but absent from the sitemap
+- Extra pages: in the sitemap but 404 or redirected
+- Quality gate warnings, where they apply
+- Generated sitemap XML, when you create a new one

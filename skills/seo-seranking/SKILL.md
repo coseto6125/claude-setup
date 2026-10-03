@@ -2,8 +2,8 @@
 name: seo-seranking
 description: SE Ranking AI visibility analyst (extension). Tracks AI Share-of-Voice across ChatGPT, Gemini, Perplexity, AI Overviews, and AI Mode in a single query.
 metadata:
-  version: "2.2.5"
-compatibility: "Requires an SE Ranking API key (set SERANKING_API_KEY by running extensions/seranking/install.sh)."
+  version: "2.3.1"
+compatibility: "Requires an SE Ranking API key (SERANKING_API_KEY in the env block of ~/.claude/settings.json)."
 disable-model-invocation: true
 ---
 
@@ -13,7 +13,7 @@ Live AI visibility tracking via the SE Ranking REST API.
 
 ## Prerequisites
 
-- Run `extensions/seranking/install.sh` (or `install.ps1`).
+- `SERANKING_API_KEY` must be set. If it is not, ask the user to add it to the `env` block of `~/.claude/settings.json`.
 - An SE Ranking API key (https://seranking.com/api.html).
 - Before any call, verify `SERANKING_API_KEY` is present in `~/.claude/settings.json` under `env.`. If absent, tell the user to run the installer.
 
@@ -43,7 +43,7 @@ Report each as a percentage with a confidence note based on sample size.
 ## Cost guardrails
 
 SE Ranking API uses unit accounting. Single AI visibility query is
-~5 units (1 per platform). Use `"$HOME/.claude/skills/seo/bin/claude-seo" run dataforseo_costs.py` to log
+~5 units (1 per platform). Use `"$HOME/.claude/skills/seo/scripts/claude-seo" run dataforseo_costs.py` to log
 spend across vendors.
 
 ## Cross-skill delegation
