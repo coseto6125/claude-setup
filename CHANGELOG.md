@@ -3,6 +3,30 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.6 — 2026-10-06
+
+### Added
+
+- `skills/ui-ux-pro-max/local/cjk-line-breaking.md`: where Chinese text wraps on a web page,
+  per layout (heading, short lead, prose paragraph, phone width), with the CSS and markup
+  for each. It follows W3C clreq. The `SKILL.md` routing table now points at it for
+  `--domain typography "chinese"`.
+
+### Changed
+
+- `skills/ecp`:
+  - A breaking change to a public interface or an existing caller needs the user's
+    sign-off at any caller count. The count now sets how much to say, not whether to ask.
+  - A fifth tell: the hook's `ecp graph hits` block lists direct (d=1) callers only.
+    `guides/troubleshooting.md` §8 gives the resolution step.
+  - `ecp impact`: `--ambiguous-callers` lists the call sites the graph could not
+    attribute. Test-file callers are listed by default and tagged `test: true`;
+    `--exclude-tests` replaces `--include-tests`.
+  - `ecp inspect`: an `incoming` `Calls` entry that reached a class through its
+    constructor carries `viaConstructor`.
+- `settings.example.json`: regenerated from the live settings. The Orca agent-hook
+  commands are the current Orca version, and two `SessionStart` hooks swapped order.
+
 ## v0.1.5 — 2026-10-04
 
 ### Added
