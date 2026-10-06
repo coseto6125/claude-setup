@@ -1,7 +1,7 @@
 # Chinese line breaking
 
 Rules for where Chinese text wraps on a web page, by layout. They follow W3C *Requirements for Chinese Text Layout*
-(clreq) and a client review of 2026-10-05. Write the user-facing copy in the page's language; the rules stay here.
+(clreq). Write the user-facing copy in the page's language; the rules stay here.
 
 ## The principle per layout
 
