@@ -28,6 +28,7 @@ loads on demand.
 | A dashboard or data-dense app screen | `--design-system --density 8`, then `--domain chart` | `local/design-patterns-library.md`, `local/cognitive-load.md` | HeroUI Pro, ReUI, Watermelon dashboards |
 | Motion: scroll choreography, page transition, 3D or shader hero | `--domain gsap`, plus `--stack threejs` for 3D | `local/motion-craft.md` | GSAP, ThreeUI, GlideCN for a route change |
 | A theme or token system: colors, radius, type scale | `--domain color`, then `--domain typography` | `local/wcag-checklist.md` | tweakcn |
+| Chinese text that wraps to two or more lines: a heading, a lead, a paragraph, a phone layout | `--domain typography "chinese"` | `local/cjk-line-breaking.md` | clreq, BudouX |
 | A hand-drawn or doodle surface | `--domain style "hand-drawn sketch"` | `local/sources.md`, `local/anti-patterns.md` | Oreo Doodle, Sketchy, khushmeen, dddoodle |
 | A design system meant to outlive this session | `--design-system --persist` | `local/design-md.md` | DESIGN.md spec |
 | A poster, flyer, or any print piece | this skill covers screens. For artboards, tell the user to run `/design` | | |
