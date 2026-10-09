@@ -16,9 +16,7 @@ are first-class.
 
 ## Prerequisites
 
-- `PROFOUND_API_KEY` must be set. If it is not, ask the user to add it to the `env` block of `~/.claude/settings.json`.
-- Profound API key.
-- Before any tool call, check `~/.claude/settings.json` has `env.PROFOUND_API_KEY`.
+- `PROFOUND_API_KEY` must be set in the environment. Before any tool call, check that the variable is set, without printing its value. If it is not set, ask the user to add it to the `env` block of `~/.claude/settings.json`.
 
 ## Routing
 

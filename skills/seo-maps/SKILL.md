@@ -212,7 +212,7 @@ Generate LocalBusiness JSON-LD markup from collected data.
 2. Populate required properties: `@type`, `name`, `address`, `image`
 3. Add recommended properties: `telephone`, `url`, `geo`, `openingHoursSpecification`, `priceRange`
 4. Add strategic properties for multi-location: `branchOf`, `areaServed`, `sameAs`
-5. Add `aggregateRating` if review data available
+5. Add `aggregateRating` only when it summarizes third-party reviews that are visible on the page (see the rule below)
 6. Output valid JSON-LD block ready for implementation
 
 **Do NOT generate self-serving review markup** -- Google ignores LocalBusiness review markup from the business itself. Only mark up third-party reviews visible on the page.

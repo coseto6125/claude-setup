@@ -30,7 +30,7 @@ Pick the LOWEST tier the diff qualifies for; Phase-2 risk moves it up.
 
 Every tier from 1 up also runs codex — see **Cross-family** below. The tier sets how many Claude agents read the diff. A second model family reads it either way.
 
-**Reviewer agent** — Tier 2 and Tier 3 both dispatch `subagent_type: deep-review` with `model: sonnet`: read-only, ecp-aware, already carrying the confidence protocol. At Phase-2 HIGH risk, drop the model override so Correctness runs on its native opus. When the agent list has no `deep-review`, dispatch `general-purpose` with the same model. The Phase-4 preamble carries the same rules.
+**Reviewer agent** — Tier 2 and Tier 3 both dispatch `subagent_type: deep-review` with `model: sonnet`: read-only, ecp-aware, already carrying the confidence protocol. At Phase-2 HIGH risk, pass `model: opus` so Correctness runs on opus. When the agent list has no `deep-review`, dispatch `general-purpose` with the same model. The Phase-4 preamble carries the same rules.
 
 **HIGH runs Tier 3.** HIGH is the top level Phase 2 assigns, so it never qualifies a diff out of the tier it just earned.
 

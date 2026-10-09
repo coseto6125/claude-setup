@@ -181,7 +181,7 @@ Schema is NOT a direct ranking factor (John Mueller confirmed). But enables rich
 **Check for:**
 - LocalBusiness schema presence (extract JSON-LD blocks)
 - Required properties: `name`, `address` with PostalAddress sub-properties
-- Recommended properties: `geo` (minimum 5 decimal places, Confirmed), `openingHoursSpecification`, `telephone`, `url`, `priceRange` (<100 chars), `image`, `aggregateRating`
+- Recommended properties: `geo` (minimum 5 decimal places, Confirmed), `openingHoursSpecification`, `telephone`, `url`, `priceRange` (<100 chars), `image`, `aggregateRating` (only when it summarizes visible third-party reviews: Google ignores self-serving LocalBusiness ratings)
 - **Correct subtype for industry** -- load `../seo/references/local-schema-types.md`:
   - Restaurant using `Restaurant` not generic `LocalBusiness`
   - Legal using `LegalService` not deprecated `Attorney`

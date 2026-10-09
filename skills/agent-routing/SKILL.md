@@ -76,8 +76,8 @@ task's scope or settles a decision the coordinator is tracking, send that back a
 
 The `orchestration` and `orca-cli` guides predate cross-session messaging, so they
 route every handoff prompt through a terminal. Two of their instructions take the
-routing above on top. Each quote is a heading in the guide `orca skills get orca-cli`
-serves. When a quote no longer matches that guide, re-read its section before you trust
+routing above on top. Each quote is a heading in the guide that `ORCA skills get orca-cli`
+serves (`ORCA` is the binary the `orca-cli` skill resolves: `orca-ide` on Linux). When a quote no longer matches that guide, re-read its section before you trust
 the override.
 
 - "Independent new-worktree handoff:" starts a worker with `worktree create --prompt`.

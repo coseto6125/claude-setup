@@ -44,8 +44,8 @@ well-optimized it is.
 
 ### Step 1: Target Acquisition
 
-1. Fetch the target URL via `"$HOME/.claude/skills/seo/scripts/claude-seo" run render_page.py <URL> --mode auto` (SPA-aware and SSRF-safe)
-2. Parse with `"$HOME/.claude/skills/seo/scripts/claude-seo" run parse_html.py <URL>` to extract: title, H1, meta description,
+1. Fetch the target URL via `"$HOME/.claude/skills/seo/scripts/claude-seo" run render_page.py <URL> --mode auto -o <page.html>` (SPA-aware and SSRF-safe)
+2. Parse the saved file with `"$HOME/.claude/skills/seo/scripts/claude-seo" run parse_html.py <page.html> --url <URL> --json` to extract: title, H1, meta description,
    headings hierarchy, word count, schema markup, CTAs, media elements
 3. If no keyword provided, extract primary keyword from title tag + H1 overlap
 4. Validate keyword is non-empty before proceeding
