@@ -4,6 +4,9 @@
 # whole body (frontmatter stripped) goes before the scenario, as the Skill tool delivers it. Otherwise rules/<NN>.<arm>.txt
 # is injected as "RULE you follow: …" where NN = id prefix. Pass full model IDs: an alias moves at a model release.
 # Control preloads ~/.claude/CLAUDE.md (+RTK, ECP) unless PRELOAD_USER=0. Score with score26.py-style regex over raw/.
+usage() { sed -n '2,/^[^#]/s/^# \{0,1\}//p' "$0"; }
+# Takes no arguments: any argument prints the header and exits, so `--help` never starts a run.
+if [ $# -gt 0 ]; then usage; case "$1" in -h|--help) exit 0 ;; *) exit 2 ;; esac; fi
 set -u
 [ -n "${WORK:-}" ] && [ -d "$WORK/${PROBES_DIR:-probes}" ] || { sed -n 2p "$0" >&2; exit 2; }
 for arm in ${ARMS:-control A B}; do [ "$arm" = control ] || [ -f "$WORK/$arm.md" ] || [ -d "$WORK/${RULES_DIR:-rules}" ] || { echo "missing $WORK/${RULES_DIR:-rules}/" >&2; exit 2; }; done

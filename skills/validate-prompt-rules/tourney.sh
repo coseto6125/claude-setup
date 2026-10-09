@@ -5,6 +5,8 @@
 # Runs every candidate on opus, sonnet and haiku, n trials each, then prints
 # hit-rate per model and the Pareto front: the shortest candidate that ties the
 # best hit-rate. A candidate only wins when it is both shorter and not worse.
+usage() { sed -n '2,/^[^#]/s/^# \{0,1\}//p' "$0"; }
+case "${1:-}" in -h|--help|"") usage; [ -n "${1:-}" ]; exit $? ;; esac
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SCN="$1"; ASK="$2"; SCORER="$3"; N="$4"; HIT="$5"; shift 5

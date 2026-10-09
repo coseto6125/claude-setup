@@ -2,6 +2,9 @@
 # usage: WORK=<dir> PROJ_MD=<project CLAUDE.md> ARMS="control seven" N=3 JOBS=3 MODEL=claude-opus-5-5 bash agentic.sh
 # base/ = repo snapshot (git archive <ref> | tar -x), task.txt = the request, rules/<arm>.txt = appended rules.
 # Each run: fresh copy, git init+commit, claude -p with tools on, stream.jsonl + diff.patch + status.txt left in runs/<arm>.<i>/.
+usage() { sed -n '2,/^[^#]/s/^# \{0,1\}//p' "$0"; }
+# Takes no arguments: any argument prints the header and exits, so `--help` never starts a run.
+if [ $# -gt 0 ]; then usage; case "$1" in -h|--help) exit 0 ;; *) exit 2 ;; esac; fi
 set -u
 [ -n "${WORK:-}" ] && [ -d "$WORK/base" ] && [ -f "$WORK/task.txt" ] || { sed -n 2p "$0" >&2; exit 2; }
 for arm in ${ARMS:-control seven codex3}; do [ "$arm" = control ] || [ -f "$WORK/rules/$arm.txt" ] || { echo "missing $WORK/rules/$arm.txt" >&2; exit 2; }; done

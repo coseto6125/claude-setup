@@ -4,6 +4,8 @@
 # usage: route.sh <skills-dir> <n> <model>
 # env: CLAUDE_HOME (default ~/.claude), WORKDIR (default $PWD)
 # Reads scenarios from scenarios.tsv: <expected-skill>\t<situation>
+usage() { sed -n '2,/^[^#]/s/^# \{0,1\}//p' "$0"; }
+case "${1:-}" in -h|--help|"") usage; [ -n "${1:-}" ]; exit $? ;; esac
 set -u
 SKILLS="$1"; N="$2"; MODEL="$3"
 HERE="$(cd "$(dirname "$0")" && pwd)"

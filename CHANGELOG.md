@@ -3,6 +3,28 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.9 — 2026-10-09
+
+### Changed
+
+- `CLAUDE.md`: the wait-loop rule tells a sub-agent to run the process in the foreground,
+  in steps that each end within the 10-minute Bash timeout. A background task's completion
+  notification never wakes an idle in-process sub-agent: it waits in the queue until the
+  sub-agent's next turn starts for another reason. In one session, 5 of 7 measurement
+  agents stalled this way for 5 to 31 minutes. The `pgrep` sentence is unchanged.
+- `maintainer-notes.md`: every rule whose evidence predated the -5-5 models was re-run on
+  claude-opus-5-5, and on claude-sonnet-5-5 and claude-haiku-5-5 where sub-agents read it.
+  No rule needs deletion. Changed statuses: the Dispatch red line adds nothing inside the
+  document, but a softer wording drops dispatch from 9/15 to 1/15; the batching-instance
+  line now matters on opus too; the `lite-scan` double mention is inert once the agent
+  list loads; the bug-scan line and the `writing-for-agents` pointer are saturated on
+  opus in their probes and still needed on haiku. Unsettled cells stop at n=5 or n=10
+  under a budget cap. Every probe was rebuilt, because no original survived.
+- `skills/validate-prompt-rules`: each script handles `--help`. `validate.sh`,
+  `agentic.sh` and `preloaded.sh` take no arguments, so any argument prints the header
+  and exits. Before, `validate.sh --help` ran the paid demo. The skill tells a sub-agent
+  to make each trial step one foreground call.
+
 ## v0.1.8 — 2026-10-09
 
 ### Changed
