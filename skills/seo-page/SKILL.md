@@ -38,7 +38,7 @@ metadata:
 ### Content Quality
 - Word count vs page type minimums (see quality-gates.md)
 - Readability: Flesch Reading Ease score, grade level
-- Keyword density: natural (1-3%), semantic variations present
+- Keyword use: natural, with semantic variations. Flag stuffing, with no numeric density target.
 - E-E-A-T signals: author bio, credentials, first-hand experience markers
 - Content freshness: publication date, last updated date
 

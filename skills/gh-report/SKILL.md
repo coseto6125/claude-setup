@@ -52,12 +52,11 @@ own files before you draft anything.
    and the dedupe table from step 1. Post only on explicit approval. Then report
    the resulting URL back, and link our mpm follow-ups both ways when related work exists.
 
-## Worked example (2026-08-24, an external repo)
+## Example (illustrative)
 
-`blank_issues_enabled: false`. Both templates said "maintainer work queue".
-CONTRIBUTING said external issues get auto-closed and unsolicited PRs receive
-no review. Everything therefore went to Discussions. The feature form wanted
-Problem / Proposed solution / Alternatives considered. The bug form wanted
-Description / Steps to reproduce / Expected behavior / Actual behavior /
-Product version / Operating system. Drafts were reshaped to those exact
-fields and posted as Discussions.
+A repo sets `blank_issues_enabled: false`. Its issue templates say "maintainer work queue". Its CONTRIBUTING file says external issues are auto-closed and unsolicited PRs get no review. Post every draft for that repo as a Discussion, mapped to the template's field names:
+
+| Form | Fields |
+|---|---|
+| Feature | Problem / Proposed solution / Alternatives considered |
+| Bug | Description / Steps to reproduce / Expected behavior / Actual behavior / version / OS |

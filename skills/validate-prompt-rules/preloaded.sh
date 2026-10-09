@@ -8,7 +8,9 @@ set -u
 [ -n "${WORK:-}" ] && [ -d "$WORK/${PROBES_DIR:-probes}" ] || { sed -n 2p "$0" >&2; exit 2; }
 for arm in ${ARMS:-control A B}; do [ "$arm" = control ] || [ -f "$WORK/$arm.md" ] || [ -d "$WORK/${RULES_DIR:-rules}" ] || { echo "missing $WORK/${RULES_DIR:-rules}/" >&2; exit 2; }; done
 S="$WORK"; export S   # WORK holds probes/, rules/, raw/
-export CLAUDE_CONFIG_DIR=$(mktemp -d); trap 'rm -rf "$CLAUDE_CONFIG_DIR"' EXIT INT TERM; printf '{}' > "$CLAUDE_CONFIG_DIR/settings.json"
+# Deletes only a direct child of /tmp that this script made. An empty path, a nested path or `..` is refused.
+rm_tmp() { for p; do case "$p" in *..*|/tmp/*/*) echo "rm_tmp: refused '$p'" >&2 ;; /tmp/?*) rm -rf -- "$p" ;; *) echo "rm_tmp: refused '$p'" >&2 ;; esac; done; }
+CLAUDE_CONFIG_DIR=$(mktemp -d /tmp/preloaded-cfg.XXXXXX) || exit 1; export CLAUDE_CONFIG_DIR; trap 'rm_tmp "$CLAUDE_CONFIG_DIR"' EXIT INT TERM; printf '{}' > "$CLAUDE_CONFIG_DIR/settings.json"
 cp ~/.claude/.credentials.json "$CLAUDE_CONFIG_DIR"/; [ "${PRELOAD_USER:-1}" = 1 ] && cp ~/.claude/CLAUDE.md ~/.claude/RTK.md ~/.claude/ECP.md "$CLAUDE_CONFIG_DIR"/
 echo "user surface:"; ls -A "$CLAUDE_CONFIG_DIR"
 PROJ_MD="${PROJ_MD:-}"; export PROJ_MD   # project CLAUDE.md to seed each probe cwd (optional)
@@ -29,12 +31,12 @@ run_one() {
 ---
 
 "; elif [ "$arm" != control ]; then extra=(--append-system-prompt "RULE you follow: $(cat "$S/${RULES_DIR:-rules}/$n.$arm.txt")"); fi
-  d=$(mktemp -d); [ -n "$PROJ_MD" ] && cp "$PROJ_MD" "$d/CLAUDE.md"
+  d=$(mktemp -d /tmp/preloaded.XXXXXX) || { echo "ERR $p $arm $m $i: mktemp failed"; return 1; }; [ -n "$PROJ_MD" ] && cp "$PROJ_MD" "$d/CLAUDE.md"
   (cd "$d" && timeout 300 claude -p "${pre}SITUATION: $scn
 
 $ask" --model "$m" --setting-sources user,project --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' "${extra[@]}" > "$out.tmp" 2>"$out.err")
   rc=$?; if [ $rc -eq 0 ] && [ -s "$out.tmp" ]; then mv "$out.tmp" "$out"; rm -f "$out.err"; echo "ok  $p $arm $m $i"; else echo "ERR $p $arm $m $i rc=$rc"; fi
-  rm -rf "$d"
+  rm_tmp "$d"
 }
-export -f run_one
+export -f run_one rm_tmp
 xargs -d '\n' -P "${JOBS:-8}" -I{} bash -c 'run_one "$@"' _ {} < "$JOBS_F"

@@ -10,7 +10,9 @@ set -u
 umask 077
 SCN_F="$1"; ASK_F="$2"; SCORER="$3"; N="$4"; shift 4
 SCN=$(cat "$SCN_F"); ASK=$(cat "$ASK_F")
-WORK=$(mktemp -d)
+# Deletes only a direct child of /tmp that this script made. An empty path, a nested path or `..` is refused.
+rm_tmp() { for p; do case "$p" in *..*|/tmp/*/*) echo "rm_tmp: refused '$p'" >&2 ;; /tmp/?*) rm -rf -- "$p" ;; *) echo "rm_tmp: refused '$p'" >&2 ;; esac; done; }
+WORK=$(mktemp -d /tmp/ab.XXXXXX) || exit 1  # under /tmp: a cwd under $HOME loads the live ~/.claude/CLAUDE.md as a project file
 # Replies are scored and then discarded, which makes row-reading impossible after the
 # fact. Keep every reply on disk: one file per trial, so parallel writers never interleave.
 RAWDIR="${AB_RAW_DIR:-$(mktemp -d -t ab-raw-XXXXXX)}"
@@ -60,5 +62,5 @@ export -f run_one; export WORK SCN ASK RAWDIR
 
 parallel_n=3
 cat "$JOBS" | xargs -d '\n' -P "$parallel_n" -I{} bash -c 'run_one "$@"' _ {} | sort
-rm -rf "$WORK"
+rm_tmp "$WORK"
 echo "raw replies: $RAWDIR"

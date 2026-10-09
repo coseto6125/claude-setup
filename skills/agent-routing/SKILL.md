@@ -62,8 +62,9 @@ Route by what the message is:
 - Follow-ups to an already-dispatched Claude worker, and content between Claude
   sessions, go over `SendMessage`. It delivers into the recipient's conversation
   directly, so it needs no terminal handle and no shell quoting.
-- Anything for codex, opencode, gemini, or a bare shell goes over Orca; `ListAgents`
-  reports Claude Code sessions only.
+- Anything for opencode, gemini, or a bare shell goes over Orca, and so do codex
+  lifecycle and terminal input. `ListAgents` reports Claude Code sessions only.
+  Content for codex can also go over `ecp peers say` (see *Reaching codex*).
 
 Content reaching a peer without passing through the coordinator is the point: two
 workers cross-reviewing hand each other raw diffs directly, and the coordinator
@@ -74,25 +75,20 @@ task's scope or settles a decision the coordinator is tracking, send that back a
 ## Where this overrides the Orca guides
 
 The `orchestration` and `orca-cli` guides predate cross-session messaging, so they
-route every free-form prompt through a terminal. Three of their instructions take the
-routing above on top. Each quote is verbatim from the guide `orca skills get
-orchestration` serves; when a quote no longer matches what that guide says, re-read
-its section before trusting the override.
+route every handoff prompt through a terminal. Two of their instructions take the
+routing above on top. Each quote is a heading in the guide `orca skills get orca-cli`
+serves. When a quote no longer matches that guide, re-read its section before you trust
+the override.
 
-- Messaging: "`terminal send` when an existing agent needs a free-form prompt"
-  applies to non-Claude agents. Reach an existing Claude Code session with
-  `SendMessage`.
-- Full Handoffs: "Existing terminal handoff:" covers non-Claude agents. Hand a Claude
-  Code session its brief with `SendMessage`; ownership transfers the same way, so the
-  guide's own rule against creating lifecycle state for a handoff still holds.
-- Worker Terminals: "Use `orca worktree create --prompt ...` or `orca terminal send
-  ...` for full handoffs or untracked/lightweight prompts" splits by whether the
-  worker exists yet. Use `worktree create --prompt` for one that does not exist,
-  `terminal send` for an existing non-Claude one, and `SendMessage` for an existing
-  Claude Code session. A worker being created is not yet in `ListAgents`, so
-  `SendMessage` cannot reach it.
+- "Independent new-worktree handoff:" starts a worker with `worktree create --prompt`.
+  Use it for a worker that does not exist yet. A worker being created is not yet in
+  `ListAgents`, so `SendMessage` cannot reach it.
+- "Existing-terminal handoff:" sends a brief with `terminal send`. That covers
+  non-Claude agents. Hand an existing Claude Code session its brief with `SendMessage`.
+  Ownership transfers the same way, so the guide's rule against lifecycle state for a
+  handoff still holds.
 
-`check-anchors.sh` in this skill's folder checks those three quotes against the running
+`check-anchors.sh` in this skill's folder checks those two quotes against the running
 Orca and names any that no longer match. It probes the app version on each run and pulls
 the guide only when Orca itself changed, so the usual run costs one status call.
 
@@ -115,8 +111,10 @@ plain shell work, and the browser rule never fires.
 
 ## Reaching codex
 
-`ListAgents` reports Claude Code sessions only, so every channel to codex runs through
-Orca. `ecp peers` is the one layer that sees codex and Claude at once. Codex exports
+`ListAgents` reports Claude Code sessions only, so `SendMessage` never reaches codex.
+Codex lifecycle and terminal input go over Orca. Content can also go over
+`ecp peers say --to <name>`, the one channel to codex that needs no terminal.
+`ecp peers` is the one layer that sees codex and Claude at once. Codex exports
 `CODEX_THREAD_ID` to its shell and ecp reads it, so any launch form enrolls codex as one
 stable peer (codex-cli 0.155.1, 2026-09-23). To address it by a name instead of its id,
 launch it with one:
@@ -137,4 +135,14 @@ Two knobs are adjustable. Thinking is not one of them.
 - **effort** — no per-call param on the Agent tool. Set it through agent-definition frontmatter. The generic `effort-<level>` definitions in `~/.claude/agents/` carry no model binding, so they compose with the per-call `model` param into a full model x effort grid; the per-call `model` overrides the frontmatter. `lite-scan` and `deep-review` add role prompts and tool whitelists on top. Only Workflow `agent()` has a true per-call `effort`. New definitions register at session start, not mid-session.
 - **thinking** — fixed. Sub-agents inherit the session's extended-thinking toggle, and "think hard" or "ultrathink" keywords in a prompt do not change any budget. Adapt through model and effort only.
 
-Per-MTok list prices, input/output: Haiku $1/$5 · Sonnet $2/$10 · Opus $4/$20, cache reads $0.20 (0.05x) · Fable 5.1 $10/$50, cache reads $0.25 (0.025x); every other model reads cache at 0.1x. Source: platform.claude.com/docs/en/about-claude/pricing (2026-09-11); Haiku, Sonnet and Opus re-checked in the bundled `claude-api` skill (2026-09-25).
+Per-MTok list prices:
+
+| model | input / output | cache read |
+|---|---|---|
+| Haiku 5.5, prompt up to 100K tokens | $0.10 / $0.50 | 0.1x |
+| Haiku 5.5, prompt over 100K tokens | $0.50 / $2.50 | 0.1x |
+| Sonnet 5.5 | $2 / $10 | $0.20 (0.1x) |
+| Opus 5.5 | $4 / $20 | $0.20 (0.05x) |
+| Fable 5.1 | $10 / $50 | $0.25 (0.025x) |
+
+Source: platform.claude.com/docs/en/about-claude/pricing (2026-09-11). Sonnet and Opus re-checked in the bundled `claude-api` skill on 2026-09-25, Haiku 5.5 on 2026-10-09.

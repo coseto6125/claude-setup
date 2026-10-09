@@ -3,6 +3,42 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.7 — 2026-10-09
+
+### Added
+
+- `skills/writing-for-agents/measurements.md`: the current-model rows behind the four
+  measured blockquotes in `SKILL.md`, which now keep only the shortest evidence.
+- `skills/writing-for-agents/audit.py`:
+  - Rule 6 flags a `> Measured` blockquote that names a model family without a full ID.
+  - `audit.py spans <old> <new>` lists code spans a rewrite dropped. "Finishing a change"
+    in `SKILL.md` now calls it.
+  - `test_audit.py`, 45 cases. The `drift` tests use a stub CLI, not the host's tools.
+
+### Changed
+
+- Re-measured on the current models (claude-haiku-5-5, claude-sonnet-5-5,
+  claude-opus-5-5). `SKILL.md` files cite current-model evidence only. Older rows moved to
+  `measurements.md` and `maintainer-notes.md`, labelled with full model IDs.
+- `maintainer-notes.md`: regrouped by rule, with an Index at the top. The `CLAUDE.md`
+  pointer now reads only the rule's own section.
+- `CLAUDE.md`: a rule against `pgrep -f` wait loops, which match their own command line.
+- `skills/validate-prompt-rules`:
+  - Every harness creates its probe cwd under `/tmp`. A cwd under `$HOME` made
+    `--setting-sources project` load the live `~/.claude/CLAUDE.md`.
+  - Temp directories are deleted only through `rm_tmp`, which refuses any path that is
+    not a direct child of `/tmp`. A failed `mktemp` stops the run.
+  - A report carries a read-only recount command.
+  - The default probe model is `claude-haiku-5-5`.
+- `skills/agent-routing`: the Orca handoff overrides quote the `orca-cli` guide, where
+  those passages moved in Orca 1.4.223. `check-anchors.sh` fetches both guides.
+- `audit.py refs` counts the skills the CLI bundles. `drift` no longer reads a filename
+  argument or a help Examples line as a subcommand.
+- `ECP.md` and `skills/ecp`: the explore trigger opens on a moment, and a new trigger
+  covers grepping for a function, class or method name.
+- `agents/deep-review.md`, `skills/simplify`, `skills/peer-agent`, `skills/gh-report`,
+  `skills/pr-finalize`, `skills/domain-modeling` and the `seo` skills: wording updates.
+
 ## v0.1.6 — 2026-10-06
 
 ### Added
