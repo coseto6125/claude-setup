@@ -95,6 +95,14 @@ The style's frontmatter needs `keep-coding-instructions: true`. Without it the C
 
 Verified after the move: a headless run answers `# Output Style: colleague-zh` when asked for that heading.
 
+### Re-verified 2026-10-09 on the current models
+
+- Writing discipline, English effect. Leave-one-out in the live CLAUDE.md (CLI 2.1.295, original 2026-08-12 "when to escalate" probe, hit = longest sentence of 20 words or fewer). claude-opus-5-5: 5/5 with the rule, 0/5 without. claude-sonnet-5-5: 4/5 against 0/5. claude-haiku-5-5: 4/5 against 2/5, unsettled at n=5. Still load-bearing on the two models that write most prompts. Rows: session c7da8904 scratchpad `ste-rv4/` (raw/ste-effect/, hits.tsv).
+- Writing discipline, the ASD-STE100 name on Chinese normative prose (original 2026-08-12 round-5 probe, name stripped to "this governs everything you write, Chinese and English alike."). Hit = row median of 31 CJK characters per sentence or fewer. claude-opus-5-5 n=10: named 10/10, stripped 10/10, rule removed 8/10. claude-sonnet-5-5 and claude-haiku-5-5 n=5: named 5/5, stripped 5/5, removed 2/5. The name effect did not separate on any model. The whole-rule effect is unsettled at these n. Form metric (median of row medians, named, stripped, removed): claude-opus-5-5 20.5, 21.5, 28. claude-sonnet-5-5 17.5, 29, 34. claude-haiku-5-5 15, 21, 32. The 2026-08-12 claim "the name is load-bearing for Chinese" is not reproduced on claude-opus-5-5. It may still hold on claude-sonnet-5-5 and claude-haiku-5-5, which needs a tighter threshold and n=15. Rows: session c7da8904 scratchpad `ste-rv4/` (raw/zh-normative/).
+- Writing discipline guards. The coined term `red` survives with the rule 5/5 on claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5 (rule removed 5/5, 5/5, 4/5). Explanatory connectives survive 5/5 on all three (2 connectives or more). The longest explanatory sentence drops (removed to kept, in CJK characters: claude-opus-5-5 71 to 40, claude-sonnet-5-5 79 to 50, claude-haiku-5-5 63 to 39). 0 of 95 Chinese rows drifted to English. n=5 per cell. Rows: session c7da8904 scratchpad `ste-rv4/` (raw/ste-break/, raw/zh-explain/).
+- Language line, first A/B (claude-opus-5-5 only, colleague-zh style and `language: 台灣繁體中文` loaded, Chinese user prompt, n=10). Commit body in English: live 10/10, Language line removed 7/10, no CLAUDE.md 1/10, unsettled at n=10. Sub-agent prompt in English: 10/10 in all three arms, so saturated (claude-opus-5-5 writes English prompts without the rule). The progress-note branch is not measurable in `-p`. Rows: session c7da8904 scratchpad `ste-rv4/` (raw/lang-commit/, raw/lang-subagent/).
+
+
 ## Word choice (in `output-styles/colleague-zh.md`)
 
 Keep the enumerated mapping. A short paraphrase leaks, and 「用台灣用語」 alone is worse than writing no rule at all.
@@ -112,7 +120,14 @@ Two things this pins down. First, opus alone cannot measure this rule: on opus t
 
 「用台灣用語」 probably makes things worse because it pushes toward rendering every term in Chinese, which is what produces the coinages. The control feels no such pressure and writes 關鍵的 or 有作用的 unprompted.
 
+### Re-verified 2026-10-09 on the current models
+
+- Re-measured 2026-10-09 on claude-opus-5-5, n=15, preloaded CLAUDE.md, rebuilt probe. Shipped 0/15 calques. Word choice paragraph removed: 5/15 (all 承重). Bare: 1/15. Still load-bearing, and now measurable on claude-opus-5-5. Removing the paragraph scores worse than no style at all. The rest of the style pushes the 承重 calque, and this paragraph cancels the push. Paraphrase 2/10 and 「用台灣用語」 1/10 are unsettled at n=10. Unlisted idioms (boil the ocean, move the needle, bikeshedding, dogfood) floor at 0/5 in every arm. Rows: session c7da8904 scratchpad `rv-vw.ixCWfh/` (labels_W1.tsv, labels_W2.tsv).
+
+
 ## `colleague-zh` Voice, the turn-ending sentence
+
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
 
 Live failure: a turn ended on 「開始了。」 with no tool call after it, then repeated one turn
 later with the first fix already in place.
@@ -143,6 +158,11 @@ Removed on the same evidence: a `**Tool calls fire direct.**` paragraph added to
 same day. Against the rest of the style it scored 20/20 vs 18/20 at n=20 (p=0.24), while bare
 opus scored 2/20 — redundant against the document, not against the model.
 
+### Re-verified 2026-10-09 on the current models
+
+- Re-measured 2026-10-09 on claude-opus-5-5, n=15, preloaded CLAUDE.md, rebuilt probe, clean last sentence. Shipped 15/15, passage removed 10/15, red line alone 14/15, bare 10/15. Shipped against removal still holds (gap 5). The red line alone is no longer weaker than the combination under the fixed rule (gap 1, and gap 3 if plan-state closers count as announcements). The claim "inert alone, load-bearing together" is not reproduced on claude-opus-5-5. Bare claude-opus-5-5 now ends on a question 9/15 and on an announcement 5/15, not 12/12. Rows: session c7da8904 scratchpad `rv-vw.ixCWfh/` (labels_V1.tsv).
+
+
 ## Core Philosophy
 
 ### "Delete before you optimize.", added 2026-08-25 — pilot only, not shipping-grade
@@ -169,9 +189,18 @@ but not run before this rule shipped. Re-run it before trusting that clause spec
 
 ### Add-one-in, 2026-08-15 (design: `## Method notes`)
 
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
+
 | section | probe | RULE | CONTROL | verdict |
 |---|---|---|---|---|
 | Core Philosophy | dedup 10M strings, first-seen order | 8/10 | 5/10 | load-bearing on opus (3v0); haiku already does it |
+
+### Re-verified 2026-10-09 on the current models
+
+- "Delete before you optimize", with a competing regex hoist in the scenario (p1). Re-run 2026-10-09, leave-one-out against the live CLAUDE.md. claude-haiku-5-5: 10/10 with the bullet, 1/10 without, bare 0/5. claude-opus-5-5: 6/15 against 0/15, bare 0/5. Load-bearing on both. Without the competing optimization (p1b), claude-opus-5-5 scores 8/10 against 0/10 (bare 0/5, it reorders `v3` first and keeps the legacy branches). claude-haiku-5-5 bare scores 5/5, so it is prior-saturated. claude-sonnet-5-5 at n=5 only: p1 2/5 against 0/5, p1b 5/5 against 2/5, unsettled. Most hits name a test or sign-off check before the delete. The probe for the coverage clause is still not run. Rows: session c7da8904 scratchpad `rv4-core.AbhUPW/raw/`.
+- Flag-guarded branch (keep it), 2026-10-09: 10/10 in both arms on claude-haiku-5-5 and claude-opus-5-5, bare 5/5. Still saturated. The bullet does not cause a wrong delete. Rows: session c7da8904 scratchpad `rv4-core.AbhUPW/raw/` (files p2-*).
+- Add-one-in row, dedup of 10M strings. Re-run 2026-10-09 as leave-one-out (whole section removed). dict.fromkeys scores 10/10 with and without the section and 5/5 bare on claude-opus-5-5 and claude-haiku-5-5. The 2026-08-15 effect on claude-opus-5 does not reproduce. This probe is prior-saturated. Rows: session c7da8904 scratchpad `rv4-core.AbhUPW/raw/` (files p3-*).
+
 
 ## Proactive Engineering
 
@@ -184,6 +213,8 @@ Merged the two ask-the-user bullets in Proactive Engineering.
 Six open design questions (`preflight`) moved opus against a bare control (reuse 8/15 vs 0/15) but 26 such rules moved nothing against this CLAUDE.md preloaded (25/26 control 5/5). Rewriting the questions as action sentences dropped compliance 15/15 → 0/15. Seven action-shaped lookup lines matched control 3/3 in an agentic run and added a dependency in 2/3. So: no design/review rules added for opus; `preflight` is `disable-model-invocation: true`, value for new modules unmeasured. Untested lever: a fresh session fixed the historical miss a long session judged wrong (context cleanliness, not wording). Evidence: `skills/validate-prompt-rules/measurements.md`.
 
 ### Breaking-change sign-off, added 2026-08-25 — pilot only, not shipping-grade
+
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
 
 Source ideas and the common thread: `## Method notes`, the 2026-08-25 subsection.
 
@@ -239,6 +270,8 @@ durable fix is a scorer that prints rows, not a rule.
 
 ### Add-one-in, 2026-08-15 (design: `## Method notes`)
 
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
+
 | section | probe | RULE | CONTROL | verdict |
 |---|---|---|---|---|
 | Proactive Engineering | next action after fixing a None-deref | 10/10 | 1/10 | load-bearing |
@@ -248,9 +281,20 @@ that asked "what do you do about the other three?" — the question already carr
 Rewritten to "state your single next action", the same section separates 10/10 vs 1/10.
 A null result on a probe whose control cannot fail says nothing.
 
+### Re-verified 2026-10-09 on the current models
+
+- Regex bullet (under "The regex bullet, extended 2026-08-21"). Re-run 2026-10-09, leave-one-out on the live CLAUDE.md, ECP.md and RTK.md, rebuilt tx.csv probe. claude-opus-5-5 n=10: with v6 10/10, without v6 4/10, bare 0/10, load-bearing. claude-sonnet-5-5 n=10: 10/10, 0/10, 0/10. claude-haiku-5-5 n=15: 3/15, 0/15, 0/15, unsettled. claude-haiku-5-5 answers `awk -F,` with the rule loaded. Rows: session c7da8904 scratchpad `rv4-pe.txYwfa/` (probe `csv`).
+- Breaking-change sign-off (under "Breaking-change sign-off, added 2026-08-25"). Re-run 2026-10-09, leave-one-out, rebuilt probe (one test-helper caller, grep agrees with ecp). claude-opus-5-5 n=10: whole file 10/10, CLAUDE.md bullet removed 10/10, bullet and the ECP.md duplicate both removed 0/10, bare 0/10. The two copies are interchangeable on claude-opus-5-5. claude-haiku-5-5 n=10, probe without the grep line: 6/10 with the bullet, 0/10 without it while ECP.md still holds its sentence. With the grep line, claude-haiku-5-5 edits the caller 0/10 in every arm. claude-sonnet-5-5 n=10: 3/10 against 0/10, unsettled, because Branch Discipline takes the single next action ("create a worktree") in 15 of 20 rows. Keep both copies. Rows: session c7da8904 scratchpad `rv4-pe.txYwfa/` (probes `break`, `break2`).
+- Add-one-in row (under "Add-one-in, 2026-08-15"). Re-run 2026-10-09, leave-one-out, rebuilt None-deref probe. claude-opus-5-5 n=10 and claude-sonnet-5-5 n=10: 10/10 in the whole file, without the bullet and bare, so saturated. claude-haiku-5-5 n=15: 15/15 with the bullet, 9/15 without it, 4/15 bare. Load-bearing on claude-haiku-5-5 only. The bullet stays for claude-haiku-5-5 sub-agents. Rows: session c7da8904 scratchpad `rv4-pe.txYwfa/` (probe `scan`).
+- Rejected on the same run as the regex bullet (under "The regex bullet, extended 2026-08-21"). Re-checked 2026-10-09 with three rebuilt probes (JSONL count, report a regex classifier's numbers, list defined functions), bare control n=5: 5/5 on claude-opus-5-5 and claude-haiku-5-5 for each. Still saturated, so "not added" stands. Rows: session c7da8904 scratchpad `rv4-pe.txYwfa/` (probes `rc_*`).
+- Under "Not added 2026-09-11": not re-run 2026-10-09. The client-package probes and `raw26/` no longer exist.
+
+
 ## Surgical Changes
 
 ### Leave-one-out, 2026-08-21, n=6 per arm, opus + haiku (design: `## Method notes`)
+
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
 
 | section | opus c/B/A | haiku c/B/A | verdict |
 |---|---|---|---|
@@ -261,6 +305,12 @@ A null result on a probe whose control cannot fail says nothing.
 | section | probe | RULE | CONTROL | verdict |
 |---|---|---|---|---|
 | Surgical Changes | "retry an HTTP GET a few times", nothing specified | 9/10 | 7/10 | weak, opus-only (4v2) |
+
+### Re-verified 2026-10-09 on the current models
+
+- Re-run 2026-10-09, leave-one-out, rebuilt probe (two Minor off-task items after a fix, hit = the final message asks whether to fix them). claude-haiku-5-5: 10/10 against 2/10 (bare 1/5). claude-sonnet-5-5: 5/5 against 1/5 (bare 1/5). Both are load-bearing. claude-opus-5-5: 15/15 against 12/15 (bare 0/5), unsettled at n=15. The literal "y/n" appears in 28/30 rows with the section and 0/30 without it. Rows: session c7da8904 scratchpad `rv4-core.AbhUPW/raw/` (files p4-*).
+- Add-one-in row, "retry an HTTP GET a few times". Re-run 2026-10-09, leave-one-out. No arm on claude-haiku-5-5 or claude-opus-5-5 wrote a retry function with 2 or fewer parameters (0/15 each). With 3 or fewer parameters, trials 6 to 15: claude-opus-5-5 8/10 against 5/10, claude-haiku-5-5 2/10 against 2/10. Unsettled. Rows: session c7da8904 scratchpad `rv4-core.AbhUPW/raw/` (files p5-*).
+
 
 ## Test Discipline
 
@@ -328,7 +378,14 @@ n≥15 before treating the swap as settled.
 Branch Discipline is not about branching at all: every arm branches, and
 only the section produces `git worktree add`, the `fix/` prefix and an explicit base.
 
+### Re-verified 2026-10-09 on the current models
+
+- Re-run 2026-10-09, leave-one-out with CLAUDE.md, RTK.md and ECP.md preloaded, n=5. claude-opus-5-5 and claude-haiku-5-5 each scored live 5/5, section removed 0/5, bare 0/5 (target: a git worktree add command before the first edit of a one-word README fix). Still load-bearing. Rows: session c7da8904 scratchpad `rv4-bcp.QXYCPd/raw/` (files branch.*).
+
+
 ## Commit & PR Authorship
+
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
 
 Red line — keep the negative wording; a positive rephrase here weakens the constraint (verified: reworded variant let a model re-add the footer).
 
@@ -337,6 +394,12 @@ Red line — keep the negative wording; a positive rephrase here weakens the con
 The settings reference's table claims the default is `false`. It is not. Verified against the 2.1.232 binary: the attribution builder returns the trailer and the PR footer unless `includeCoAuthoredBy === false`, and `attribution: {commit, pr}` overrides both texts and outranks it. To re-verify on a later build, start a session and read whether the system prompt still carries the trailer instruction.
 
 The `CLAUDE.md` rule stays for now. Its red-line status was measured while the harness was injecting the opposite instruction, and nothing has been measured without it. Deleting it needs its own A/B against the model's own prior, on more than one model: the injection is gone, the training prior for `🤖 Generated with Claude Code` is not.
+
+### Re-verified 2026-10-09 on the current models
+
+- C2, replaces the open question of the "nothing has been measured without it" paragraph. Measured 2026-10-09 with includeCoAuthoredBy:false, CLAUDE.md, RTK.md and ECP.md preloaded, in a repo whose history carries the trailer and the footer. With the section removed, claude-haiku-5-5 and claude-sonnet-5-5 add the exact Co-Authored-By trailer to 5/5 commit messages and the exact 🤖 Generated footer to 5/5 PR bodies. With the live rule both are clean 5/5 (claude-haiku-5-5 15/15). claude-opus-5-5 is saturated (bare 4/5 clean). The prior alone produces the attribution, so the rule stays for sub-agents. Rows: session c7da8904 scratchpad `rv4-bcp.QXYCPd/raw/` (files commit.*, pr.*).
+- C1, reword re-test 2026-10-09. One positive rephrase ("End every commit message, PR body, comment, and issue on its last line of content, with the human user as the only author...") held 15/15 on claude-haiku-5-5 and 5/5 on claude-sonnet-5-5, the same as the negative wording. The original failing rephrase is lost, so this clears one rephrase only. The negative wording stays. Rows: session c7da8904 scratchpad `rv4-bcp.QXYCPd/raw/` (arm cmP).
+
 
 ## Important Reminders
 
@@ -356,6 +419,10 @@ Probe: one bash command, no PID kept, three branches: wait for my own background
 | claude-haiku-5-5, foreign deploy | 2/2 (3 invalid) | 5/5 |
 
 Read: load-bearing on sonnet for the codex wait, the 09-17 failure exactly (4 of 5 control answers were `while pgrep -f "codex exec"`). Haiku already brackets the pattern (`[c]odex`) and is saturated. The foreign-process branch, where "start it as a background call" cannot apply, stays safe in the rule arm. Not measured: the in-brief placement, and a long-context run (both real lapses happened deep in long tasks, which `-p` does not reproduce). Raw rows and classifier: session faae8fad scratchpad `vpr-wait.CLvb9Q/` (`score2.py`).
+
+### Sub-agent foreground clause, added 2026-10-09 (unmeasured)
+
+Added "In a sub-agent, run it in the foreground instead, in steps that each end within the 10-minute Bash timeout: a completion notification never wakes an idle sub-agent." The pasted rule had told sub-agents to background the run and wait for the notification. Evidence, session c7da8904 (CLI 2.1.295), main transcript `queue-operation` rows: a background task's `<task-notification>` for an idle in-process sub-agent is enqueued, and it is removed only when the sub-agent's next turn starts for another reason (`absorbed_mid_turn`). 146 of 178 removals were absorbed. 26 waited more than 120 s, the longest 1901 s, which ended when the main session sent a SendMessage. 5 of 7 measurement agents stalled this way twice in one run, for 5 to 31 minutes each. The 32 `delivered_to_agent` removals all took under 11 s. The `pgrep` sentence and its probe are unchanged. The new clause has no probe: `claude -p` cannot reproduce an idle in-process sub-agent.
 
 ### The `rm -r` red line, added 2026-10-08
 
@@ -396,6 +463,8 @@ Not added: "Start each rule's trigger with a moment the reader can see ..., neve
 
 ### The `writing-for-agents` pointer, live failure 2026-09-04
 
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
+
 Live failure 2026-09-04: a session edited `simplify/SKILL.md` by hand, following the Guide's
 own bullets from context, and never invoked `writing-for-agents`. The skill's own description
 never fired, because the inline block already felt like coverage.
@@ -426,6 +495,8 @@ design that separates frames the task as a rule change, where the skill is not t
 
 ### Prompt Writing Guide, compressed 1,111 → 704 chars
 
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
+
 Five probes, A = compressed, B = current, n=6 per arm on opus and haiku. Every probe ties.
 Two bullets are confirmed load-bearing and both survive: positive phrasing (opus control 0/6,
 haiku control 0/6, both arms 6/6 and 5/6) and abstract-rules-first (haiku control 3/6, both arms
@@ -436,6 +507,14 @@ haiku control 0/6, both arms 6/6 and 5/6) and abstract-rules-first (haiku contro
 | section | opus c/B/A | haiku c/B/A | verdict |
 |---|---|---|---|
 | Prompt Writing Guide | 0/0/6 | 0/0/6 | load-bearing, both models |
+
+### Re-verified 2026-10-09 on the current models
+
+- Pointer (P2). Re-run 2026-10-09, rebuilt probe (original lost), leave-one-out, 30-skill list in every arm. claude-haiku-5-5: live 15/15, pointer removed 10/15, bare 1/5, so load-bearing on claude-haiku-5-5 now. claude-opus-5-5: 5/5 in every arm, bare included (saturated for this probe). Do not read this as licence to drop the pointer for opus. The probe names the task outright ("write a skill") and asks which skill to invoke. The deployed miss is an artifact written in passing: on 2026-10-09 the claude-opus-5-5 main session wrote a skill rule without invoking `writing-for-agents` until the user asked. The main session writes most agent-read text, so opus is the pointer's main reader. claude-sonnet-5-5 not measured. Rows: session c7da8904 scratchpad `rv4-bcp.QXYCPd/raw/` (files pointer.*).
+- Positive phrasing (P3a). Re-run 2026-10-09. The console.log probe is saturated (bare 4/5 claude-haiku-5-5, 5/5 claude-opus-5-5). Comment-restating probe: claude-opus-5-5 live 5/5, bullet removed 4/5, section removed 1/5, bare 1/5 (claude-opus-5-5 leads positive in every arm and the arms differ in a trailing "never ..."). claude-haiku-5-5 scores 0/5 in every arm, live included (it leads with "Do not"). The bullet is unsettled at n=5 on claude-opus-5-5, and claude-haiku-5-5 shows no compliance. Rows: session c7da8904 scratchpad `rv4-bcp.QXYCPd/raw/` (files positive*).
+- Abstract-first (P3b). Re-run 2026-10-09. claude-opus-5-5: live 5/5, bullet removed 0/5, bare 0/5, so load-bearing (it was saturated on claude-opus-5). claude-haiku-5-5: live 4/10, bullet removed 0/10, unsettled at n=10. Rows: session c7da8904 scratchpad `rv4-bcp.QXYCPd/raw/` (files abstract.*).
+- Section leave-one-out (P4). Re-run 2026-10-09, section removed against live. claude-opus-5-5: abstract 0/5 against 5/5 and comment probe 1/5 against 5/5, so still load-bearing. claude-haiku-5-5: pointer 12/15 against 15/15 and abstract 0/10 against 4/10, unsettled. Rows: session c7da8904 scratchpad `rv4-bcp.QXYCPd/raw/` (files *.pwS.*).
+
 
 ## Search & Read Strategy (Token Optimization)
 
@@ -462,6 +541,12 @@ Cross-model A/B, n=3 on each of opus, sonnet and haiku. Scenario: "find which mo
 - compressed 359-char version 9/9.
 
 The mapping carries the behaviour. The argument for it carries none, which agrees with the earlier finding that a rationale clause appended to a rule is inert.
+
+### Re-verified 2026-10-09 on the current models
+
+- Point 4 (under "Point 4, compressed 2026-08-14"). Re-run 2026-10-09, CLI 2.1.295, rebuilt probe (original lost), tools off, n=5 to 10. Rule alone against bare control, "riskiest modules" one-command ask, hit = `ecp impact`: claude-haiku-5-5 4/5 against 0/10, claude-opus-5-5 5/5 against 0/10, claude-sonnet-5-5 5/5 against 0/5. Leave-one-out in the shipped CLAUDE.md and ECP.md: claude-opus-5-5 and claude-sonnet-5-5 rank by fan-in with an `ecp cypher` count when point 4 is present (4/5, 5/5) and fall back to `ecp summary` without it (0/5, 0/5). claude-haiku-5-5 is flat on risk (8/10 against 8/10, both from the `ecp impact --baseline` line in ECP.md). On "most complex functions" claude-haiku-5-5 picks ruff `C901` 5/5 with point 4 and `ecp find --help` 4/5 without it (bare control 3/5). Load-bearing on all three models, through different branches. Keep. The 673-vs-359-char reword was not re-run (old text lost). Rows: session c7da8904 scratchpad `rv4-search.ydHs2j/` (scores.tsv, recount.sh, recount-v2.sh).
+- After the leave-one-out table: not re-run 2026-10-09. The 2026-08-21 cell is "invalid", so no status exists to re-verify. Points 2 and 3 remain unmeasured on every model.
+
 
 ## `ECP.md`
 
@@ -501,6 +586,11 @@ claude-sonnet-5-5, same day, n=15: 15/15 in all three arms, log-string break 5/5
 
 Moved out of `CLAUDE.md` as provenance, not instruction: "`Bash` carries 58% of long-session context" from Tool Call Batching (source not recorded).
 
+### Re-verified 2026-10-09 on the current models
+
+- 2026-10-09: no measured status and no probe on record, so nothing to re-verify. The rule has never been measured. The related batching-instance line (2026-09-15) belongs to `## Dispatch, "When to dispatch"`.
+
+
 ## MCP Tool Calling (Token Optimization)
 
 ### Add-one-in, 2026-08-15 (design: `## Method notes`)
@@ -509,9 +599,19 @@ Moved out of `CLAUDE.md` as provenance, not instruction: "`Bash` carries 58% of 
 |---|---|---|---|---|
 | MCP Tool Calling | one production SQL query | 6/6 | 1/6 | load-bearing |
 
+### Re-verified 2026-10-09 on the current models
+
+- Add-one-in row. Re-run 2026-10-09, CLI 2.1.295, rebuilt probe (orders row count in the production DB, first tool call, tools off), n=5. Section alone against bare: claude-haiku-5-5 5/5 against 0/5, claude-opus-5-5 5/5 against 0/5. Leave-one-out in the shipped CLAUDE.md: 5/5 against 0/5 on both. Without the section, claude-haiku-5-5 still names `mcp__exec__run` 4/5 but with a `command` key and psql. Without the section, claude-opus-5-5 probes `env` via Bash. Break case (a single GitHub MCP call must go direct): 5/5 in every arm on both models. Load-bearing. Keep. Rows: session c7da8904 scratchpad `rv4-search.ydHs2j/`.
+
+
 ## Dispatch (Cost-Aware, Adaptive)
 
 Red line — keep this wording. The CLI's default prompt bars dispatch unless the user asks, and that bar wins by default. Isolated A/B on Opus 5 (n=3, `--setting-sources project`): this wording dispatches 3/3; the softer "you may dispatch sub-agents when it would help" dispatches 0/3, same as no rule.
+
+### Re-verified 2026-10-09 on the current models
+
+- Re-run 2026-10-09 on claude-opus-5-5. Agentic leave-one-out on the live CLAUDE.md: a 14-service repo, 12 turns, bypassPermissions. A hook blocked and recorded the Agent and Workflow calls. Dispatched: whole doc 9/15, doc without the red line 12/15, red line replaced by "you may dispatch sub-agents when it would help" 1/15, no CLAUDE.md 0/5. On claude-opus-5-5 the paragraph adds nothing to the rest of Dispatch, but the softer wording suppresses dispatch below plain deletion. Never soften it. Delete it only after a claude-sonnet-5-5 or claude-haiku-5-5 main session is measured. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (ag2.jsonl).
+
 
 ## Dispatch, "When to dispatch"
 
@@ -521,11 +621,24 @@ Moved out of `CLAUDE.md` as provenance, not instruction: the two "Measured 2026-
 
 ### Phase bullet and the brief lines, 2026-09-15
 
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
+
 Source: the 22 sub-agent transcripts of one client-project session, usage summed per turn. Four implementers ran 221 to 335 turns to a final context of 370k to 471k; 78 to 95% of their spend (cache reads at 0.1x) fell after the context passed 200k. Reviewers that ended at 73k to 211k cost $0.7 to $14 each. The 150k phase target is chosen, not measured: the agent cannot see its own context and the main session sees nothing until it returns, so the split is planned in the brief, and the 200k line is only the after-the-fact signal. The "names the function or line range" and batching-instance lines come from the same transcripts: one 31k-token source file read whole four times, 87 to 114 single-command Bash calls per implementer. A/B 2026-09-15, isolated `claude -p`, control = CLAUDE.md without the new lines, rule injected via `--append-system-prompt`, n=5 per arm, hit scored by regex on the reply. Phase bullet (probe: plan the dispatch for a six-tab cut): opus control 2/5 (both hits were "handoff" in the merge sense, not a phase split), A 5/5; sonnet control 0/5, A 5/5. Keep. Line-range line (probe: write the brief for a change in two large files, sizes stated): opus control 5/5, so a no-op for an opus brief-writer when the scenario states the sizes; sonnet control 0/5, A 5/5. Kept for the weaker reader; the opus probe is leading and does not measure the real-brief case. Batching-instance line: opus control 4/5, A 5/5; sonnet control 1/5, A 5/5. Keep.
 
 ### Deliberately absent: the big-read rule and the worktree-isolation rule
 
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
+
 Deliberately absent: a "delegate the big read" rule, and a worktree-isolation rule. The cost arithmetic supports the first (a haiku delegate repays its own ~10k prefix reload once it reads past ~6.5k tokens), but five wordings measured neutral-to-harmful on Opus 5: it already delegates a genuine bulk read unprompted (3/3) and already prefers a targeted grep over delegating a lookup (3/3), and every threshold wording broke that second case. It also already sets `isolation: "worktree"` on parallel writers unprompted (3/3). Don't re-derive the arithmetic and re-add either rule.
+
+### Re-verified 2026-10-09 on the current models
+
+- Phase bullet. Re-run 2026-10-09 on claude-opus-5-5, leave-one-out on the live CLAUDE.md, n=5, six-tab dispatch plan. A hand-off file between phase agents appeared with the bullet 5/5, without it 0/5, no CLAUDE.md 0/5. Keep. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (main.jsonl, probe P1).
+- Line-range line. Re-run 2026-10-09 on claude-opus-5-5, n=5, brief for two files of 1,450 and 930 lines. Targeted read named: with the line 5/5, without it 5/5, no CLAUDE.md 5/5. Still no effect on claude-opus-5-5. Kept for the weaker reader. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (main.jsonl, probe P2).
+- Batching-instance line. Re-run 2026-10-09 on claude-opus-5-5, n=5, same probe. Batching instruction in the brief: with the line 5/5, without it 0/5 (claude-opus-5 was 4/5), no CLAUDE.md 0/5. Now load-bearing on claude-opus-5-5 too. Keep. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (main.jsonl, probe P2).
+- Deliberately absent rules, X1 (big-read delegation). Probe X1 scored A 0/5, because every first action is `ecp find` or `ecp summary` and 2 rows say "before I read files or dispatch agents". The fixed rule gives a changed verdict, but the substance is unsettled. The reflex in ECP.md takes the first action, so this probe cannot see a later delegation. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (main.jsonl).
+- Deliberately absent rules, X2 and X3. X2 (targeted search for a lookup) scored A 5/5 with `ecp find`, so it still holds. X3 (worktree isolation set unprompted) scored A 5/5, so it still holds. Branch Discipline sits in the preload. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (main.jsonl).
+
 
 ## Dispatch, "What a delegate returns"
 
@@ -554,6 +667,11 @@ Leave-one-out on the live `CLAUDE.md`, one run per model, the section removed in
 |---|---|---|---|
 | Across rounds | 0/0/6 | 0/1/5 | load-bearing, both models |
 
+### Re-verified 2026-10-09 on the current models
+
+- Re-run 2026-10-09 on claude-opus-5-5, leave-one-out, n=5 per probe. Stop after two empty rounds with "be thorough": with the section 4/5, without it 0/5. TTL line: 5/5 and 0/5. Continue after one empty round: 5/5 in both arms, on two scenarios, because claude-opus-5-5 already wants two in a row. Keep. Open question: in the stop probe each round covered a different slice, and the rule stopped claude-opus-5-5 where both controls argued that files were still unaudited. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (main.jsonl, probes RA, RA2, RB, RC).
+
+
 ## Dispatch, "Model and effort"
 
 ### Tier clauses added 2026-09-11 — from session observation, not probed
@@ -564,6 +682,8 @@ Leave-one-out on the live `CLAUDE.md`, one run per model, the section removed in
 Effort levels untouched: no dispatch this session used an `effort-*` type and none showed a deliberation failure; the classifier false negatives were acceptance-criterion gaps (regex not tested against a plausible miss), not effort.
 
 ### Reduced 2026-08-14, and the two-mentions finding
+
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
 
 Reduced from 1,823 to 1,054 chars on 2026-08-14. The Dispatch red line above is untouched; this covers only the subsection.
 
@@ -591,6 +711,11 @@ Where the optimisation stopped: further cuts would have to trim the ladder rows'
 
 The brief lines ("names the function or the line range", the batching instances): `## Dispatch, "When to dispatch"`, the 2026-09-15 subsection.
 
+### Re-verified 2026-10-09 on the current models
+
+- Re-run 2026-10-09 on claude-opus-5-5, the 40-PR-titles probe. With `~/.claude/agents/` loaded, the model names `lite-scan` 15/15 with the subagent_type naming and 15/15 without it (n=15), and 5/5 with no CLAUDE.md. With no agents directory: 4/5 and 0/5 (n=5). The description of the agent now carries the name when the main session is claude-opus-5-5. Not measured: `deep-review` naming, a claude-sonnet-5-5 or claude-haiku-5-5 main session. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (main.jsonl, probe L1).
+
+
 ## Python, the `except A, B:` red line
 
 ### `except A, B:` red line re-checked 2026-09-23
@@ -612,6 +737,8 @@ So the check is not a proxy for the rule; it is the rule. A reviewer that disagr
 
 ### Special case removed by restructuring, added 2026-08-25 — pilot only, not shipping-grade
 
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
+
 Source ideas and the common thread: `## Method notes`, the 2026-08-25 subsection.
 
 **Code Style, eliminate a special case by restructuring.** Scenario: a linked-list bug where
@@ -631,9 +758,17 @@ within the n=5 noise floor; not shipped as "proven better," shipped as "at least
 
 ### Add-one-in, 2026-08-15 (design: `## Method notes`)
 
+> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
+
 | section | probe | RULE | CONTROL | verdict |
 |---|---|---|---|---|
 | Code Style (general) | `match` over an if/elif chain on four string values | 6/6 | 0/6 | load-bearing |
+
+### Re-verified 2026-10-09 on the current models
+
+- Special case, same linked-list `pop` scenario. Re-run 2026-10-09, leave-one-out. claude-opus-5-5 and claude-sonnet-5-5 move the decrement out in every arm, bare 5/5 (prior-saturated). claude-haiku-5-5: 11/15 against 7/15, bare 1/5, unsettled at n=15. Rows: session c7da8904 scratchpad `rv4-core.AbhUPW/raw/` (files p6-*).
+- `match` row, four-command `handle`. Re-run 2026-10-09, leave-one-out (bullet removed). claude-opus-5-5 and claude-sonnet-5-5 write `match` in every arm, bare 5/5. claude-haiku-5-5: 15/15 against 12/15, bare 0/5. The rest of CLAUDE.md lifts claude-haiku-5-5 most of the way, and the gap of the bullet (3/15) is unsettled at n=15. Rows: session c7da8904 scratchpad `rv4-core.AbhUPW/raw/` (files p7-*).
+
 
 ## Memory (removed from `CLAUDE.md` 2026-09-23)
 
@@ -727,6 +862,8 @@ B shipped. A scoring 0/8 is correct behaviour for A, not a defect: at Tier 1 the
 fire by design. What the probe measures is that the new wording reaches even haiku, 7/8.
 
 ## Method notes
+
+- 2026-10-09 round 4: seven agents re-ran every status whose evidence predated the claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5 models. No original probe survived, so every probe was rebuilt from its entry. A "changed" verdict compares a rebuilt probe with an old one. Budget cap: no round beyond the one in flight, so several cells stop at n=5 or n=10 as "unsettled".
 
 ### The seven unmeasured sections, measured 2026-08-15
 

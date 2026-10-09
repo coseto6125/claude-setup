@@ -39,6 +39,9 @@
 #        status/exit_code/attempt/model/position/scenario/wording metadata. A probe that
 #        fails after one retry gets status=failed — excluded from comparison; the run then
 #        exits 2 (incomplete).
+usage() { sed -n '2,/^[^#]/s/^# \{0,1\}//p' "$0"; }
+# Takes no arguments: any argument prints the header and exits, so `--help` never starts a run.
+if [ $# -gt 0 ]; then usage; case "$1" in -h|--help) exit 0 ;; *) exit 2 ;; esac; fi
 
 set -u
 for dep in claude jq timeout shuf; do

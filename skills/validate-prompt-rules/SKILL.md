@@ -139,7 +139,7 @@ Start at n=5. Add trials in steps, and stop at the first step where the arms sep
 | n=7, then n=10 | the arms differ by half of n or more |
 | n=15 | the arms differ by 5 or more trials |
 
-- **Add trials to the same run.** `preloaded.sh` keeps finished trials, so run it again with a larger `N`.
+- **Add trials to the same run.** `preloaded.sh` keeps finished trials, so run it again with a larger `N`. In a sub-agent, make each step one foreground call with `timeout: 600000`, sized to end within it.
 - **Take the next step** when the gap is smaller than the table asks, or when the result decides the deletion of a measured rule.
 - **Stop at n=15.** A gap that is still smaller is unsettled. Sharpen the scenario, or report the rule as unsettled.
 - **Compare arms inside one run.** Never compare a cell with a cell from another run.
