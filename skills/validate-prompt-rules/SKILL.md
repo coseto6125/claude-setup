@@ -143,6 +143,9 @@ Start at n=5. Add trials in steps, and stop at the first step where the arms sep
 - **Take the next step** when the gap is smaller than the table asks, or when the result decides the deletion of a measured rule.
 - **Stop at n=15.** A gap that is still smaller is unsettled. Sharpen the scenario, or report the rule as unsettled.
 - **Compare arms inside one run.** Never compare a cell with a cell from another run.
+
+  > Measured 2026-10-09 on claude-haiku-5-5: five runs of one arm scored 8 to 11 of 15, inside sampling noise. A cwd change between two runs moved the same arm from 6/10 to 0/10.
+
 - **Count the rows before you read a result.** A failed call must count as an error, never as a miss. A run where nothing executed looks like a clean null.
 
 ## Reading the result

@@ -40,7 +40,8 @@ The arms carry 08-14 model names (Haiku 4.5, Sonnet 5, Opus 5), which opus repea
 - Edge-list plant, n=5, 2026-09-11 preload: claude-opus-5-5 control 0/5, class-only 5/5, class+list 5/5. claude-haiku-5-5 control 0/5, class-only 4/5, class+list 4/5 (claude-haiku-4-5 had class-only 0/5).
 - List-only probe, claude-haiku-5-5, n=6: no arm refused (the original control and list-only arm refused 6/6). Only the class sentence named the problem as a borrowed category, 6/6 against 0/6.
 - eli5 audience tables, claude-haiku-5-5, n=15: control 0/15, four tables 10/15, class sentence alone 7/15. The gap of 3 is unsettled (claude-haiku-4-5 had 15/15 against 2/15).
-- Open: the SKILL.md advice to add the instance list for a haiku reader no longer has measured support on claude-haiku-5-5. Kept pending an n=15 run and a claude-sonnet-5-5 run.
+- claude-sonnet-5-5, edge-list plant, n=10: control 0/10, class-only 10/10, class+list 8/10 (10/10 read by hand). The class sentence carries the effect; the list adds nothing.
+- Open: the SKILL.md advice to add the instance list for a haiku or sonnet reader has no measured support on the current models. Kept pending an n=15 run.
 
 ### Negation: the named-command red line
 
@@ -55,8 +56,8 @@ CSV probe, today's `CLAUDE.md` as the document, leave-one-out. claude-opus-5-5 n
 | named-command sentence alone | 12/12 | 12/12 |
 | positive sentence alone | 12/12 | 10/12 |
 
-On claude-opus-5 (2026-08-21) the positive rule scored 0/12. Three rows that negate `awk` count as hits. Rows that offer `awk` as an alternative count as misses.
+claude-sonnet-5-5, n=15: control 0/15, file without either rule 1/15, shipped 15/15, positive rule 15/15. The rule is needed on sonnet, and the positive form holds there. It leaks on claude-haiku-5-5, so the named-command form stays. On claude-opus-5 (2026-08-21) the positive rule scored 0/12. Three rows that negate `awk` count as hits. Rows that offer `awk` as an alternative count as misses.
 
 ## 2026-10-09 — `audit.py` rule 6 and `spans` (unmeasured)
 
-Rule 6 flags a `> Measured` blockquote that names a model family without a full ID. It found 0 lines in the tree on its first run, because the day's re-run had already relabelled them. `spans` lists code spans an old copy has and the new file lacks. Origin: a trim of peer-agent dropped the only `check --ack <delivery_id>`, and claude-opus-5-5 then invented a command 7/7 (memory `evidence-sentence-can-carry-the-only-anchor`). The "Finishing a change" bullet that calls `spans` is a report-format rule and shipped unmeasured. Tests: `test_audit.py`, 19 cases.
+Rule 6 flags a `> Measured` blockquote that names a model family without a full ID. It found 0 lines in the tree on its first run, because the day's re-run had already relabelled them. `spans` lists code spans an old copy has and the new file lacks. Origin: a trim of peer-agent dropped the only `check --ack <delivery_id>`, and claude-opus-5-5 then invented a command 7/7 (memory `evidence-sentence-can-carry-the-only-anchor`). The "Finishing a change" bullet that calls `spans` is a report-format rule and shipped unmeasured. Tests: `test_audit.py`, 45 cases after the review round.
