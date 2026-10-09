@@ -51,7 +51,7 @@
 ## Important Reminders
 
 - Before pushing to remote, run `/simplify`.
-- **Never run `rm -rf` / `rm -r` on a path built from a variable or a glob.** Delete only named files by literal absolute path, and only files you created. When a step needs an empty directory, create a new one: `mktemp -d "<scratch dir>/name.XXXXXX"`, or move the old one aside with `mv` first. `mkdir -p` into a directory that may already exist mixes in its old files. When you delegate shell work, paste this rule verbatim into the sub-agent prompt.
+- **Never run `rm -rf` / `rm -r` on a path built from a variable or a glob.** Delete only named files by literal absolute path, and only files you created. When a step needs an empty directory, create a new one: `mktemp -d "<scratch dir>/name.XXXXXX"`, or move the old one aside with `mv` first. `mkdir -p` into a directory that may already exist mixes in its old files. When you delegate shell work to an agent that does not load this file, such as codex, paste this rule verbatim into its prompt.
 - **Never delete `.claude/worktrees/` directories** — they belong to other running Claude instances. If lint fails on their imports, fix the lint config to exclude `.claude/`; do not delete the worktree.
 - **Before you write a loop that waits for another process,** start that process as a background call and act on its completion notification. Never poll with `pgrep -f '<its command>'`: the pattern matches the loop's own command line, so the loop never ends. When you delegate shell work, paste this rule into the sub-agent prompt.
 

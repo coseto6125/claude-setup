@@ -3,6 +3,28 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.8 — 2026-10-09
+
+### Changed
+
+- `CLAUDE.md`: the `rm -r` rule asks to be pasted into a delegate's prompt only when that
+  agent does not load `CLAUDE.md`, such as codex. Measured on claude-haiku-5-5 and
+  claude-sonnet-5-5: a sub-agent follows the rule from `CLAUDE.md` alone (8/10 and 10/10,
+  0/10 without it), about as well as from the brief.
+- `maintainer-notes.md`: a correction. A same-day re-run reported that claude-haiku-5-5
+  ignores the rule from the system prompt. Its harness dropped `--append-system-prompt`,
+  so those arms were controls. The fixed harness gives 10/10. New rows for the deployed
+  `colleague-zh` punctuation paragraph (inert on claude-opus-5-5 in single-turn probes,
+  kept on purpose), the "What a delegate returns" section (load-bearing on
+  claude-sonnet-5-5 and claude-haiku-5-5, not on claude-opus-5-5), and the Index exception
+  rows.
+- `skills/validate-prompt-rules`: `route.sh` stops when `mktemp` fails and cleans up
+  through `rm_tmp`, like the other harnesses. The "compare arms inside one run" rule cites
+  a claude-haiku-5-5 run-to-run measurement: five runs scored 8 to 11 of 15, inside
+  sampling noise. A cwd change between runs is the risk, not model drift.
+- `skills/writing-for-agents/measurements.md`: claude-sonnet-5-5 rows for the class and
+  instance and the named-command measurements.
+
 ## v0.1.7 — 2026-10-09
 
 ### Added

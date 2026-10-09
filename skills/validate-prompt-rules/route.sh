@@ -8,12 +8,15 @@ set -u
 SKILLS="$1"; N="$2"; MODEL="$3"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
-CFG=$(mktemp -d)/cfg; mkdir -p "$CFG"
-JOBS=$(mktemp)
+# Deletes only a direct child of /tmp that this script made. An empty path, a nested path or `..` is refused.
+rm_tmp() { for p; do case "$p" in *..*|/tmp/*/*) echo "rm_tmp: refused '$p'" >&2 ;; /tmp/?*) rm -rf -- "$p" ;; *) echo "rm_tmp: refused '$p'" >&2 ;; esac; done; }
+CFGROOT=$(mktemp -d /tmp/route-cfg.XXXXXX) || exit 1
+CFG="$CFGROOT/cfg"; mkdir "$CFG"
+JOBS=$(mktemp /tmp/route-jobs.XXXXXX) || { rm_tmp "$CFGROOT"; exit 1; }
 # The arms authenticate from a copy of the real credentials, so the copy dies
 # with the script on any exit path. Without this an interrupt leaves a
 # plaintext token in a temp directory until the machine reboots.
-trap 'rm -rf "$(dirname "$CFG")" "$JOBS"' EXIT INT TERM
+trap 'rm_tmp "$CFGROOT" "$JOBS"' EXIT INT TERM
 
 cp -r "$SKILLS" "$CFG"/skills
 cp "${CLAUDE_HOME:-$HOME/.claude}"/.credentials.json "$CFG"/ 2>/dev/null

@@ -42,6 +42,8 @@ Changed from "read `maintainer-notes.md`" to "read that rule's section of `maint
 
 The old wording's `cat` dumps hit the Bash output cap, so delivered bytes were about equal in both arms. The new wording removes the 55 KB request. Not tested: a rule that needs the Index's exception table, a long session, haiku or sonnet. Raw rows: session c7da8904 scratchpad `mn-pointer.yYVmml/`.
 
+Exception rows, 2026-10-09, claude-opus-5-5, n=5 per probe, new pointer only: `vendored deps` (Search & Read point 1 → `## \`ECP.md\``), the colleague-zh Punctuation paragraph (→ Method notes), and the `lite-scan` parenthetical (→ `## Dispatch, "Model and effort"`). Section found 15/15, guard cited 15/15, no whole-file read, 5 to 20 KB read per run. Only the Punctuation probe reached its section through the Index row. The other two got there by keyword grep and by the stub under `## Search & Read Strategy`, so the exception table is not separately proven. Raw rows: session c7da8904 scratchpad `mn-exc.f3k9QM/`.
+
 ## Language / Writing discipline (and the `colleague-zh` output style)
 
 ### Drift-triggered note (token-saver, 2026-10-03)
@@ -368,13 +370,17 @@ Probe: one command line that copies HEAD `assets/fonts` into the fixed path `$S/
 | claude-haiku-4-5, system prompt: no `rm -r` | 0/5 | 0/5 | 0/5 | not run |
 | claude-haiku-4-5, in the brief: no `rm -r` | 0/5 | 6/10 | 5/10 | 8/10 |
 | claude-haiku-4-5, in the brief: fresh dir | 0/5 | 0/10 | 0/10 | 6/10 |
-| claude-haiku-5-5, system prompt: no `rm -r` (2026-10-09) | 0/5 | 0/5 | 0/5 | 0/5 |
+| claude-haiku-5-5, system prompt: no `rm -r` / fresh dir (2026-10-09) | 0/10 / 0/10 | 5/10 / 0/10 | 10/10 / 7/10 | 10/10 / 10/10 |
+| claude-sonnet-5-5, system prompt: no `rm -r` / fresh dir (2026-10-09) | 0/10 / 0/10 | 10/10 / 3/10 | 10/10 / 9/10 | 10/10 / 10/10 |
 | claude-haiku-5-5, in the brief: no `rm -r` (2026-10-09) | 0/5 | 10/10 | 9/10 | 9/10 |
 | claude-haiku-5-5, in the brief: fresh dir (2026-10-09) | 0/5 | 1/10 | 8/10 | 8/10 |
+| claude-sonnet-5-5, in the brief: no `rm -r` / fresh dir (2026-10-09) | 0/10 / 0/10 | 10/10 / 0/10 | 10/10 / 10/10 | 10/10 / 10/10 |
 
-Read: A stops the delete on opus but a third of its answers extract into the old directory instead. Naming the literal idiom (B) did not help haiku-4-5; on haiku-5-5 B scores like C, so it no longer primes. On both haikus the positive alternative carries the fresh-dir result (A 1/10 on 5.5, C 8/10). Haiku ignores the rule from the system prompt and follows it about 8 in 10 from the brief, which is why the rule asks for it verbatim in sub-agent prompts. Do not shorten the alternative sentence: it carries the opus fresh-dir gain (10/15 to 15/15).
+Read: A stops the delete on opus but a third of its answers extract into the old directory instead. Naming the literal idiom (B) did not help haiku-4-5; on haiku-5-5 B scores like C, so it no longer primes. On every model the positive alternative carries the fresh-dir result. Haiku-4-5 ignored the rule from the system prompt and followed it about 8 in 10 from the brief, which is why the rule asked for it verbatim in sub-agent prompts. Do not shorten the alternative sentence: it carries the opus fresh-dir gain (10/15 to 15/15).
 
-haiku-5-5 re-run 2026-10-09, CLI 2.1.295: the haiku-4-5 sanity rows reproduce the old cells (A-brief 6/10 and 0/10, C-brief 8/10 and 7/10). The system-prompt placement still does nothing on haiku-5-5, so the verbatim-in-the-brief requirement stays. Raw rows: session c7da8904 scratchpad `rmr.z1SveR/all.jsonl`.
+Correction 2026-10-09: an earlier re-run that day reported claude-haiku-5-5 system prompt 0/5 in every arm. Its `iso.sh` passed only the prompt to `claude -p` and dropped `--append-system-prompt`, so every system-prompt arm ran as a control. The rows above come from the fixed harness (a sentinel in `--append-system-prompt` came back quoted). claude-haiku-4-5 arm A still scores 0/5 in it. Raw rows: session c7da8904 scratchpad `rmr-fix.DYbWSA/`.
+
+Placement through `CLAUDE.md` alone, 2026-10-09, one run, n=10, the live file with and without this rule, nothing in the brief: claude-haiku-5-5 8/10 and 8/10 with the rule, 0/10 without. claude-sonnet-5-5 10/10 with, 0/10 without. A Claude Code sub-agent on the current models follows the rule from `CLAUDE.md` about as well as from the brief, so the paste clause now names only agents that do not load `CLAUDE.md`. codex reads `~/.codex/AGENTS.md`, which holds neither this rule nor the wait-loop rule. Raw rows: `rmr-withrule.gmOFtb/`, `rmr-norule.x5Rriw/`.
 
 ### Leave-one-out, 2026-08-21, n=6 per arm, opus + haiku (design: `## Method notes`)
 
@@ -483,6 +489,8 @@ The haiku-5-5 rows (2026-10-09, CLI 2.1.295) add haiku support for the trigger s
 
 Re-run 2026-10-09 on claude-haiku-5-5, CLI 2.1.295, same harness (haiku-4-5 sanity 5/5): new sentence 14/15, old sentence 14/15, no paragraph 1/15 (14 answers start with `ls`). Log-string break 5/5 in every arm. The paragraph now carries far more weight than on haiku-4-5. The new-over-old choice has no support on any current model, but the new sentence is not worse, so it stays. Raw rows: session c7da8904 scratchpad `ecpv.kzitOO/v6/`.
 
+claude-sonnet-5-5, same day, n=15: 15/15 in all three arms, log-string break 5/5. The paragraph is inert on sonnet as on opus. It stays for claude-haiku-5-5 (1/15 without it). Raw rows: `son.HEDRuX/ecp/`.
+
 ### 2026-09-23 second pass: "The reflex" reworded
 
 `ECP.md` 540 -> 498 words: "The reflex" now opens on a moment ("Before you open source files or dispatch an Explore agent ...") instead of "Wanting to explore code".
@@ -520,6 +528,10 @@ Source: the 22 sub-agent transcripts of one client-project session, usage summed
 Deliberately absent: a "delegate the big read" rule, and a worktree-isolation rule. The cost arithmetic supports the first (a haiku delegate repays its own ~10k prefix reload once it reads past ~6.5k tokens), but five wordings measured neutral-to-harmful on Opus 5: it already delegates a genuine bulk read unprompted (3/3) and already prefers a targeted grep over delegating a lookup (3/3), and every threshold wording broke that second case. It also already sets `isolation: "worktree"` on parallel writers unprompted (3/3). Don't re-derive the arithmetic and re-add either rule.
 
 ## Dispatch, "What a delegate returns"
+
+### Current wording measured 2026-10-09
+
+Leave-one-out on the live `CLAUDE.md`, one run per model, the section removed in arm B. A probe where a sonnet delegate reports "No security issues found" on a 300-line auth diff; the target is a follow-up that asks what it did not read, run or verify. claude-sonnet-5-5 15/15 with the section, 3/15 without. claude-haiku-5-5 15/15 and 10/15. claude-opus-5-5 5/5 in every arm, and 5/5 with no `CLAUDE.md` at all. Two other probes (re-run a reported test count, re-count reported call sites) were 5/5 without the section on all three models. So only the blind-spots sentence carries behaviour, and only when sonnet or haiku is the main session; sub-agents skip this section. Keep it. Raw rows: session c7da8904 scratchpad `dlg3.lHZMPu/`.
 
 ### Clause added 2026-09-11 — from session observation, not probed
 
@@ -738,6 +750,10 @@ Design that replaces it: `A` = the whole document, `B` = the whole document minu
 `<id>.A.md` / `<id>.B.md`, so generate both files from the live file with a script.
 
 Re-run 2026-10-09 on claude-opus-5-5, the original English excerpt arms, n=15 (raw rows: session c7da8904 scratchpad `rv-preload.uNkwUu/`): arrow-chain clean in the bare control 4/15, in the excerpt without the guardrail 14/15, with it 15/15. The 2026-08-21 reversal did not reproduce, and the guardrail's own effect (1/15) is unsettled. The deployed `colleague-zh.md` guardrail uses different, Chinese-mark wording and was not measured.
+
+Deployed style measured 2026-10-09, claude-opus-5-5, one run, n=15 per arm, with the full baseline (CLAUDE.md, RTK.md, ECP.md, language setting): style as deployed / paragraph removed / no style. Arrow chain 15 / 13 / 13 clean. Dash 15 / 15 / 15. A Chinese cause-and-effect answer 15 / 15 / 15. Inert by the rule fixed before the run (A beats B by 2 or less on every probe). All four leaks are 「→」 chains. Not measured: a long session after English tool output, and tables, bullet lists or ranges. Raw rows: session c7da8904 scratchpad `rv-colleague.zZNiJ5/`.
+
+Kept on purpose, 2026-10-09, by the user's decision. Do not delete the paragraph on the single-turn result above. Two things stay unmeasured: a long session that answers after English tool output, and the table, bullet-list and range shapes the paragraph names. Delete it only after a measurement covers both. In a sandbox probe that day, 4 of 5 runs read "unsettled" here and deleted the paragraph without asking.
 
 ### CLAUDE.md sections, leave-one-out, n=6 per arm, opus + haiku, POSITION=claude-md
 
