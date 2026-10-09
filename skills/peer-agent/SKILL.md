@@ -99,7 +99,7 @@ reaches none of it — Orca owns the lifetime and delivers the report as a messa
 default, and a default is invisible: two runs a week apart read the same log path and mean different
 things. Name both, and record the pair beside the findings.
 
-- Model: `-m gpt-6-astra` — the gpt-6 line, and the only slug in it. Check the slug is still listed
+- Model: `-m gpt-6-astra`. Check the slug is still listed
   with `python3 -c "import json;print([m['slug'] for m in json.load(open('$HOME/.codex/models_cache.json'))['models']])"`,
   because a wrong slug fails late, inside the run.
 - Effort: `-c model_reasoning_effort="medium"` — the standing level for every launch, whatever the

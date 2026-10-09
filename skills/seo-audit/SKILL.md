@@ -23,6 +23,7 @@ metadata:
    - `seo-content` -- E-E-A-T, readability, thin content, AI citation readiness
    - `seo-schema` -- detection, validation, generation recommendations
    - `seo-sitemap` -- structure analysis, quality gates, missing pages
+   - `seo-performance` -- Core Web Vitals measurement, resource optimization
    - `seo-visual` -- screenshots, mobile testing, above-fold analysis
    - `seo-geo` -- AI crawler access, llms.txt, citability, brand mention signals
    - `seo-local` -- GBP signals, NAP consistency, reviews, local schema, industry-specific local factors (spawn when Local Service industry detected: brick-and-mortar, SAB, or hybrid business type)

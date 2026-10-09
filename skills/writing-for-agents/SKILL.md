@@ -19,7 +19,7 @@ A pointer does two jobs. It states what the material is. It lists the **branches
 
 Write each trigger as a **moment**: an event the agent can see without judgement ("Before you rename a symbol", "After two failed attempts at the same problem"). A trigger that names a **category** ("when you are stuck", "for code-structure questions") makes the agent classify its own situation first, and the rule dies at that step. This applies to the trigger of every rule, not only to pointers.
 
-> Measured 2026-08-13, haiku, 2 x n=15: five rules with category triggers scored 0 to 7 of 15. The same five with moment triggers scored 5 to 15 of 15, and the rewrite was 135 tokens shorter.
+> Measured 2026-10-09 on claude-haiku-5-5, 2 x n=15: "when you are stuck" scored 0 and 2. "After two failed attempts at the same problem" scored 10 and 13.
 
 Every word of an always-loaded pointer costs on every turn. Prune a pointer harder than a body:
 
@@ -80,9 +80,9 @@ A split into two documents spends one of the two loads. Split only when the cut 
 
 A **leading word** is a compact concept that already lives in the model's pretraining, and that the agent thinks with while it runs the document. _Lesson_, _fog of war_ and _tracer bullets_ are leading words. The word anchors a whole region of behaviour in the fewest tokens, because it recruits priors the model already holds. A word you coin yourself works if you define it clearly. A coined word recruits no priors, so you pay in definition tokens what a pretrained word gives free. Reach for an existing word first.
 
-Repeat the word as a token, never as a sentence. It then accumulates a distributed definition. One mention is not enough.
+Repeat the word as a token, never as a sentence. It then accumulates a distributed definition.
 
-> Measured on claude-opus-5, n=10 per arm: a `subagent_type` named once was picked 0/10, in every position and syntax. Named twice, it was picked 8 to 10 of 10.
+> Measured 2026-10-09 on claude-opus-5-5, n=10: a `subagent_type` named once, as a code token in its own sentence, was picked 10/10. A block that named it twice was picked 0/10.
 
 A leading word anchors twice. In the body it anchors _execution_: the agent reaches for the same behaviour every time the word appears. Inside flat reference the word focuses attention on a class of thing to look for. In a pointer it anchors _invocation_. Put the same word in your prompts, your docs and your codebase. The agent then links that shared language to the material, and reaches it more reliably.
 
@@ -95,7 +95,7 @@ The result is fewer tokens and a sharper hook for the agent's thinking. Assume e
 
 **Class and instance.** A class sentence names the whole category ("name each input's atypical states"). An instance list names members ("empty, absent, a list where a scalar is expected"). Each one covers what the other misses. The instances make the agent recognise the named members. The class sentence carries the rule past the end of the list. Write the class sentence in the always-loaded file. Add the instance list where a haiku or sonnet reader loads the same text, such as an implementer's prompt. When each instance carries its own concrete prescription, such as an analogy per audience, keep the instances for every reader.
 
-> Measured 2026-09-11, one plant, n=5 per arm: claude-opus-5 control 0/5, class-only 5/5, class+list 5/5. Haiku control 0/5, class-only 0/5, class+list 4/5. A list-only rule scored 0/6 outside its list until a class sentence was added (6/6). Haiku 2026-09-09, n=15: four audience tables 15/15, the class sentence alone 2/15.
+> Measured 2026-10-09 on claude-haiku-5-5, n=6: a list-only rule never named the problem as a category, 0/6. With a class sentence added, it did 6/6.
 
 **Negation** is the failure mode beside this lever. A prohibition of a vague behaviour ("don't be verbose", "avoid a generic look") drags that behaviour into context and makes it more available. The negation is a weak modifier, and the strongly-activated concept overruns it. State the target behaviour instead ("write one-line comments").
 
@@ -106,7 +106,7 @@ A prohibition earns its place in two cases:
 
 Pair every prohibition with the positive target. Before you rewrite an existing red line as a positive, A/B both wordings with `validate-prompt-rules`. Keep the negative if the rewrite measurably leaks.
 
-> Measured 2026-08-21, claude-opus-5, n=12: "Never field-split a delimited format by hand (`awk -F,`, `split(',')`, `cut -d`)" scored 12/12. A positive parser rule with a moment trigger and no named command scored 0/12. Anthropic's Opus 5.5 guidance reaches the same form for frontend design: a list of named defaults to avoid works, and a vague "avoid a generic look" does not.
+> Measured 2026-10-09 on claude-haiku-5-5, n=15: "Never field-split a delimited format by hand (`awk -F,`, `split(',')`, `cut -d`)" scored 15/15. A positive parser rule with no named command scored 8/15. Anthropic's Opus 5.5 guidance reaches the same form for frontend design: a list of named defaults to avoid works, and a vague "avoid a generic look" does not.
 
 ## Sentence style
 
@@ -154,9 +154,12 @@ For a full review or a material rewrite, account for every one of the seven, and
 
 Before you change a sentence, look for its measurement: a `>` blockquote beside it, `maintainer-notes.md`, or a `measurements.md` next to the document. A measured wording has no slack. A shorter paraphrase of it is a behaviour change, not an edit.
 
-A change is done when both hold:
+A change is done when all three hold:
 
 - `audit.py` reports no new finding for the document.
+- `audit.py spans <old copy> <new file>` lists no code span you meant to keep. Copy the file before the first edit.
 - Every changed sentence with a measured wording is measured again with `validate-prompt-rules`, or your report names it as unmeasured.
 
 `audit.py --all` checks every skill against the measurable rules. `audit.py refs` reports cross-references that point at a removed or user-invoked skill. **Call them, do not read them.** The findings they print are the whole contract, and the source is large.
+
+Rows and numbers behind this file: `measurements.md`.

@@ -1,6 +1,6 @@
 # Claude Code Global Instructions
 
-> This file is loaded by every model that runs here — including Haiku sub-agents dispatched by workflows. **Write for the weakest reader**, except where a section scopes itself in its own first line. Before you reword or delete any rule in this file, read `maintainer-notes.md`: it records which wordings are measured and which rules were deliberately left out.
+> This file is loaded by every model that runs here — including Haiku sub-agents dispatched by workflows. **Write for the weakest reader**, except where a section scopes itself in its own first line. Before you reword or delete any rule in this file, read that rule's section of `maintainer-notes.md`, found through the Index at its top: it records which wordings are measured and which rules were deliberately left out.
 
 **Language:** write your thinking, commit/PR bodies and sub-agent prompts in English. Every text block the user sees is user-facing prose, including a one-line note between tool calls. The `colleague-zh` output style sets its language, voice and word choice, and only the main session loads it.
 
@@ -51,7 +51,9 @@
 ## Important Reminders
 
 - Before pushing to remote, run `/simplify`.
+- **Never run `rm -rf` / `rm -r` on a path built from a variable or a glob.** Delete only named files by literal absolute path, and only files you created. When a step needs an empty directory, create a new one: `mktemp -d "<scratch dir>/name.XXXXXX"`, or move the old one aside with `mv` first. `mkdir -p` into a directory that may already exist mixes in its old files. When you delegate shell work, paste this rule verbatim into the sub-agent prompt.
 - **Never delete `.claude/worktrees/` directories** — they belong to other running Claude instances. If lint fails on their imports, fix the lint config to exclude `.claude/`; do not delete the worktree.
+- **Before you write a loop that waits for another process,** start that process as a background call and act on its completion notification. Never poll with `pgrep -f '<its command>'`: the pattern matches the loop's own command line, so the loop never ends. When you delegate shell work, paste this rule into the sub-agent prompt.
 
 ## Prompt Writing Guide
 
@@ -66,7 +68,7 @@ Governs every artifact a model reads: skill `description` + `SKILL.md`, sub-agen
 ## Search & Read Strategy (Token Optimization)
 
 0. **Code structure** (definition / who-calls-X / blast radius / routes) → @ECP.md holds the rule and the command per question.
-1. **String literals / config keys / fs layout / vendored code** → grep/glob.
+1. **String literals / config keys / fs layout / vendored deps (`node_modules/`, `.venv/`)** → grep/glob.
 2. **Read** with `offset`/`limit` for files >200 lines; skip search when the exact path is known.
 3. **PR / multi-file diff** >200 lines: `git diff -- <path>` per-file, or grep specific hunks.
 4. **Code-health probes** — match the probe to the goal: complexity hotspots → linter cyclomatic (ruff `C901`) / AST nesting depth; change risk → `ecp impact` fan-in; dead code → grep-unreferenced ∩ ecp-orphan. Keep them as separate queries; they read different ground truth. LOC and function size pick which files merit a human skim, never a quality verdict.
@@ -74,7 +76,7 @@ Governs every artifact a model reads: skill `description` + `SKILL.md`, sub-agen
 ## Tool Call Batching (Token Optimization)
 
 - **Never issue two Bash calls whose commands do not depend on each other.** Join them with `;` in one call. The probing trio you reach for first — `pwd; ls; git status` — is one call, not three.
-- **Screenshots bill by pixel area, not file size** (~1 token per 28×28 patch; a long edge over 1568px is downscaled first). Compressing the PNG saves zero tokens — resizing is the only lever. Tile a multi-page sweep into one contact sheet rather than reading N images.
+- **Screenshots bill by pixel area, not file size** (~1 token per 28×28 patch; a long edge over 2576px is downscaled first, over 1568px on Haiku). Compressing the PNG saves zero tokens — resizing is the only lever. Tile a multi-page sweep into one contact sheet rather than reading N images.
 
 ## MCP Tool Calling (Token Optimization)
 
@@ -124,7 +126,7 @@ Keep a **ledger** in the scratchpad as you go: confirmed facts with their source
 
 ### codex — a different prior, not more throughput
 
-Subscription-billed, so its capacity is free. Reach for it where a *different* prior is the value: adversarial re-check, and alternative approaches before you commit to one. **After two failed attempts at the same problem, run codex for an independent hypothesis.** It has `ecp` wired as an MCP server, so it checks the graph itself. How to launch it and what to poll live in the `peer-agent` skill.
+Subscription-billed, so its capacity is free. Reach for it where a *different* prior is the value: adversarial re-check, and alternative approaches before you commit to one. **After two failed attempts at the same problem, run codex for an independent hypothesis.** Its `~/.codex/AGENTS.md` routes code structure to the `ecp` CLI, so it checks the graph itself. How to launch it and what to poll live in the `peer-agent` skill.
 
 ### Model and effort
 

@@ -26,9 +26,9 @@ directory because hosted marketplaces reject one. Repository users run
 with a bare Python interpreter.
 
 Comprehensive SEO analysis across all industries (SaaS, local services,
-e-commerce, publishers, agencies). Orchestrates 24 sub-skills (21 core + 1 framework
-integration + 2 extension mirrors); audit dimensions run as `general-purpose` agents driven by `specs/<dimension>.md`. A separate optional Firecrawl
-extension is also installable (see "Optional Extensions" below).
+e-commerce, publishers, agencies). Orchestrates the sub-skills listed under "Sub-Skills".
+Audit dimensions run as `general-purpose` agents driven by `specs/<dimension>.md`.
+Optional extensions need a backend (see "Optional Extensions" below).
 
 ## Quick Reference
 
@@ -235,10 +235,6 @@ Weighted aggregate of all categories:
 
 ## Sub-Skills
 
-This skill orchestrates 24 sub-skills (21 core + 1 framework integration + 2 extension
-mirrors). The orchestrator itself (`seo`) is the 25th in `skills/`, but does not
-orchestrate itself, so it is not enumerated below.
-
 Every sub-skill is user-invoked only, so it is absent from the Skill tool. To run one from here, read its instruction file at `$HOME/.claude/skills/<sub-skill>/SKILL.md` with the Read tool and follow it.
 
 1. **seo-audit** -- Full website audit with parallel delegation
@@ -271,7 +267,7 @@ Every sub-skill is user-invoked only, so it is absent from the Skill tool. To ru
 The following need a backend before they work: an MCP server in the Claude Code
 config (firecrawl, dataforseo, ahrefs, banana), an API key in the `env` block of
 `~/.claude/settings.json` (bing, profound, seranking), or the `unlighthouse` npm
-package. Each sub-skill's Prerequisites names its check:
+package. Each sub-skill's Prerequisites names its check.
 
 All optional extensions are reachable through `/seo` subcommands once
 installed: firecrawl, dataforseo, and image-gen, plus `/seo ahrefs`,
@@ -279,6 +275,11 @@ installed: firecrawl, dataforseo, and image-gen, plus `/seo ahrefs`,
 
 - **seo-firecrawl** -- Full-site crawling and site mapping via Firecrawl MCP. Needs the
   Firecrawl MCP server in the Claude Code config. Once it is connected, invoke via `/seo firecrawl <command>`.
+- **seo-ahrefs** -- Referring domains, backlinks, organic keywords via the Ahrefs MCP server.
+- **seo-bing** -- Bing Webmaster Tools data and IndexNow URL submission. Needs `BING_WEBMASTER_API_KEY`.
+- **seo-profound** -- LLM citation rates over time via the Profound API. Needs `PROFOUND_API_KEY`.
+- **seo-seranking** -- AI Share-of-Voice via the SE Ranking API. Needs `SERANKING_API_KEY`.
+- **seo-unlighthouse** -- Multi-page Lighthouse audit via the `unlighthouse` npm package. Needs no API key.
 
 ## Audit dimensions (specs/)
 

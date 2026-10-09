@@ -76,7 +76,7 @@ The browser will use the first supported format.
 
 #### JPEG XL: Emerging Format
 
-Third-party reporting and Wikipedia describe a Rust-based JPEG XL decoder as shipped in Chrome 145 stable (2026-02-10) behind the `chrome://flags/#enable-jxl-image-format` flag, not enabled by default; no Google-owned confirmation was retrieved in the fact pack. Because default support is not confirmed, it is not yet practical for production web delivery. Keep serving AVIF/WebP with JPEG fallback and monitor.
+Third-party reporting and Wikipedia describe a Rust-based JPEG XL decoder as shipped in Chrome 145 stable (2026-02-10) behind the `chrome://flags/#enable-jxl-image-format` flag, not enabled by default. No Google-owned source confirms default support. Because default support is not confirmed, it is not yet practical for production web delivery. Keep serving AVIF/WebP with JPEG fallback and monitor.
 
 ### Responsive Images
 - `srcset` attribute for multiple sizes

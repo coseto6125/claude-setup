@@ -65,7 +65,7 @@ Applies only when a spec source resolved; with none, record "no spec available" 
 
 Reads who may reach a code path, what they obtain by reaching it, and which input the path believes.
 
-This section finds the hole the diff opens. A hole that already exists belongs to a standing test that pins the anonymous route surface. Dependency CVEs belong to the `dep-audit` skill.
+This section finds the hole the diff opens. A hole that already exists belongs to a standing test that pins the anonymous route surface. Dependency CVEs belong to a dependency audit, such as the `dep-audit` skill where it is installed.
 
 A finding names **the caller who should not reach it** and **the authority or data they obtain**. Without that pair it is a generic ask, and scores 0.
 

@@ -56,7 +56,7 @@ the contradiction in the report.
 
 | Signal | Correlation with AI Citations |
 |--------|------------------------------|
-| YouTube mentions | ~0.737 (strongest) |
+| YouTube mentions | ~0.737 (strongest in this study, methodology-dependent) |
 | Reddit mentions | High |
 | Wikipedia presence | High |
 | LinkedIn presence | Moderate |

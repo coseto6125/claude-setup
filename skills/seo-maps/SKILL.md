@@ -107,8 +107,9 @@ Audits the 25 fields that affect Google Business Profile quality and ranking.
 > as a Gemini conversational Maps feature launched 2026-03-12 (iOS/Android,
 > US + India). **AI Mode** (1B+ MAU, reported from Google I/O 2026 keynote coverage; not confirmed on a Google-owned source)
 > increasingly surfaces 1-2 business local AI interfaces in third-party terminology, and **agentic
-> booking/calling** for local services (home repair, beauty, pet care) rolls out
-> to all US users summer 2026 (Google can call businesses on the user's behalf).
+> booking/calling** for local services (home repair, beauty, pet care) was reported
+> to roll out to US users from summer 2026 (Google can call businesses on the user's behalf).
+> Verify current availability on a Google-owned source before you cite it.
 > New 2026 GBP API additions: review media URLs, recurring local-post scheduling,
 > review reply-state/moderation, and invitation Place ID. Source:
 > blog.google/products-and-platforms/products/search/search-io-2026/ ·

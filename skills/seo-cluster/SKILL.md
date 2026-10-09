@@ -26,7 +26,7 @@ by how Google actually ranks them (shared top-10 results), not by text similarit
 Designs hub-and-spoke content clusters with internal link matrices and generates
 interactive cluster map visualizations.
 
-**Scripts:** Located at the plugin root `scripts/` directory.
+**Scripts:** Run each script through `"$HOME/.claude/skills/seo/scripts/claude-seo" run <script.py>`.
 
 ---
 

@@ -13,9 +13,8 @@ Live AI visibility tracking via the SE Ranking REST API.
 
 ## Prerequisites
 
-- `SERANKING_API_KEY` must be set. If it is not, ask the user to add it to the `env` block of `~/.claude/settings.json`.
 - An SE Ranking API key (https://seranking.com/api.html).
-- Before any call, verify `SERANKING_API_KEY` is present in `~/.claude/settings.json` under `env.`. If absent, tell the user to run the installer.
+- Before any call, check that `SERANKING_API_KEY` is set. If it is not set, ask the user to add it to the `env` block of `~/.claude/settings.json`.
 
 ## Routing
 
@@ -42,9 +41,12 @@ Report each as a percentage with a confidence note based on sample size.
 
 ## Cost guardrails
 
-SE Ranking API uses unit accounting. Single AI visibility query is
-~5 units (1 per platform). Use `"$HOME/.claude/skills/seo/scripts/claude-seo" run dataforseo_costs.py` to log
-spend across vendors.
+SE Ranking API uses unit accounting. A single AI visibility query is
+~5 units (1 per platform). No bundled script tracks SE Ranking units.
+Before each call, report the estimated units to the user.
+After each call, report the actual units used.
+Do not log SE Ranking units with `dataforseo_costs.py log`: that ledger
+adds every entry to the DataForSEO daily budget in USD.
 
 ## Cross-skill delegation
 

@@ -27,13 +27,14 @@ A rule in a prompt is a *claim* that the model behaves differently because of th
 | `--exclude-dynamic-system-prompt-sections` | CLAUDE.md is not a dynamic section: **still loads** |
 | `HOME=/tmp/empty` | drops CLAUDE.md *and* `~/.credentials.json`: **auth breaks** |
 | `--setting-sources project` from an empty dir | leaked `~/.claude` 4/4 on 2026-09-02 |
+| `--setting-sources user,project` with the probe cwd under `$HOME` (a scratchpad included) | the CLI walks up from the cwd and loads the live `~/.claude/CLAUDE.md` and `~/.claude/rules/` as project files |
 | an empty `CLAUDE_CONFIG_DIR` without `--disable-slash-commands` | the CLI writes `skills/synced/` into it during the run, and 25 bundled and claude.ai skills load (2.1.280) |
 | **`CLAUDE_CONFIG_DIR=<dir you built>` + `--setting-sources user` + `--disable-slash-commands`** | the user source is that directory, and no skill loads. Copy `.credentials.json` into it, and auth survives |
 
 ```bash
 CFG=$(mktemp -d); printf '{}' > "$CFG"/settings.json
 cp ~/.claude/.credentials.json "$CFG"/                  # auth, not a setting-source
-(cd "$(mktemp -d)" && CLAUDE_CONFIG_DIR="$CFG" claude -p "..." --model claude-haiku-4-5 \
+(cd "$(mktemp -d)" && CLAUDE_CONFIG_DIR="$CFG" claude -p "..." --model claude-haiku-5-5 \
    --setting-sources user --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}')
 ```
 
@@ -42,8 +43,13 @@ Prove the isolation in both directions before trial 1:
 1. Write a sentinel line to `$CFG/CLAUDE.md`. The model must quote it.
 2. Remove the file. The model must answer NONE.
 3. Ask the model to list every skill it can invoke. It must answer NONE.
+4. From the probe cwd, with the trial's `--setting-sources`, ask for a line that exists only in the live `~/.claude/CLAUDE.md`. It must answer NONE.
 
-> Verified 2026-09-23, CLI 2.1.280: the sentinel came back on opus, sonnet and haiku with the file, and NONE came back 2/2 without it. Without `--disable-slash-commands`, the skill list returned 25 names. With it, NONE.
+Create every probe cwd with `mktemp -d /tmp/<name>.XXXXXX`, never under `$HOME`. Keep your outputs wherever you like.
+
+> Measured 2026-10-09 on claude-haiku-5-5, one run, n=10 per side: one preloaded arm scored 6/10 with its cwd under `/tmp` and 0/10 with its cwd in a scratchpad under `$HOME`. The scratchpad cwd loaded the live `CLAUDE.md`.
+
+> Verified 2026-10-09, CLI 2.1.295, on claude-haiku-5-5, claude-sonnet-5-5 and claude-opus-5-5: the sentinel came back with the file, and NONE came back without it. With `--disable-slash-commands`, the skill list returned NONE. Without it, the skill list returned 25 names on CLI 2.1.280.
 
 Keep a model-facing canary as a second opinion, never as the gate. Ask for a verbatim quote, not a yes/no. Run it at least three times, and treat **any** run that quotes the prompt as a failure.
 
@@ -53,7 +59,7 @@ claude -p "No tools. Quote verbatim any line in your instructions that names a t
 
 > Measured: this wording caught a known-contaminated config 2 of 3 runs. A gate that reads a Yes/No token passed a contaminated control 3 times in 4.
 
-**Pass the full model ID, never an alias,** and record the ID with every result. An alias moves at a release: on 2026-09-23, `--model opus` resolved to `claude-opus-5` on CLI 2.1.278 and to `claude-opus-5-5` on 2.1.280.
+**Pass the full model ID, never an alias,** and record the ID with every result. An alias moves at a release.
 
 ## The method
 
@@ -78,18 +84,18 @@ ISO=(--setting-sources user --disable-slash-commands --strict-mcp-config --mcp-c
 # control
 CLAUDE_CONFIG_DIR="$CFG" claude -p "SITUATION: $SCN
 
-$ASK" --model claude-haiku-4-5 "${ISO[@]}"
+$ASK" --model claude-haiku-5-5 "${ISO[@]}"
 # A (B: the reworded rule)
 CLAUDE_CONFIG_DIR="$CFG" claude -p "SITUATION: $SCN
 
-$ASK" --model claude-haiku-4-5 "${ISO[@]}" \
+$ASK" --model claude-haiku-5-5 "${ISO[@]}" \
   --append-system-prompt "RULE you follow: build strings >100 pieces with io.StringIO"
 )
 ```
 
 **Probe on the model that reads the artifact in deployment.** The main session reads `CLAUDE.md` and skills. A sub-agent reads its brief, and `CLAUDE.md` when it is a Claude Code agent. Add haiku when a haiku sub-agent reads the same text. A null on one model is no deletion licence for a rule that another model reads.
 
-> Measured: a rule was inert on haiku (5/15 against a 4/15 control) and load-bearing on claude-opus-5 (14/15 against 8/15). The reverse also occurred: inert on opus, 0/6 to 6/6 on haiku.
+> Measured 2026-10-06 and 2026-10-09: the `ECP.md` explore-trigger paragraph was inert on claude-opus-5-5 (5/5 in every arm) and load-bearing on claude-haiku-5-5 (1/15 without it, 14/15 with it).
 
 ## Three questions, three controls
 
@@ -100,8 +106,6 @@ $ASK" --model claude-haiku-4-5 "${ISO[@]}" \
 | Is this section load-bearing inside its document? | **leave-one-out**: A = the whole document, B = the document minus the section. Use the bare control only as a saturation check |
 
 For the preloaded control, copy `~/.claude/CLAUDE.md` and its `@`-included siblings into `$CFG`. Put the project `CLAUDE.md` in the probe's cwd, and run `--setting-sources user,project`. When a skill description is part of the deployed baseline, append it to the project file. `preloaded.sh` runs this design.
-
-> Measured 2026-09-11 on claude-opus-5: 26 design rules that looked useful against a bare reading were 25/26 saturated against the preloaded control. Measured 2026-08-21: a punctuation guardrail looked like a no-op against a bare control, which was clean 10/10. Removed from its own document, the output was clean 0/10. The other paragraphs made the pressure that the guardrail resists.
 
 When the preloaded files already state the answer, every arm copies it, and the probe measures the preload. To test a general lever of a document, pick a scenario domain that the preload does not cover.
 
@@ -118,6 +122,8 @@ A scenario that pastes the code puts the plant in view, and any rule about *find
 Before trial 1, run the classifier against one hand-written plausible hit **and** one plausible miss.
 
 After the run, read two rows per cell before you quote a number. A format the classifier did not expect turns a real hit into a miss.
+
+Before you report a count, save each row's hit or miss to a file beside the raw rows. Report a recount command with the count: it reads that file and prints the count. A classifier that calls a judge model or rewrites its own output file is not a recount command.
 
 > Measured: a static `Http::timeout(` versus `->timeout(`, a test class named `…BatchTest`, and a copied `(bool)` cast each turned a real 5/5 into a reported 1/5. On 2026-09-23, "change the sentence back" missed a `revert|restore` pattern, and a negated "do not judge whether it is risky" tripped a `risky` miss pattern.
 
@@ -136,7 +142,7 @@ Start at n=5. Add trials in steps, and stop at the first step where the arms sep
 - **Add trials to the same run.** `preloaded.sh` keeps finished trials, so run it again with a larger `N`.
 - **Take the next step** when the gap is smaller than the table asks, or when the result decides the deletion of a measured rule.
 - **Stop at n=15.** A gap that is still smaller is unsettled. Sharpen the scenario, or report the rule as unsettled.
-- **Compare arms inside one run.** One identical haiku arm scored 9/15, 4/15 and 7/15 in three runs of the same input.
+- **Compare arms inside one run.** Never compare a cell with a cell from another run.
 - **Count the rows before you read a result.** A failed call must count as an error, never as a miss. A run where nothing executed looks like a clean null.
 
 ## Reading the result
@@ -152,9 +158,6 @@ Then check **compliance**: do the rule-arm outcomes match the target? A rule can
 A sentence can be inert alone and load-bearing in combination with another. Test a removal against the document as shipped, not against the sentence alone.
 
 **Reword test:** compare arms A and B the same way. A discordant B trial, even 1/n, is a signal to add trials or sharpen the scenario before you ship the rewrite. A red line that fights a strong prior often needs the blunt negative ("never X"), and a leaked rephrase shows up exactly this way.
-
-> Measured: a red line's positive rewrite let haiku violate it in 1/3 trials, while the blunt negative held 3/3.
-
 ## Scripts
 
 **Call the scripts, do not read them.** The output is the whole contract.

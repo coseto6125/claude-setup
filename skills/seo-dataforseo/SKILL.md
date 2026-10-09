@@ -111,7 +111,7 @@ Fetch live Google organic search results.
 
 ### `/seo dataforseo serp-youtube <keyword>`
 
-Fetch YouTube search results. Valuable for GEO. YouTube mentions correlate most strongly with AI citations.
+Fetch YouTube search results. Valuable for GEO. One third-party study found YouTube mentions the strongest AI-citation correlate. Treat that finding as methodology-dependent.
 
 **MCP tools:** `serp_youtube_organic_live_advanced`
 
