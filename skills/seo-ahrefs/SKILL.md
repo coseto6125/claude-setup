@@ -17,10 +17,7 @@ Live Ahrefs data via the tested `@ahrefs/mcp@0.0.11` server.
 - An Ahrefs API token (https://ahrefs.com/api).
 - Node 18+ on `$PATH` for the MCP server.
 
-Before calling any Ahrefs tool, verify the MCP is connected by checking
-that any Ahrefs MCP tool is available in this session. If tools are
-not available, tell the user the extension is not installed and
-provide the install command above.
+Before your first Ahrefs tool call, confirm that the first prerequisite above holds.
 
 ## Routing
 
@@ -39,7 +36,7 @@ provide the install command above.
 
 ## Cross-skill delegation
 
-- For multi-source confidence weighting across Moz + Bing + Common Crawl + Ahrefs, hand back to `seo-backlinks`.
+- For multi-source confidence weighting across Moz + Bing + Common Crawl, hand back to `seo-backlinks`. It has no Ahrefs source, so report Ahrefs figures beside its weighted score, not inside it.
 - For SERP-feature analysis where Ahrefs and DataForSEO overlap, prefer DataForSEO for live SERP data.
 
 ## Cost guardrails

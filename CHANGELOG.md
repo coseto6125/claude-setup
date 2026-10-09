@@ -3,6 +3,41 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.10 — 2026-10-09
+
+### Changed
+
+Fixes from a prompt audit against claude-opus-5-5. Each one cites the file or script that
+contradicts the old text.
+
+- `skills/seo-sxo`: the page is rendered to a file with `render_page.py -o`, then parsed
+  from that file. `parse_html.py` takes a file path, so the old `parse_html.py <URL>` step
+  failed every run.
+- `skills/seo-profound`: checks that `PROFOUND_API_KEY` is set without reading
+  `settings.json`, so the key never enters the transcript. Three bullets became one.
+- `skills/agent-routing`: the guide command uses the `ORCA` placeholder (`orca-ide` on
+  Linux). A bare `orca` outside an Orca terminal is the GNOME screen reader.
+- `skills/simplify`: at HIGH risk the reviewer gets `model: opus` explicitly, in line
+  with `CLAUDE.md` ("Always pass an explicit model").
+- `skills/grilling`: an environment fact is looked up directly, code structure through
+  `ecp`. A sub-agent is dispatched only for a lookup larger than one query.
+- `skills/pr-finalize`: names its three refusal cases, as the script has them, and states
+  that it is the one sanctioned exception to the "never delete `.claude/worktrees/`" rule.
+- `skills/to-spec`, `skills/to-tickets`: ask the user where issues live. The setup skill
+  that used to provide this is not installed. "Work the frontier" no longer reads as an
+  order to implement the tickets.
+- `skills/improve-codebase-architecture`: the report opens in Orca's embedded browser,
+  per `agent-routing`, not through `xdg-open`.
+- `skills/seo-geo`: the 134-167-word passage length is reported as a third-party
+  observation. The skill's own Google-sourced reference says chunking for AI is
+  unnecessary.
+- `skills/seo-ahrefs`: removes the pointer to a missing install command, and reports
+  Ahrefs figures beside the `seo-backlinks` weighted score, which has no Ahrefs source.
+- `skills/seo-maps`, `skills/seo-local`: `aggregateRating` only for visible third-party
+  reviews. `seo-maps` already forbids self-serving review markup.
+- `agents/Explore.md`: drops the manual `ecp admin index` step. `ECP.md` says ecp builds a
+  missing index on the first query.
+
 ## v0.1.9 — 2026-10-09
 
 ### Changed

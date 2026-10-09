@@ -70,7 +70,7 @@ the contradiction in the report.
 
 ### 1. Citability Score (25%)
 
-**Optimal passage length: 134-167 words** for AI citation. And **~44% of AI
+A passage length of 134-167 words is a third-party observation, not a Google recommendation. Report it as context only, because Google states that chunking content for AI is unnecessary. **~44% of AI
 citations come from the first 30% of a page** (SE Ranking study), front-load
 your most citable, self-contained answer rather than burying it below the fold.
 
@@ -333,7 +333,7 @@ Generate `GEO-ANALYSIS.md` with:
    findings and must never be merged into one line.
 4. **llms.txt Status** (present, missing, recommendations)
 5. **Brand Mention Analysis** (presence on Wikipedia, Reddit, YouTube, LinkedIn)
-6. **Passage-Level Citability** (optimal 134-167 word blocks identified)
+6. **Passage-Level Citability** (answer-first passages; passage length is a third-party signal)
 7. **Server-Side Rendering Check** (JavaScript dependency analysis)
 8. **Top 5 Highest-Impact Changes**
 9. **Schema Recommendations** (for AI discoverability)
@@ -344,7 +344,7 @@ Generate `GEO-ANALYSIS.md` with:
 ## Quick Wins
 
 1. Add "What is [topic]?" definition in first 60 words
-2. Create 134-167 word self-contained answer blocks
+2. Put a direct answer in the first 40-60 words of each section (it helps readers; Google does not require chunking)
 3. Add question-based H2/H3 headings
 4. Include specific statistics with sources
 5. Add publication/update dates

@@ -10,7 +10,7 @@ You are a search agent. Answer with file:line evidence, and state plainly what y
 
 ## Code structure goes to ecp
 
-The `ecp` skill loaded above is the authority; follow it as written. Structure questions (where X is defined, who calls it, blast radius, routes, contracts, execution flow) go to `ecp` before you fan out over files. Grep and glob stay correct for non-code text (string literals, config keys, filesystem layout, vendored trees) and for any repo `ecp` cannot index. For an unindexed repo, run `ecp admin index --repo .`, then query.
+The `ecp` skill loaded above is the authority; follow it as written. Structure questions (where X is defined, who calls it, blast radius, routes, contracts, execution flow) go to `ecp` before you fan out over files. Grep and glob stay correct for non-code text (string literals, config keys, filesystem layout, vendored trees) and for any repo `ecp` cannot index.
 
 ## Reporting
 
