@@ -12,7 +12,7 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `output-styles/colleague-zh.md` | main session only | voice and language for user-facing prose |
 | `agents/` | on dispatch | effort-pinned and role-scoped sub-agent definitions |
 | `hooks/` | per the events in `settings.example.json` | shell hooks |
-| `skills/` | description resident, body on invocation | 30 written here, plus 32 directories vendored from `claude-seo` |
+| `skills/` | description resident, body on invocation | 30 written or adapted here, plus 32 SEO directories adapted from `claude-seo` |
 | `mods/token-saver/` | every session, through `env.CLAUDE_CODE_PLUGIN_DIRS` in `settings.example.json` | a mod that trims the session prompt; `claude plugin test mods/token-saver` runs its 56 checks |
 | `settings.example.json` | copy to `~/.claude/settings.json` | read the security notes first |
 
@@ -28,7 +28,7 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `dep-audit` | Upgrades every dependency to latest and audits the breakage against real usage | — |
 | `domain-modeling` | Ubiquitous language and ADRs | mattpocock |
 | `ecp` | Structural code queries: definitions, callers, blast radius, routes | — |
-| `eli5` | Explains a topic for a named audience, shaped for an ADHD reader | [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5) |
+| `eli5` | Explains a topic for a named audience, shaped for an ADHD reader | [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5) merged with [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) |
 | `gh-report` | Files issues and PRs against repositories we do not own | — |
 | `grill-me` | A relentless interview to sharpen a plan or design | mattpocock |
 | `grill-with-docs` | The same interview, writing ADRs and a glossary as it goes | mattpocock |
@@ -46,7 +46,7 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `to-questionnaire` | Turns a decision you cannot answer into a questionnaire for someone else | mattpocock |
 | `to-spec` | Turns the conversation into a spec in the issue tracker | mattpocock |
 | `to-tickets` | Breaks a plan into tracer-bullet tickets with their blocking edges | mattpocock |
-| `ui-ux-pro-max` | A local UI/UX database plus a registry of external component sources | — |
+| `ui-ux-pro-max` | A local UI/UX database plus a registry of external component sources | [nextlevelbuilder](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) and others; see Attribution |
 | `validate-prompt-rules` | A/B tests whether a prompt rule changes model behaviour at all | — |
 | `wait-what` | Re-pitches a message that did not land | mattpocock |
 | `writing-for-agents` | Rules for any document an agent reads | mattpocock |
@@ -71,9 +71,9 @@ Mods are an early-access Claude Code feature. `mods/token-saver/.claude-plugin/t
 
 ## Vendored third-party skills
 
-`skills/seo` and the 31 `skills/seo-*` directories are [`claude-seo`](https://github.com/AgriciDaniel/claude-seo) v2.2.5 by AgriciDaniel, MIT-licensed, copied unmodified. They sit here so one clone reproduces the whole machine, not because they were written for it. Two directories the upstream install creates are excluded: `seo/.venv` (777 MB) and `seo/ms-playwright` (656 MB). Install those from the upstream repo, or run `skills/seo/bin/claude-seo` and let it build them. `seo/runtime-state.json` is machine state and is excluded too.
+`skills/seo` and 30 of the `skills/seo-*` directories come from [`claude-seo`](https://github.com/AgriciDaniel/claude-seo) v2.3.1 by AgriciDaniel, MIT-licensed. Every one of their 31 `SKILL.md` files adds `disable-model-invocation: true`, so the 31 descriptions stay out of the routing context until you call a skill by name. 26 of those files also have edited bodies: all-caps emphasis toned down, contradictory lines removed, and the AI-crawler material in `seo-technical` moved into references. The other files match upstream. `skills/seo-lite` is written here from the same material and keeps only the on-page and JSON-LD checks. They sit here so one clone reproduces the whole machine, not because they were written for it. Two directories the upstream install creates are excluded: `seo/.venv` (777 MB) and `seo/ms-playwright` (656 MB). Install those from the upstream repo, or run `skills/seo/bin/claude-seo` and let it build them. `seo/runtime-state.json` is machine state and is excluded too.
 
-Upgrade by re-installing from upstream rather than by patching here.
+Upgrade by re-installing from upstream, then re-apply the `SKILL.md` edits above; diff against the upstream tag to find them.
 
 ## Security notes
 
@@ -81,9 +81,9 @@ These are properties of this configuration, not defects. Read them before you co
 
 **`settings.example.json` turns the permission prompts off.** It carries `"defaultMode": "bypassPermissions"` together with `"skipDangerousModePermissionPrompt": true` and `"skipAutoPermissionPrompt": true`. Copied as-is, Claude Code runs shell commands, edits files and reaches the network with no confirmation step. That suits one machine whose owner watches every session, and it removes a safety boundary everywhere else. Set `"defaultMode": "default"` and drop both `skip*` keys unless you want the same trade.
 
-**The permission `allow` list runs to 45 entries.** Each one is a subcommand pattern rather than a whole command family, and the widest of them (`Bash(python3:*)`, `Bash(xargs:*)`, `Bash(cat:*)`) approve an arbitrary argument to a general-purpose program. Combined with the mode above, that is the real reach. Cut the list down to what you run.
+**The permission lists do not narrow anything.** `allow` is absent, `ask` is empty and `deny` holds only `SendFeedback`, so under the mode above every tool call runs without a prompt. The hooks below are the only guard. If you set the mode back to `default`, add an `allow` list of the subcommands you actually run.
 
-**Hooks execute on every matching event.** `hooks/` holds fourteen scripts and `settings.example.json` wires nine of them: `auto-etoon.sh`, `limit-worktrees.sh`, `guard-main-edit.sh`, `guard-push-simplify.sh` and `ecp-graph-nudge.sh` on `PreToolUse`, `idle-guard-stop.sh` on `Stop`, `idle-guard-submit.sh` on `UserPromptSubmit`, `patch-tool-persist.py` and `prune-scratchpad.sh` on `SessionStart`. Read each one before you install it. `guard-main-edit.sh` enforces a rule `CLAUDE.md` only states — it refuses an edit to a file on the default branch and prints the worktree command to use instead. `guard-push-simplify.sh` blocks `git push` until `/simplify` has run in that session. `ecp-graph-nudge.sh` hands over the exact `ecp impact` command a symbol's direct callers cannot answer on their own. `prune-scratchpad.sh` deletes every session temp directory under `$CLAUDE_CODE_TMPDIR` in which nothing changed for 14 days (`SCRATCH_KEEP_DAYS`), so a file you parked in a scratchpad is gone two weeks after its session last wrote there. Run it with `--dry-run` first to see the list.
+**Hooks execute on every matching event.** `hooks/` holds fifteen scripts and `settings.example.json` wires ten of them: `auto-etoon.sh`, `limit-worktrees.sh`, `guard-main-edit.sh`, `guard-push-simplify.sh` and `ecp-graph-nudge.sh` on `PreToolUse`, `idle-guard-stop.sh` on `Stop`, `idle-guard-submit.sh` on `UserPromptSubmit`, `lang-anchor.sh` on `UserPromptSubmit` and on `SessionStart` with the `compact` matcher, `patch-tool-persist.py` and `prune-scratchpad.sh` on `SessionStart`. Read each one before you install it. `guard-main-edit.sh` enforces a rule `CLAUDE.md` only states — it refuses an edit to a file on the default branch and prints the worktree command to use instead. `guard-push-simplify.sh` blocks `git push` until `/simplify` has run in that session. `ecp-graph-nudge.sh` hands over the exact `ecp impact` command a symbol's direct callers cannot answer on their own. `prune-scratchpad.sh` deletes every session temp directory under `$CLAUDE_CODE_TMPDIR` in which nothing changed for 14 days (`SCRATCH_KEEP_DAYS`), so a file you parked in a scratchpad is gone two weeks after its session last wrote there. Run it with `--dry-run` first to see the list.
 
 The other five ship unwired, so wire them yourself or delete them. `audit-skill.sh` belongs on `PostToolUse` for `Edit`, `Write` and `MultiEdit`, and checks a `SKILL.md` against the measurable rules the moment it is written. `worktree-symlinks.sh` is the second. The three `eywa-*.sh` scripts are the rest: they inject coding principles on `UserPromptSubmit`, capture them on `Stop`, and clear the session cache on `PreCompact`. They read `$HOME/.eywa/` and query a local server on `127.0.0.1:8788`; without that server running, `eywa-inject.sh` is a no-op.
 
@@ -140,10 +140,9 @@ Per-tool schema cost, from `--disallowedTools <tool>`:
 
 ## Attribution
 
-- `skills/ui-ux-pro-max/{data,scripts,references}` come wholesale from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill). `local/` and its `SKILL.md` are local work.
+- `skills/ui-ux-pro-max/{data,scripts,references}` come wholesale from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill). `SKILL.md` is rewritten here. `local/` folds in other sources, each named at the top of its file: [pbakaus/impeccable](https://github.com/pbakaus/impeccable) v4.1.2 (`anti-patterns.md`), tdimino's `design-critique` and `minoan-frontend-design` (`critique-framework.md` and the references it lists), Google Labs' [DESIGN.md](https://github.com/google-labs-code/design.md) format (`design-md.md`) and W3C [clreq](https://www.w3.org/TR/clreq/) (`cjk-line-breaking.md`). `local/sources.md` registers external component and icon sources with their licenses.
 - `skills/writing-for-agents` cites [danyuchn/asd-ste100-skill](https://github.com/danyuchn/asd-ste100-skill) for the ASD-STE100 summary.
-- `skills/i-have-adhd` comes from [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd), MIT, Ayoub Ghriss.
-- `skills/eli5` comes from [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5), MIT.
+- `skills/eli5` comes from [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5), MIT, merged with the output-shape rules of [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd), MIT, Ayoub Ghriss.
 - `skills/{agent-routing,peer-agent}` drive the Orca agent runner and assume it is installed.
 - Orca's own `orchestration`, `orca-cli` and `computer-use` skills come from [stablyai/orca](https://github.com/stablyai/orca) and Orca installs them into `~/.agents/skills/` itself, so they are not copied here. `agent-routing` quotes three sentences from Orca's orchestration guide and re-checks them with its own `check-anchors.sh`; that guide ships inside the Orca binary and is read with `orca-ide skills get orchestration`, so it moves with the app rather than with any file.
 
