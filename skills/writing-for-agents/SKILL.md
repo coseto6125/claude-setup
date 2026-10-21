@@ -72,6 +72,8 @@ Hiding works only across a real context boundary, such as a hand-off or a subage
 
 The strongest criteria are both checkable and exhaustive.
 
+After an agent breaks a rule it had loaded, find the moment it wrote the wrong text. Move the rule's step to that moment. Add no later check and no report field for it.
+
 ## When to split
 
 A split into two documents spends one of the two loads. Split only when the cut earns it.
@@ -110,6 +112,7 @@ Pair every prohibition with the positive target. Before you rewrite an existing 
 Write every sentence to **ASD-STE100**, the aerospace standard for Simplified Technical English. `CLAUDE.md`'s **Writing discipline** holds the core rules: one term per concept, one idea per sentence, active voice, present tense, articles kept, normative sentences under 20 words, a long enumeration as a table. This section adds the rules that one leaves out:
 
 - Keep a noun cluster to three words.
+- Keep a number as a number. Write "20 words", not "short".
 - Replace a phrasal verb with the single plain verb. Write "start the job", not "spin up the job".
 - Write two sentences instead of one semicolon.
 - Put a sequence of actions on separate lines, one action per line.
@@ -126,7 +129,7 @@ Apply STE to the sentences, not to the document's shape. The hierarchy, the disc
 
 - Keep each meaning in a **single source of truth**: one authoritative place, so a behaviour change is a one-place edit. **Duplication** puts the same meaning in more than one place. It costs maintenance and tokens, and it lifts a meaning's prominence past its real rank. A leading word repeats a token on purpose. Duplication repeats the meaning by accident. Its cross-artifact form is **derived-mirror drift**: two documents that express one policy disagree. Name the authority, then align the mirror or remove it. An always-loaded summary of a canonical policy is worth keeping aligned, and is not automatically a copy to delete.
 - The **environment** is a source of truth too: `package.json` scripts, config files, the directory layout, `--help` output. A document that restates the environment is a **cache**, a copy of a lookup. A cache earns its load only when the lookup is expensive. Cache what the agent cannot find by looking: the unwritten convention, the reason behind a choice, the gotcha no config confesses.
-- A **mechanical rule** names a fixed pattern: a banned command, an import shape, a file location. Back it with a check, such as a lint rule, a hook or a CI job. Before you build the check, run its pattern once over real past artifacts, and build it only when that run finds a true violation. Plant one violation and watch the check block it before you trust the check. Keep the prose line while its measurement shows it still moves behaviour.
+- A **mechanical rule** names a fixed pattern: a banned command, an import shape, a file location. Back it with a check, such as a lint rule, a hook or a CI job. Before you build the check, look for a setting that already enforces the rule. `tools` and `disallowedTools` in an agent's frontmatter are such settings. Use the setting when one exists. Otherwise, run the rule's pattern once over real past artifacts, and build it only when that run finds a true violation. Plant one violation and watch the check block it before you trust the check. Keep the prose line while its measurement shows it still moves behaviour.
 - Check every line for **relevance**: does the line still bear on what the document does? A line loses relevance in two ways. It never bore on the task, because it is exposition or a branch that belongs behind a pointer. Or it goes stale as the behaviour or the world it describes changes. Without a pruning discipline the default fate is **sediment**: stale layers settle because adding feels safe and removing feels risky.
 - A measurement goes stale with its model. Label every measurement with the model ID it ran on, never an alias such as `opus`. After a model release, treat each measured status (load-bearing, no-op, saturated) as unverified until you run it again on the new model.
 - Hunt **no-ops** sentence by sentence. A no-op is an instruction the model already obeys by default, so it pays load and says nothing. The test is one question: does this line change behaviour against the default? The test is model-relative. Settle a disagreement by running the document with `validate-prompt-rules`. A null result reads _no effect detected for this model and probe set_. That is grounds to nominate the line for deletion, and never proof the line is inert. When a sentence fails the test, delete the whole sentence rather than trim words from it. A leading word too weak to beat the default, such as _be thorough_, is a no-op too. Delete it, and put the demand in the completion criterion instead ("every modified model accounted for").
@@ -149,6 +152,8 @@ For a full review or a material rewrite, account for every one of the seven, and
 ## Finishing a change
 
 Before you change a sentence, look for its measurement in the `measurements.md` next to the document, or in `maintainer-notes.md` for `CLAUDE.md`. A measured wording has no slack. A shorter paraphrase of it is a behaviour change, not an edit.
+
+Write the rewrite yourself. Dispatch the `validate-prompt-rules` run to an Opus sub-agent.
 
 A change is done when all three hold:
 

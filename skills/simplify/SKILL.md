@@ -19,7 +19,7 @@ Then pin the **spec source**, in this order: issue references in the commit mess
 
 ## Phase 3: Tier the dispatch
 
-Pick the LOWEST tier the diff qualifies for; Phase-2 risk moves it up.
+Pick the LOWEST tier the diff qualifies for; Phase-2 risk moves it up. Tier a diff that fixes earlier review findings by its own size and risk. Tier a peer's diff the same way.
 
 | Tier | When | Dispatch |
 |------|------|----------|
