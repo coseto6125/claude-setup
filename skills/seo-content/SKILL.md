@@ -65,56 +65,7 @@ Read `../seo/references/eeat-framework.md` for full criteria.
 - Date stamps, transparent corrections
 - Secure site (HTTPS)
 
-## Content Metrics
-
-### Word Count Analysis
-Compare against page type minimums:
-| Page Type | Minimum |
-|-----------|---------|
-| Homepage | 500 |
-| Service page | 800 |
-| Blog post | 1,500 |
-| Product page | 300+ (400+ for complex products) |
-| Location page | 500-600 |
-
-> **Important:** These are **topical coverage floors**, not targets. Google has confirmed word count is NOT a direct ranking factor. The goal is comprehensive topical coverage; a 500-word page that thoroughly answers the query will outrank a 2,000-word page that doesn't. Use these as guidelines for adequate coverage depth, not rigid requirements.
-
-### Readability
-- Flesch Reading Ease: target 60-70 for general audience
-
-> **Note:** Flesch Reading Ease is a useful proxy for content accessibility but is NOT a direct Google ranking factor. John Mueller has confirmed Google does not use basic readability scores for ranking. Yoast deprioritized Flesch scores in v19.3. Use readability analysis as a content quality indicator, not as an SEO metric to optimize directly.
-- Grade level: match target audience
-- Sentence length: average 15-20 words
-- Paragraph length: 2-4 sentences
-
-### Keyword Optimization
-- Primary keyword in title, H1, first 100 words
-- Primary keyword used naturally; flag stuffing, with no numeric density target
-- Semantic variations present
-- No keyword stuffing
-
-### Content Structure
-- Logical heading hierarchy (H1 -> H2 -> H3)
-- Scannable sections with descriptive headings
-- Bullet/numbered lists where appropriate
-- Table of contents for long-form content
-
-### Multimedia
-- Relevant images with proper alt text
-- Videos where appropriate
-- Infographics for complex data
-- Charts/graphs for statistics
-
-### Internal Linking
-- 3-5 relevant internal links per 1000 words
-- Descriptive anchor text
-- Links to related content
-- No orphan pages
-
-### External Linking
-- Cite authoritative sources
-- Open in new tab for user experience
-- Reasonable count (not excessive)
+Before you score word count, readability, keywords, structure, media or links, read `references/content-metrics.md`.
 
 ## AI Content Assessment (Sept 2025 QRG addition)
 
@@ -165,31 +116,7 @@ removes them; do not claim otherwise in reports. This cleanup is for
 editing the user's own drafts, not for laundering third-party content —
 decline requests to strip provenance from content the user doesn't own.
 
-## AI Citation Readiness (GEO signals)
-
-Optimize for AI search engines (ChatGPT, Perplexity, Google AI Overviews):
-
-- Clear, quotable statements with statistics/facts
-- Structured data (especially for data points)
-- Strong heading hierarchy (H1->H2->H3 flow)
-- Answer-first formatting for key questions
-- Tables and lists for comparative data
-- Clear attribution and source citations
-
-### AI Search Visibility & GEO (2025-2026)
-
-**Google AI Mode** is Google's conversational AI search surface. Treat third-party AI Mode usage, citation, and link-share figures as methodology-dependent unless primary-sourced, and optimize for both AI Mode and AI Overviews (see the `seo-geo` skill).
-
-**Key optimization strategies for AI citation:**
-- **Structured answers:** Clear question-answer formats, definition patterns, and step-by-step instructions that AI systems can extract and cite
-- **First-party data:** Original research, statistics, case studies, and unique datasets are highly cited by AI systems
-- **Schema markup:** Article and other relevant structured content. FAQPage produces no Google FAQ rich results; use QAPage only for genuine user Q&A where appropriate
-- **Topical authority:** AI systems preferentially cite sources that demonstrate deep expertise. Build content clusters, not isolated pages
-- **Entity clarity:** Ensure brand, authors, and key concepts are clearly defined with structured data (Organization, Person schema)
-- **Multi-platform tracking:** Monitor visibility across Google AI Overviews, AI Mode, ChatGPT, Perplexity, and Bing Copilot, not just traditional rankings. Treat AI citation as a standalone KPI alongside organic rankings and traffic.
-
-**Generative Engine Optimization (GEO):**
-Per Google's AI optimization guide, "AEO" and "GEO" are rebranded labels for SEO: AI Overviews and AI Mode are grounded in the same ranking and quality systems as classic Search. The optimization signals that matter (quotability, attribution, heading hierarchy, freshness) are SEO fundamentals applied to AI-search surfaces, not a separate discipline. Cross-reference the `seo-geo` skill for detailed workflows; both surfaces share the primary-source synthesis in `skills/seo-geo/references/google-ai-optimization-guide.md`.
+Before you assess AI citation readiness or GEO signals, read `references/ai-citation-geo.md`.
 
 ## Content Freshness
 

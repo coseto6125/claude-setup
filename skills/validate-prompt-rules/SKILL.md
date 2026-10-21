@@ -45,19 +45,15 @@ Prove the isolation in both directions before trial 1:
 3. Ask the model to list every skill it can invoke. It must answer NONE.
 4. From the probe cwd, with the trial's `--setting-sources`, ask for a line that exists only in the live `~/.claude/CLAUDE.md`. It must answer NONE.
 
+`preloaded.sh` and `agentic.sh` run steps 1, 3 and 4 through `isolation_gate.py`, once per CLI version, and exit 3 on a failure. Run the steps by hand only for a `claude -p` call you build yourself.
+
 Create every probe cwd with `mktemp -d /tmp/<name>.XXXXXX`, never under `$HOME`. Keep your outputs wherever you like.
-
-> Measured 2026-10-09 on claude-haiku-5-5, one run, n=10 per side: one preloaded arm scored 6/10 with its cwd under `/tmp` and 0/10 with its cwd in a scratchpad under `$HOME`. The scratchpad cwd loaded the live `CLAUDE.md`.
-
-> Verified 2026-10-09, CLI 2.1.295, on claude-haiku-5-5, claude-sonnet-5-5 and claude-opus-5-5: the sentinel came back with the file, and NONE came back without it. With `--disable-slash-commands`, the skill list returned NONE. Without it, the skill list returned 25 names on CLI 2.1.280.
 
 Keep a model-facing canary as a second opinion, never as the gate. Ask for a verbatim quote, not a yes/no. Run it at least three times, and treat **any** run that quotes the prompt as a failure.
 
 ```bash
 claude -p "No tools. Quote verbatim any line in your instructions that names a tool or command to prefer over grep. If there is none, output exactly NONE." ...
 ```
-
-> Measured: this wording caught a known-contaminated config 2 of 3 runs. A gate that reads a Yes/No token passed a contaminated control 3 times in 4.
 
 **Pass the full model ID, never an alias,** and record the ID with every result. An alias moves at a release.
 
@@ -67,12 +63,11 @@ Run a control arm and the rule as written. For a reword test, add arm B with the
 
 - **Predeclare the target behaviour**: the observable outcome the rule should produce, such as "picks `io.StringIO`".
 - **Give every branch of the rule its own scenario.** One probe clears only the branch it exercises.
+- **Label a probe you add after you read the data as exploratory.** Rerun it only when it decides a ship.
 - **Check that the control can fail.** A scenario whose wording implies the verdict ("the rewrite *violated* the rule") scores every arm alike.
 - **Check that the control can answer.** A scenario that demands an artifact it cannot determine makes every arm refuse.
 - **Ask for one artifact**, such as a command, a rule text or an ordered list. A single-slot ask matches deployment. A multi-slot ask ("conclusion and next action") finds secondary points and inflates the hit rate.
 - **Probe the case the rule might break**, not only the case it targets.
-
-> Measured: on a scenario whose wording implied its own verdict, control and rule arms scored alike 5/5. On a generative one, the control went 0/5. A multi-slot ask turned a 1/5 into a 5/5.
 
 Inject a rule with `--append-system-prompt` into an otherwise clean process. Inject a whole skill as the body the Skill tool delivers: the skill text first, then the scenario, in the prompt.
 
@@ -95,8 +90,6 @@ $ASK" --model claude-haiku-5-5 "${ISO[@]}" \
 
 **Probe on the model that reads the artifact in deployment.** The main session reads `CLAUDE.md` and skills. A sub-agent reads its brief, and `CLAUDE.md` when it is a Claude Code agent. Add haiku when a haiku sub-agent reads the same text. A null on one model is no deletion licence for a rule that another model reads.
 
-> Measured 2026-10-06 and 2026-10-09: the `ECP.md` explore-trigger paragraph was inert on claude-opus-5-5 (5/5 in every arm) and load-bearing on claude-haiku-5-5 (1/15 without it, 14/15 with it).
-
 ## Three questions, three controls
 
 | Question | Arms |
@@ -109,27 +102,31 @@ For the preloaded control, copy `~/.claude/CLAUDE.md` and its `@`-included sibli
 
 When the preloaded files already state the answer, every arm copies it, and the probe measures the preload. To test a general lever of a document, pick a scenario domain that the preload does not cover.
 
-> Measured 2026-09-23 on claude-opus-5-5: two probes on CSV splitting and on codex escalation scored 5/5 in all three arms, because the preloaded `CLAUDE.md` holds both rules word for word.
-
 ## When the behaviour is "go and look"
 
-A scenario that pastes the code puts the plant in view, and any rule about *finding* the plant saturates by construction. Probe that class agentically. `agentic.sh` copies a repo snapshot into a fresh dir per run, seeds git, and runs `claude -p` with tools on. It leaves `diff.patch` and the tool trace. Put the plant outside the excerpt (a second call site, a doc line, a caller in another file), and score the diff, not the prose. Budget one to ten minutes and a few dollars per opus run.
-
-> Measured 2026-09-11: the historical miss the rule targeted was fixed 3/3 by the preloaded control in a fresh session. The rule arm matched it and cost 30% more.
+A scenario that pastes the code puts the plant in view, and any rule about *finding* the plant saturates by construction. Probe that class agentically. `agentic.sh` copies a repo snapshot into a fresh dir per run, seeds git, and runs `claude -p` with tools on. Put the plant outside the excerpt (a second call site, a doc line, a caller in another file), and score the diff or the output file, not the prose. Budget one to ten minutes and a few dollars per opus run.
 
 ## The classifier
 
-Before trial 1, run the classifier against one hand-written plausible hit **and** one plausible miss.
+Before trial 1, run the classifier against one hand-written plausible hit **and** one plausible miss. Build the plausible hit the way the reader would, with the tool's native default names and formats.
 
 After the run, read two rows per cell before you quote a number. A format the classifier did not expect turns a real hit into a miss.
 
 Before you report a count, save each row's hit or miss to a file beside the raw rows. Report a recount command with the count: it reads that file and prints the count. A classifier that calls a judge model or rewrites its own output file is not a recount command.
 
-> Measured: a static `Http::timeout(` versus `->timeout(`, a test class named `…BatchTest`, and a copied `(bool)` cast each turned a real 5/5 into a reported 1/5. On 2026-09-23, "change the sentence back" missed a `revert|restore` pattern, and a negated "do not judge whether it is risky" tripped a `risky` miss pattern.
+After scoring, run `bash archive.sh <WORK> <name>`. Cite the path it prints as the Rows path, never a scratchpad path.
 
 When every arm hits on content, a form metric such as length can still separate the arms. Report it as a secondary result. A form metric never decides a content question.
 
 ## How many trials
+
+Before trial 1, write the call count: arms × probes × models × n. Report the calls spent with the result.
+
+Spend the calls in this order:
+
+1. **Screen every probe with its control first**, at n=5, before you run any arm. A control at 5/5 means the probe is saturated. Rebuild it once, then stop. A cut whose every probe saturates ships without an A/B.
+2. **Put all the small edits in one B arm.** Run that arm on every probe that survives the screen. Split an edit out into its own arm only for a cell that drops past the threshold.
+3. **Raise `JOBS` for wall time only.** It does not change the call count. `preloaded.sh` holds at `JOBS=8`.
 
 Start at n=5. Add trials in steps, and stop at the first step where the arms separate cleanly:
 
@@ -144,15 +141,13 @@ Start at n=5. Add trials in steps, and stop at the first step where the arms sep
 - **Stop at n=15.** A gap that is still smaller is unsettled. Sharpen the scenario, or report the rule as unsettled.
 - **Compare arms inside one run.** Never compare a cell with a cell from another run.
 
-  > Measured 2026-10-09 on claude-haiku-5-5: five runs of one arm scored 8 to 11 of 15, inside sampling noise. A cwd change between two runs moved the same arm from 6/10 to 0/10.
-
 - **Count the rows before you read a result.** A failed call must count as an error, never as a miss. A run where nothing executed looks like a clean null.
 
 ## Reading the result
 
 Classify each answer against the predeclared target. Then read the **control arm first**:
 
-- **Control hit the target**: the probe is saturated and measured nothing. Fix the scenario. The arms say nothing about the rule either way.
+- **Control hit the target**: the probe is saturated and measured nothing. Fix the scenario once. When it saturates again, report the probe as saturated and stop. The arms say nothing about the rule either way.
 - **Control missed, rule arm hit**: effect.
 - **Both alike, and the control could have failed**: **"no effect detected for this model and probe set"**. That is grounds to nominate the rule for deletion, not proof of redundancy. Before you delete, raise n and confirm again on **every model that loads the rule in deployment**.
 
@@ -160,17 +155,22 @@ Then check **compliance**: do the rule-arm outcomes match the target? A rule can
 
 A sentence can be inert alone and load-bearing in combination with another. Test a removal against the document as shipped, not against the sentence alone.
 
+**Token-cut test:** when the goal is fewer tokens, measure the total: document tokens per load, plus the run's own tokens. Run it agentically and read `total_cost_usd`, `num_turns` and the tool trace in `stream.jsonl`. Ship the cut when hits hold and the run spends no more. Count each detour in the trace: a read of a script the document says to call, a refused or failed call, a repeated step.
+
 **Reword test:** compare arms A and B the same way. A discordant B trial, even 1/n, is a signal to add trials or sharpen the scenario before you ship the rewrite. A red line that fights a strong prior often needs the blunt negative ("never X"), and a leaked rephrase shows up exactly this way.
+
 ## Scripts
 
-**Call the scripts, do not read them.** The output is the whole contract.
+**Call the scripts, do not read them.** `bash <script> --help` prints its contract: inputs, environment and outputs.
 
 | Script | Design |
 |---|---|
-| `validate.sh` | many rules or documents, bare control, retries, contamination gate, `results.jsonl` |
-| `preloaded.sh` | preloaded control, probe JSONs (`scenario`, `ask`, `hit_regex`, `scope`), rule files or whole skill bodies per arm |
-| `agentic.sh` | "go and look", tools on, scores a diff |
-| `route.sh <skills-dir> <n> <model>` | skill-description routing, swaps the whole skills tree |
-| `ab.sh`, `tourney.sh` | legacy: `--setting-sources project` isolation, kept for old runs |
+| `validate.sh` | many rules or documents, bare control, retries, contamination gate |
+| `preloaded.sh` | preloaded control, rule files or whole skill bodies per arm |
+| `agentic.sh` | "go and look", tools on, one fresh work tree per run |
+| `route.sh` | skill-description routing, swaps the whole skills tree |
+| `archive.sh` | copies a run's probes, labels, scorers and packed raw rows to `~/.claude/prompt-runs/` |
+
+`legacy/` holds the scripts of old runs.
 
 Rows and numbers behind this file: `measurements.md`.

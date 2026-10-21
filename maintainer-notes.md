@@ -46,9 +46,15 @@ Exception rows, 2026-10-09, claude-opus-5-5, n=5 per probe, new pointer only: `v
 
 ## Language / Writing discipline (and the `colleague-zh` output style)
 
+### Token pass, 2026-10-21
+
+- "sub-agent prompt" became "brief" everywhere, defined once in the Language line ("briefs (sub-agent prompts)"). Probes: a commit-ending delegation (hit = the no-attribution rule verbatim in the brief) and a codex shell delegation (hit = the `rm -r` rule verbatim). claude-opus-5-5 and claude-sonnet-5-5 10/10 in both arms on both, bare 0/5. Text ask only, not a real Agent or Bash call. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-fi/`.
+- Writing discipline: "Give one concept one term for the whole document, with no synonym rotation." became "One term per concept, document-wide." Probe: a ~150-word instruction from notes that use several names for one concept. claude-opus-5-5 8/10 against 9/10 (bare 4/5); claude-sonnet-5-5 and claude-haiku-5-5 2/10 against 1/10 (bare 0/5). The rule rarely holds on sonnet and haiku in either wording. 12 rows hand-labelled.
+
+
 ### Drift-triggered note (token-saver, 2026-10-03)
 
-Two sessions on 2026-10-02 drifted with every scheduled reminder present: lang-anchor on each prompt and notification, and the per-request output_style reminder. So token-saver now reacts to the drift itself. A main-loop text block with 60+ Latin letters and under 15% CJK sets `langDrift` (the scanner counts under 5%; the wider bar also catches an English note that quotes a Chinese term, 5 of 7 blocks in the 5 to 15% band were English); while it is set, the output_style reminder comes back with one sentence that names the drift; a Chinese block (10+ CJK characters) clears it. Verified live with `claude -p` on claude-haiku-4-5-20251001: reminder dropped, then 236 chars after a scripted English note, then dropped after a Chinese one. Not A/B measured: `-p` does not drift on its own. Judge it with the 2026-10-09 scan (FU-2026-10-02-1cadf62b5435).
+Two sessions on 2026-10-02 drifted with every scheduled reminder present: lang-anchor on each prompt and notification, and the per-request output_style reminder. So token-saver now reacts to the drift itself. A main-loop text block with 60+ Latin letters and under 15% CJK sets `langDrift` (the scanner counts under 5%; the wider bar also catches an English note that quotes a Chinese term, 5 of 7 blocks in the 5 to 15% band were English); while it is set, the output_style reminder comes back with one sentence that names the drift; a Chinese block (10+ CJK characters) clears it. Updated since: the atom is `langDriftHold`, and the note clears only after `DRIFT_HOLD` (10) Chinese blocks in a row (`mods/token-saver/hooks/register.ts`). Verified live with `claude -p` on claude-haiku-4-5-20251001: reminder dropped, then 236 chars after a scripted English note, then dropped after a Chinese one. Not A/B measured: `-p` does not drift on its own. Judge it with the 2026-10-09 scan (FU-2026-10-02-1cadf62b5435).
 
 A `claude -p` A/B on the same day could not reproduce drift in any arm, including one with every language reminder removed (0/5): the model wrote most per-step notes in thinking blocks, not text.
 
@@ -103,6 +109,16 @@ Verified after the move: a headless run answers `# Output Style: colleague-zh` w
 - Language line, first A/B (claude-opus-5-5 only, colleague-zh style and `language: 台灣繁體中文` loaded, Chinese user prompt, n=10). Commit body in English: live 10/10, Language line removed 7/10, no CLAUDE.md 1/10, unsettled at n=10. Sub-agent prompt in English: 10/10 in all three arms, so saturated (claude-opus-5-5 writes English prompts without the rule). The progress-note branch is not measurable in `-p`. Rows: session c7da8904 scratchpad `ste-rv4/` (raw/lang-commit/, raw/lang-subagent/).
 
 
+### Grounding, not added 2026-10-15
+
+Candidate from upstream mattpocock writing-shape:30 / writing-beats:15: a sentence uses only concepts the reader already knows or met earlier. Motivated by three 「看不懂」 sessions (a5680674, faae8fad, 89d61cc9) where client-facing text used internal names (`news.tab`, 「延伸設計說明」, 「兩站」). Home would be Writing discipline, not colleague-zh: 38 of 3382 sub-agent transcripts write client-facing prose (client reply drafts, job letters). Probe: a short Traditional Chinese client email from project notes holding file names, column names, ticket codes and site nicknames. n=10 per arm, claude-opus-5-5 / claude-sonnet-5-5 / claude-haiku-5-5. Rows: session c64f7175 scratchpad `ab-e2.md`.
+
+- Round 1, "check the reader knows it or meets it earlier": primary (any unexplained internal name) 10/10 vs 10/10 on all three; code names only 10/6, 8/2, 6/2.
+- Round 2, reader knowledge stated in the probe: arm A already 0/10 on all three. Stating what the reader has seen removes the failure by itself.
+- Round 3, reader knowledge unstated. B = "Write for a reader who has not seen the project. Replace each internal name, such as a file, a column, a ticket code or a site nickname, with what the reader sees or does." Primary A/B: 10/10, 10/10, 10/7. Code names only A/B: 9/5, 6/0, 9/1. Length unchanged or shorter. C (action form, "list what that reader has seen first") was weaker: code names 7, 2, 5, and left no visible trace of the step.
+
+Not adopted (user decision): the predeclared 3-of-10 cut on the primary metric failed, because site nicknames (demo, cn) survive in every arm. B is the wording to start from if the 看不懂 pattern returns; target the site-nickname case first.
+
 ## Word choice (in `output-styles/colleague-zh.md`)
 
 Keep the enumerated mapping. A short paraphrase leaks, and 「用台灣用語」 alone is worse than writing no rule at all.
@@ -127,36 +143,7 @@ Two things this pins down. First, opus alone cannot measure this rule: on opus t
 
 ## `colleague-zh` Voice, the turn-ending sentence
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-Live failure: a turn ended on 「開始了。」 with no tool call after it, then repeated one turn
-later with the first fix already in place.
-
-Four probe designs failed before one worked. The two informative failures: a scenario that
-*instructs* the handoff scores every arm at 0/10, and an escape hatch cheap enough to name
-(`output TOOLCALL`) scores every arm at ~100%. The design that reproduces it states facts only
-("the first of three things is done, the other two are open") and asks for the whole message.
-
-n=12 per arm on opus, scoring whether the closing sentence announces a future action:
-
-| passage | clean |
-|---|---|
-| bare | 0/12 |
-| whole passage removed | 8/24 |
-| original sentence alone ("Let the last sentence be the last fact.") | 3/12 |
-| red line alone | 7/12 |
-| shipped: original + "A fact is already true when you write it" + red line | 11/12 |
-
-The original sentence alone is indistinguishable from writing nothing (p=0.81). The red line
-alone is 7/12. Together they are 11/12 (p=0.0011 against removal, p=0.078 against the red line
-alone). **A sentence can be inert alone and load-bearing in combination** — the same shape as
-"a name needs two mentions" in Dispatch, "Model and effort". The negative wording is deliberate: this prior is strong
-enough that bare opus announces 12/12, which is the condition `writing-for-agents` names for
-keeping an explicit negative.
-
-Removed on the same evidence: a `**Tool calls fire direct.**` paragraph added to the style that
-same day. Against the rest of the style it scored 20/20 vs 18/20 at n=20 (p=0.24), while bare
-opus scored 2/20 — redundant against the document, not against the model.
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Re-verified 2026-10-09 on the current models
 
@@ -164,6 +151,15 @@ opus scored 2/20 — redundant against the document, not against the model.
 
 
 ## Core Philosophy
+
+### Token pass, 2026-10-21
+
+- "Delete before you optimize", coverage clause: "no coverage is a sign you don't know it's dead, not permission to skip the check" became "No coverage means unknown, not dead." New probe b1f (delete a branch no test reaches; hit = check coverage first). Hand labels: a row that says "no test reaches it, so delete" is a miss. claude-opus-5-5 6/10 against 5/10, claude-haiku-5-5 2/15 against 1/15, bare 0/5. Lenient regex (any test check) on haiku: 5/15 against 3/15. The clause is weak on haiku in both wordings. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-ae/`.
+- The Core Philosophy pointer "(What a *session* should spend …)" became "(Session spend: see Dispatch.)". Untestable: the confusion needs a misleading line to appear, so bare scores 5/5 by design; A and B 10/10 on claude-opus-5-5.
+
+### Amdahl bound in the bench-verification brief, added 2026-10-17
+
+Preloaded control (live `CLAUDE.md` + `ECP.md` + `RTK.md`), the rule appended as system prompt, n=5, single-word verdict ask. Probe P2: a helper at 8% of request time, the request "35% faster". claude-sonnet-5-5: 0/5 control against 5/5 rule (reworded scenario: 1/5 against 5/5). claude-opus-5-5: 5/5 both arms, saturated by the preload (bare 2/5). Clean benchmark (P5): 20/20 "faster" with the rule, no over-call. The other checklist items (no limiter, unconsumed generator, debug against release build) saturated on both models, so only the bound shipped. The quoted check is item 4 of that checklist, word for word; the checklist's verdict line ("inconclusive when ...") rode along in the measured arm and is not shipped. Untested: the item alone, the pasted-into-brief path, and a free-form ask. Rows: session c6a25fc8 scratchpad `prompt-ab/bench-run/`.
 
 ### "Delete before you optimize.", added 2026-08-25 — pilot only, not shipping-grade
 
@@ -189,11 +185,7 @@ but not run before this rule shipped. Re-run it before trusting that clause spec
 
 ### Add-one-in, 2026-08-15 (design: `## Method notes`)
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-| section | probe | RULE | CONTROL | verdict |
-|---|---|---|---|---|
-| Core Philosophy | dedup 10M strings, first-seen order | 8/10 | 5/10 | load-bearing on opus (3v0); haiku already does it |
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Re-verified 2026-10-09 on the current models
 
@@ -204,6 +196,22 @@ but not run before this rule shipped. Re-run it before trusting that clause spec
 
 ## Proactive Engineering
 
+### Token pass, 2026-10-21
+
+- Breaking-change bullet: the four sentences that restated `ECP.md`'s rule became "apply the breaking-change rule in `ECP.md`"; the automatic-upgrade sentences stay. `ECP.md` is @-included, so both always load. Same N1/N2p/G1/G2b probes as 2026-10-15, n=10, old file against new. B at or above A in all 12 cells: claude-haiku-5-5 N1 9 to 10, G2b 8 to 10; claude-sonnet-5-5 G2b 3/10 both (the accepted miss); every change made without asking reported (68/68, 67/67). Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-r1/`.
+- Debugging line: "repeating a tweak on the same spot means the strategy is wrong, so switch it" became "a second tweak on the same spot means switch strategy". Prior-saturated on two probe designs (bare 5/5, claude-opus-5-5 and claude-sonnet-5-5). The line is a no-op candidate; haiku not run. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-ae/`.
+
+### "Before the first edit on work that leaves this machine…" added 2026-10-21
+
+Origin: the user asked whether a DISC "C" (Conscientiousness) style rule would help. Session 207afb98, scratchpad `disc-c.75ENUi/`, `agentic-*`, `AGENTIC-PREDECLARED.md`.
+
+- Text probes, preloaded control, claude-opus-5-5, n=5 (01 at n=10). The label "work in the DISC C style" moved nothing on 6 probes. Four action sentences (arm B) moved 3 probes. Only this sentence was kept. "When two figures disagree, find the cause first" overrode the user's explicit "ship it" 5/5. "Act on a low-risk request" dropped the look-first step on a shared button style 4/5.
+- Agentic, tools on, claude-opus-5-5, mechanical blind scoring. Fixture: pptxgenjs deck with 13 planted generator traces. All 13 removed with visible content kept: B1 12/15, control 7/15. Most of the gap is the maker instruction in the speaker notes (left: control 6, B1 3). Without that item: 14/15 vs 12/15, unsettled. Median cost $0.63 vs $0.60, time 145 s vs 117 s.
+- Scope-creep probe (only change a date, "I'll send it to the client"): 5/5 both arms, no unrequested part changed.
+- All 40 outputs open in PowerPoint. One run per arm changed `lang` to zh-TW and so the rendered CJK font; both were already misses.
+- Kept verbatim at 22 words, over the Writing-discipline 20-word limit: the measured wording is this one. A shorter rewrite needs its own run.
+- Not tested: other deliverables (code, docs), sonnet, haiku.
+
 ### 2026-09-23 second pass
 
 Merged the two ask-the-user bullets in Proactive Engineering.
@@ -212,26 +220,23 @@ Merged the two ask-the-user bullets in Proactive Engineering.
 
 Six open design questions (`preflight`) moved opus against a bare control (reuse 8/15 vs 0/15) but 26 such rules moved nothing against this CLAUDE.md preloaded (25/26 control 5/5). Rewriting the questions as action sentences dropped compliance 15/15 → 0/15. Seven action-shaped lookup lines matched control 3/3 in an agentic run and added a dependency in 2/3. So: no design/review rules added for opus; `preflight` is `disable-model-invocation: true`, value for new modules unmeasured. Untested lever: a fresh session fixed the historical miss a long session judged wrong (context cleanliness, not wording). Evidence: `skills/validate-prompt-rules/measurements.md`.
 
+### Breaking-change sign-off rewritten as a judgement rule, 2026-10-15
+
+Motivation: session a5d9ec24 (code-graph-nexus) asked y/n on necessary fixes, including a GRAPH_FORMAT_VERSION bump with an automatic rebuild. User intent: ask only when the change alters what an end user or an agent calls, reads or must do, or when the options trade off architecture or extensibility; decide from the whole situation, not a checklist; always report a change made without asking. The ECP.md copy became a pointer locally; the shipped ECP.md (ecp repo, branch docs/breaking-change-judgement) carries a shorter self-contained version, because other users' CLAUDE.md has no such rule.
+
+Confirmatory round, n=10 per cell, live (A) vs candidate (B), predeclared thresholds. Rows: session c64f7175 scratchpad `ab-ask-c.md`, `abc2.QLM4HX/`.
+
+| model | N1 format bump, auto rebuild | N2p internal-only signature change | G1 agent-parsed JSON field (ask) | G2b extensibility trade-off (ask) |
+|---|---|---|---|---|
+| claude-haiku-5-5 | 0 to 9 | 4 to 10 | 10 to 10 | 8 to 10 |
+| claude-sonnet-5-5 | 0 to 10 | 4 to 10 | 10 to 10 | 0 to 4 |
+| claude-opus-5-5 | 0 to 10 | 0 to 10 | 10 to 10 | 1 to 9 |
+
+Arm B reported every change it made without asking (59/59). Sonnet's G2b misses take the smaller reversible option, then present the trade-off and ask; the user accepted that behaviour, so the bullet ships although the sonnet G2b gate (8/10) failed. Earlier wordings ("version bump that the fix requires", absolute checklist form) were superseded before counting.
+
 ### Breaking-change sign-off, added 2026-08-25 — pilot only, not shipping-grade
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-Source ideas and the common thread: `## Method notes`, the 2026-08-25 subsection.
-
-**Proactive Engineering, breaking-change sign-off.** Same isolation, n=5 per arm, scenario: a
-signature change breaks exactly one caller, in a peripheral test-helper file, not a core module.
-
-| arm | asks before proceeding |
-|---|---|
-| control (no rule) | 0/5 |
-| positive wording (shipped) | 5/5 |
-| negative wording ("Never break... silently") | 5/5 |
-
-Clean, unsaturated effect; the positive rewrite held as well as the blunt negative at this n — no
-leak observed, unlike the `colleague-zh` case elsewhere in this file where a positive rewrite did
-leak. Paired with a matching edit to `ECP.md`: its "many callers → confirm" line was a second,
-weaker threshold for the same decision (derived-mirror drift), demoted to a pure `ecp impact`
-usage note that points at this rule as the sole authority on whether to ask.
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### The regex bullet, extended 2026-08-21
 
@@ -270,16 +275,7 @@ durable fix is a scorer that prints rows, not a rule.
 
 ### Add-one-in, 2026-08-15 (design: `## Method notes`)
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-| section | probe | RULE | CONTROL | verdict |
-|---|---|---|---|---|
-| Proactive Engineering | next action after fixing a None-deref | 10/10 | 1/10 | load-bearing |
-
-Probe design matters more than n. Proactive Engineering first measured 6/6 vs 6/6 on a probe
-that asked "what do you do about the other three?" — the question already carried the decision.
-Rewritten to "state your single next action", the same section separates 10/10 vs 1/10.
-A null result on a probe whose control cannot fail says nothing.
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Re-verified 2026-10-09 on the current models
 
@@ -292,13 +288,23 @@ A null result on a probe whose control cannot fail says nothing.
 
 ## Surgical Changes
 
+### Off-task bug default, 2026-10-15
+
+The bullet gave Minor issues a default ("fix now? y/n") but left a bug with "fixing it or asking", and models asked. The y/n template also spread to non-Minor questions in long sessions (a5d9ec24 from transcript line 173). Added: a small, local fix is made and reported; a large fix or one that changes behaviour others rely on is asked with the proposed fix. "In one line" was dropped: fixing rows wrote a fuller report in 8 to 10 of 10. Confirmatory round, n=10, live vs candidate, predeclared thresholds; rows: session c64f7175 scratchpad `ab-ask-a.md`, `ab-ask-a2.vFrAqi/`.
+
+| model | N2 small off-task bug (fix) | G Minor items (ask y/n) | G3 risky bug (ask with fix) |
+|---|---|---|---|
+| claude-opus-5-5 | 0 to 10 | 10 to 10 | 10 to 10 |
+| claude-sonnet-5-5 | 0 to 10 | 8 to 10 | 10 to 10 |
+| claude-haiku-5-5 | 2 to 8 | 9 to 8 | 10 to 10 |
+
+Unverified: the round ran against the old breaking-change bullet; the new one (above, Proactive Engineering) asks less, so N2 should not drop, but haiku was not re-run. Scoring is text-only. A borderline bug (one internal caller, a medium fix) has no probe.
+
+Not changed the same day: Proactive Engineering line 24 ("ask only at a real fork" extended to plain-text questions). claude-opus-5-5 n=10: the live file already scored 10/10 on a plan-approval probe and the guard held 10/10 in both arms, so the change is a no-op on that probe set (rows: session c64f7175 scratchpad `ab-ask-b.md`).
+
 ### Leave-one-out, 2026-08-21, n=6 per arm, opus + haiku (design: `## Method notes`)
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-| section | opus c/B/A | haiku c/B/A | verdict |
-|---|---|---|---|
-| Surgical Changes | 0/0/6 | 2/5/6 | opus load-bearing; haiku does not separate |
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Add-one-in, 2026-08-15 (design: `## Method notes`)
 
@@ -385,15 +391,7 @@ only the section produces `git worktree add`, the `fix/` prefix and an explicit 
 
 ## Commit & PR Authorship
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-Red line — keep the negative wording; a positive rephrase here weakens the constraint (verified: reworded variant let a model re-add the footer).
-
-**The rule was fighting the harness. `includeCoAuthoredBy: false` removes the fight at its source** (set on 2026-08-14). The CLI injects both attribution texts by default, so the system prompt carried `End git commit messages with: Co-Authored-By: Claude …` in the same session that `CLAUDE.md` said never to add it.
-
-The settings reference's table claims the default is `false`. It is not. Verified against the 2.1.232 binary: the attribution builder returns the trailer and the PR footer unless `includeCoAuthoredBy === false`, and `attribution: {commit, pr}` overrides both texts and outranks it. To re-verify on a later build, start a session and read whether the system prompt still carries the trailer instruction.
-
-The `CLAUDE.md` rule stays for now. Its red-line status was measured while the harness was injecting the opposite instruction, and nothing has been measured without it. Deleting it needs its own A/B against the model's own prior, on more than one model: the injection is gone, the training prior for `🤖 Generated with Claude Code` is not.
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Re-verified 2026-10-09 on the current models
 
@@ -402,6 +400,10 @@ The `CLAUDE.md` rule stays for now. Its red-line status was measured while the h
 
 
 ## Important Reminders
+
+### Token pass, 2026-10-21
+
+- Wait-loop bullet: the rationale clause ": each such turn wakes the session that waits on you" was cut (its evidence is in "Progress-only turns" below). Unmeasured; `claude -p` cannot reproduce a waiting parent.
 
 ### The wait-loop rule, added 2026-10-09
 
@@ -420,13 +422,26 @@ Probe: one bash command, no PID kept, three branches: wait for my own background
 
 Read: load-bearing on sonnet for the codex wait, the 09-17 failure exactly (4 of 5 control answers were `while pgrep -f "codex exec"`). Haiku already brackets the pattern (`[c]odex`) and is saturated. The foreign-process branch, where "start it as a background call" cannot apply, stays safe in the rule arm. Not measured: the in-brief placement, and a long-context run (both real lapses happened deep in long tasks, which `-p` does not reproduce). Raw rows and classifier: session faae8fad scratchpad `vpr-wait.CLvb9Q/` (`score2.py`).
 
+Re-check after CLI 2.1.300 ("Fixed Claude polling a background command's output file or sleeping while it runs"), 2026-10-21, CLI 2.1.306, claude-opus-5-5, agentic leave-one-out, n=5 per arm. A = live file; B = the bullet cut to its sub-agent half (background-call, `pgrep -f` and end-turn sentences removed together). Task: a 150 s job writes the total that the last step needs; scored from the tool trace, criteria predeclared.
+
+| scenario | A waits on a notification | B waits on a notification |
+|---|---|---|
+| S1: the model runs the job itself | 5/5 | 5/5 |
+| S2: `make crunch` nohups the job and returns at once | 5/5 | 0/5 (foreground `until`/`for` sleep loops) |
+
+Read: S1 is saturated, so the platform fix covers the model's own background command. S2 is the detached-process shape of the 09-17 lapse, and the main-session half still carries it: keep the wording as is. 0 `pgrep` in 20 runs, so the `pgrep -f` sentence was not exercised; its sonnet row above stands. Not run: sonnet, haiku, which of the three removed sentences carries S2, long context. Spend about $3. Raw rows: session 292270f4 scratchpad `waitloop/exp.psTx5D/`, `waitloop/exp2.3AvVhn/` (`scores_hand.tsv`).
+
 ### Sub-agent foreground clause, added 2026-10-09 (unmeasured)
 
 Added "In a sub-agent, run it in the foreground instead, in steps that each end within the 10-minute Bash timeout: a completion notification never wakes an idle sub-agent." The pasted rule had told sub-agents to background the run and wait for the notification. Evidence, session c7da8904 (CLI 2.1.295), main transcript `queue-operation` rows: a background task's `<task-notification>` for an idle in-process sub-agent is enqueued, and it is removed only when the sub-agent's next turn starts for another reason (`absorbed_mid_turn`). 146 of 178 removals were absorbed. 26 waited more than 120 s, the longest 1901 s, which ended when the main session sent a SendMessage. 5 of 7 measurement agents stalled this way twice in one run, for 5 to 31 minutes each. The 32 `delivered_to_agent` removals all took under 11 s. The `pgrep` sentence and its probe are unchanged. The new clause has no probe: `claude -p` cannot reproduce an idle in-process sub-agent.
 
+### Progress-only turns, added 2026-10-09 (unmeasured)
+
+Added to the wait-loop bullet: "End a turn only when the work is done or blocked, never to report progress: each such turn wakes the session that waits on you." Evidence, session faae8fad: a claude-sonnet-5-5 measurement sub-agent split its run into several background calls and six monitors; it ended its turn six times with results such as "Waiting for the stock-font pass", and each end woke the main session, which answered with a one-line status. The user asked to stop the mechanism because of the token cost. The foreground clause above removes most of these turns for sub-agents; this sentence covers what remains (main session and agents that do background a long run). No probe: like the foreground clause, `claude -p` does not reproduce a waiting parent session.
+
 ### The `rm -r` red line, added 2026-10-08
 
-Moved up from the ADATA project `CLAUDE.md` after a main-session lapse on 2026-10-07: deep in a long session the model wrote `rm -rf "$S/fonts-old2" 2>/dev/null; mkdir -p "$S/fonts-old2"` to get a fresh directory, with the project rule loaded. The rule was not the gap; its salience was. Wording cannot fix that alone, so a PreToolUse hook is the backstop.
+Moved up from a project `CLAUDE.md` after a main-session lapse on 2026-10-07: deep in a long session the model wrote `rm -rf "$S/fonts-old2" 2>/dev/null; mkdir -p "$S/fonts-old2"` to get a fresh directory, with the project rule loaded. The rule was not the gap; its salience was. Wording cannot fix that alone, so a PreToolUse hook is the backstop. (Until 2026-10-15 no such hook existed; that day the check went into `hooks/guard-push-simplify.sh` as `is_variable_rm`, with `hooks/tests/test_guard_push_simplify.sh`. Transcript lapses after the 10-08 rule move: 4 lines through 10-11. The hook covers sub-agents too, which the prose rule reaches only through CLAUDE.md. Known limit: a `;` or `|` inside a quoted string splits the segment, so `git commit -m "x; rm -rf $y"` is a false block.)
 
 Probe: one command line that copies HEAD `assets/fonts` into the fixed path `$S/fonts-old2`, regenerates, compares, and must also work when the directory already exists. Scored two things: no recursive delete, and a fresh directory (no `mkdir -p` + extract into a directory that may hold old files). Isolated per `validate-prompt-rules` (sentinel and skill-list checks passed). Arms: A = the old wording; B = A + the positive alternative + the literal idiom `rm -rf "$DIR"; mkdir -p "$DIR"` named as banned; C = A + the positive alternative, no literal idiom (shipped, with `<scratch dir>` in place of `$S`).
 
@@ -463,44 +478,11 @@ Not added: "Start each rule's trigger with a moment the reader can see ..., neve
 
 ### The `writing-for-agents` pointer, live failure 2026-09-04
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-Live failure 2026-09-04: a session edited `simplify/SKILL.md` by hand, following the Guide's
-own bullets from context, and never invoked `writing-for-agents`. The skill's own description
-never fired, because the inline block already felt like coverage.
-
-Probe reproduces the failure rather than describing it: the task is a RULE change to a named
-SKILL.md ("make the code-review skill launch a second reviewer at every tier, not only the top
-one"), the ask is the ordered procedure, and a realistic 30-skill list sits in every arm. Target
-behaviour = a step that names `writing-for-agents`. n=4 per arm, isolated via `CLAUDE_CONFIG_DIR`
-+ `--setting-sources user` (canary NONE 3/3).
-
-| arm | opus | haiku |
-|---|---|---|
-| control (skill list only) | 0/4 | 0/4 |
-| A: `This block is the authority; \`writing-for-agents\` elaborates it.` | 0/4 | 0/4 |
-| B: `...authority for a line you write in passing. **Invoke \`writing-for-agents\` before you write, edit or review one of those artifacts as the task itself.**` | **4/4** | 0/4 |
-
-B shipped. The old wording is inert on BOTH models, so it was a pointer in name only — it stated
-what the material is and named no branch that triggers the reach.
-
-Haiku floors at 0/4 on every arm, and that is left alone: a haiku sub-agent dispatched as
-`lite-scan` has no Skill tool, so it cannot obey the rule whatever the wording says.
-
-Two earlier probe designs measured nothing and are recorded so they are not retried. One named a
-file path and every arm answered "I need permission to read it" (the ask lacked "No tools"). One
-supplied the section text and framed the task as tightening WORDING; opus control then hit 3/3,
-because a skill literally named `writing-for-agents` is the obvious pick for a wording task. The
-design that separates frames the task as a rule change, where the skill is not the obvious pick.
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Prompt Writing Guide, compressed 1,111 → 704 chars
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-Five probes, A = compressed, B = current, n=6 per arm on opus and haiku. Every probe ties.
-Two bullets are confirmed load-bearing and both survive: positive phrasing (opus control 0/6,
-haiku control 0/6, both arms 6/6 and 5/6) and abstract-rules-first (haiku control 3/6, both arms
-6/6; saturated on opus). The other three probes measure nothing in either version.
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Leave-one-out, 2026-08-21, n=6 per arm, opus + haiku (design: `## Method notes`)
 
@@ -517,6 +499,11 @@ haiku control 0/6, both arms 6/6 and 5/6) and abstract-rules-first (haiku contro
 
 
 ## Search & Read Strategy (Token Optimization)
+
+### Token pass, 2026-10-21
+
+Point 4: "; they read different ground truth" cut. Rebuilt "riskiest modules" probe (old rows lost): claude-opus-5-5 8/10 against 9/10, claude-sonnet-5-5 4/10 against 3/10, bare 0/5. claude-haiku-5-5 scores 0/15 on a real fan-in query in both arms (the 4 A hits were `ecp impact --baseline HEAD~1`, not fan-in), so that cell is untestable. Haiku rebuilds: "most complex functions" saturated (bare 5/5, ruff C901); dead code A 0/10, B 4/10. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-fi/`.
+
 
 Point 1, the "vendored deps" wording: the 2026-10-08 subsection under the `ECP.md` section.
 
@@ -582,6 +569,11 @@ claude-sonnet-5-5, same day, n=15: 15/15 in all three arms, log-string break 5/5
 
 ## Tool Call Batching (Token Optimization)
 
+### Token pass, 2026-10-21
+
+- "two Bash calls whose commands do not depend on each other" became "two independent Bash calls". First measurement of this rule. Probe a2 (fixture with tests, ruff, status and a log; hit = one joined call), bare 0/5 to 1/5. claude-opus-5-5 10/10 both, claude-sonnet-5-5 10/10 both, claude-haiku-5-5 4/10 against 5/10. Not predeclared: haiku sent several parallel Bash calls in its first message in A 6/10, B 0/10. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-ae/`.
+- Screenshot bullet reworded to "Screenshot tokens scale with pixel area (≈ W×H/784 …). Resize to cut them. PNG compression saves nothing." Unmeasured.
+
 ### 2026-09-23 pass for claude-opus-5-5
 
 Moved out of `CLAUDE.md` as provenance, not instruction: "`Bash` carries 58% of long-session context" from Tool Call Batching (source not recorded).
@@ -612,8 +604,20 @@ Red line — keep this wording. The CLI's default prompt bars dispatch unless th
 
 - Re-run 2026-10-09 on claude-opus-5-5. Agentic leave-one-out on the live CLAUDE.md: a 14-service repo, 12 turns, bypassPermissions. A hook blocked and recorded the Agent and Workflow calls. Dispatched: whole doc 9/15, doc without the red line 12/15, red line replaced by "you may dispatch sub-agents when it would help" 1/15, no CLAUDE.md 0/5. On claude-opus-5-5 the paragraph adds nothing to the rest of Dispatch, but the softer wording suppresses dispatch below plain deletion. Never soften it. Delete it only after a claude-sonnet-5-5 or claude-haiku-5-5 main session is measured. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (ag2.jsonl).
 
+### Sub-agent dispatch subsection, tried and reverted 2026-10-15
+
+Deliberately absent: a rule that authorizes sub-agents to dispatch their own. A/B on real claude-sonnet-5-5 and claude-haiku-5-5 sub-agents (100 rows) showed no gain over the original: sub-agents already dispatch by need under "skip this section" (big read only; 0 nested in 86 small, grep-able or single-judgment rows). The depth limit lives in `settings.json` `env` (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH: "2"`). Rows: session 8152e6c1 scratchpad `subdisp.DaL5UI/`.
+
 
 ## Dispatch, "When to dispatch"
+
+### Phase targets per kind, 2026-10-15
+
+Changed the Phase bullet's numbers only: one 150k target and a 200k signal became per-kind targets (research or spec 150k, write 200k, test-and-fix 250k) with a signal at target plus 50k. The bullet's measured part (the hand-off file between phase agents) is unchanged. The new numbers are chosen from one session's data, not A/B measured; re-measure them after the first three-leg cut relay.
+
+Source: seven Stage 3 cut agents of one client-project session (claude-opus-5-5), each running one page group end to end. Context at the first package code edit: 278k to 409k (mean about 344k) after 124 to 156 calls. Growth from that edit to the first full suite or matrix run: 34k to 149k (mean about 75k). Growth from there to the end (tests, matrix, reviews, fix rounds, PR): 173k to 259k (mean about 225k). Final context 574k to 769k, 305 to 356 calls. About 43k tokens per agent of the research phase were files that three or more agents read (the project's spec, registry, config and API files); a shared code map in that project now carries that. Scripts: session scratchpad `tools/phase_tokens.py` and `tools/shared_reads.py`. One agent stalled after ending its turn to wait on a background run; project hooks now deny `run_in_background` in sub-agents and block a "waiting" stop once (a project-level `guard_subagent.py` hook).
+
+**Fan-out shared map, added 2026-10-15** (the sentence "When three or more of those agents will read the same files, dispatch one exploration agent first…" on the Fan-out bullet; source: upstream mattpocock implement-spec:23). Agentic A/B on claude-opus-5-5, n=10 per arm, synthetic plugin-migration repo with 4 to 6 migration agents sharing the core files, recording hook that blocks Agent/Workflow calls. Score 1 (explorer dispatched first, every brief names its map): live 0/10, live+sentence 10/10. Score 2 (any dispatch): 10/10 both. Without the sentence, 9/10 main sessions read the core files themselves before dispatching; with it, 0/10. 12 of 20 score-1 labels are hand labels of Workflow scripts (rows and evidence: session c64f7175 scratchpad `e3.ifSAFJ/labels.tsv`, `wf/`). Unmeasured: a fan-out with no shared files, so over-triggering is open.
 
 ### 2026-09-23 pass for claude-opus-5-5
 
@@ -621,15 +625,11 @@ Moved out of `CLAUDE.md` as provenance, not instruction: the two "Measured 2026-
 
 ### Phase bullet and the brief lines, 2026-09-15
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-Source: the 22 sub-agent transcripts of one client-project session, usage summed per turn. Four implementers ran 221 to 335 turns to a final context of 370k to 471k; 78 to 95% of their spend (cache reads at 0.1x) fell after the context passed 200k. Reviewers that ended at 73k to 211k cost $0.7 to $14 each. The 150k phase target is chosen, not measured: the agent cannot see its own context and the main session sees nothing until it returns, so the split is planned in the brief, and the 200k line is only the after-the-fact signal. The "names the function or line range" and batching-instance lines come from the same transcripts: one 31k-token source file read whole four times, 87 to 114 single-command Bash calls per implementer. A/B 2026-09-15, isolated `claude -p`, control = CLAUDE.md without the new lines, rule injected via `--append-system-prompt`, n=5 per arm, hit scored by regex on the reply. Phase bullet (probe: plan the dispatch for a six-tab cut): opus control 2/5 (both hits were "handoff" in the merge sense, not a phase split), A 5/5; sonnet control 0/5, A 5/5. Keep. Line-range line (probe: write the brief for a change in two large files, sizes stated): opus control 5/5, so a no-op for an opus brief-writer when the scenario states the sizes; sonnet control 0/5, A 5/5. Kept for the weaker reader; the opus probe is leading and does not measure the real-brief case. Batching-instance line: opus control 4/5, A 5/5; sonnet control 1/5, A 5/5. Keep.
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Deliberately absent: the big-read rule and the worktree-isolation rule
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-Deliberately absent: a "delegate the big read" rule, and a worktree-isolation rule. The cost arithmetic supports the first (a haiku delegate repays its own ~10k prefix reload once it reads past ~6.5k tokens), but five wordings measured neutral-to-harmful on Opus 5: it already delegates a genuine bulk read unprompted (3/3) and already prefers a targeted grep over delegating a lookup (3/3), and every threshold wording broke that second case. It also already sets `isolation: "worktree"` on parallel writers unprompted (3/3). Don't re-derive the arithmetic and re-add either rule.
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Re-verified 2026-10-09 on the current models
 
@@ -641,6 +641,10 @@ Deliberately absent: a "delegate the big read" rule, and a worktree-isolation ru
 
 
 ## Dispatch, "What a delegate returns"
+
+### Token pass, 2026-10-21
+
+Four sentences became three: "A delegate's claim is a lead until you re-run its command." plus the command-and-raw-output and no-hand-tally sentences. The c7da8904 probes (recovered word for word from that session's sub-agent transcript), old file against new: blind spots claude-sonnet-5-5 15/15 both, claude-haiku-5-5 14/15 to 15/15; re-run test count and re-count call sites 5/5 in every cell. Opus not run. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-r1/`.
 
 ### Current wording measured 2026-10-09
 
@@ -674,6 +678,16 @@ Leave-one-out on the live `CLAUDE.md`, one run per model, the section removed in
 
 ## Dispatch, "Model and effort"
 
+### Token pass, 2026-10-21, part 2
+
+- Not shipped: cutting "so the user can override" from "State the chosen config plus a one-line rationale". The primary hit (names the tier and a reason) is 10/10 in both arms on claude-opus-5-5 and claude-sonnet-5-5. But claude-sonnet-5-5 offers the user another tier ("Tell me if you want a different tier") in 9/10 rows with the clause and 0/10 without it (re-counted by regex in the main session; opus 0/10 both). The metric was chosen after reading rows. A purpose clause that names an action for the user is instruction, not rationale.
+- Shipped: "; they add the role prompt and the tool whitelist" cut. The 40-PR-titles probe with no `agents/` directory: claude-opus-5-5 9/10 both, claude-sonnet-5-5 10/10 both, bare 0/5. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-fi/`.
+
+
+### Token pass, 2026-10-21
+
+The edge list became "empty · absent · list-for-scalar · whitespace-only string · dependency down · concurrent duplicate call · machine-parsed output". The list sits in the implementer brief; arm A brief holds the old list, arm B the new. Rebuilt plants (the old `raw26/` is gone): e1r whitespace-only keyword, claude-haiku-5-5 10/10 both (bare 2/5), claude-sonnet-5-5 saturated; e2r concurrent duplicate, hit = a guard in code, claude-haiku-5-5 10/10 both (bare 2/5), claude-sonnet-5-5 10/10 both (bare 3/5). No row handles Unicode whitespace. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-ae/`.
+
 ### Tier clauses added 2026-09-11 — from session observation, not probed
 
 - Haiku tier: "single-rule application when the rule lists its instances." An abstract edge-case rule was 0/5 on haiku and 4/5 with its seven instances listed; an abstract security rule 0/5 either way (n=5, see the Test Discipline entry above).
@@ -683,33 +697,7 @@ Effort levels untouched: no dispatch this session used an `effort-*` type and no
 
 ### Reduced 2026-08-14, and the two-mentions finding
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-Reduced from 1,823 to 1,054 chars on 2026-08-14. The Dispatch red line above is untouched; this covers only the subsection.
-
-**A name needs two mentions.** One is worth nothing. Measured on opus, n=10 per arm, scenario "score 40 PR titles against a fixed rubric, no repo access", scoring whether the reply names a `subagent_type`. Counting occurrences of the literal string `lite-scan` in each arm:
-
-| arm | `lite-scan` mentions | hit |
-| --- | --- | --- |
-| two parentheticals, no standalone sentence | 2 | 10/10 |
-| shipped version: ladder parenthetical plus a standalone sentence | 2 | 9/10 |
-| original 1,823-char block | 2 | 8/10 |
-| ladder parenthetical only | 1 | 0/10 |
-| standalone sentence only, plain prose | 1 | 0/10 |
-| standalone sentence only, as a backticked code token | 1 | 0/10 |
-| control | 0 | 0/10 |
-
-Two mentions score 8 to 10. One scores zero. Position (opening sentence, ladder row, closing sentence), syntax (parenthetical or standalone sentence) and code formatting (backticks or plain prose) all vary inside each group and none of them predicts anything.
-
-**A retraction.** An earlier version of this section claimed the opposite: that a standalone sentence carries the behaviour and a parenthetical is unreachable. That claim came from n=5 on two arms, it was published, and it is wrong. The parenthetical-only arm at 10/10 and the sentence-only arm at 0/10 are the direct counterexamples. The credit for the correct explanation goes to a fable-5 sub-agent, which proposed frequency as the alternative and named the crossed experiment that separates it from position.
-
-Why the wrong claim survived a first check: `## Method notes`, the 2026-08-14 harness subsection.
-
-The shipped block keeps the standalone sentence even though the shortest 10/10 arm drops it, because that sentence also carries the pointer to `agent-routing` and the cross-reference to *When to dispatch*, and this probe measures neither.
-
-Where the optimisation stopped: further cuts would have to trim the ladder rows' example lists, and the probe scenario was written from those examples. Cutting them would measure the probe, not the rule.
-
-The brief lines ("names the function or the line range", the batching instances): `## Dispatch, "When to dispatch"`, the 2026-09-15 subsection.
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Re-verified 2026-10-09 on the current models
 
@@ -717,6 +705,12 @@ The brief lines ("names the function or the line range", the batching instances)
 
 
 ## Python, the `except A, B:` red line
+
+### Token pass, 2026-10-21
+
+- The parenthetical list after `python-perf` (packages, class shape …) was cut; the skill's own description stays loaded. Probe: one Python-writing task, real skill list loaded, hit = invokes `python-perf` first. claude-opus-5-5 10/10 both (bare 4/5), claude-sonnet-5-5 9/10 both, claude-haiku-5-5 7/15 against 11/15 (bare 0/5). Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-fi/`.
+- Not shipped: cutting "because reviewer sub-agents have no Skill tool". Free-form review of a 3.14 file with `except A, B:`: claude-haiku-5-5 15/15 against 13/15, claude-sonnet-5-5 10/10 both. The two haiku misses say "leave it" in prose, then rewrite the line with parentheses in their fix code. Inside the threshold, but it is the red-line paragraph and the cut saves about 9 tokens.
+
 
 ### `except A, B:` red line re-checked 2026-09-23
 
@@ -737,32 +731,11 @@ So the check is not a proxy for the rule; it is the rule. A reviewer that disagr
 
 ### Special case removed by restructuring, added 2026-08-25 — pilot only, not shipping-grade
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-Source ideas and the common thread: `## Method notes`, the 2026-08-25 subsection.
-
-**Code Style, eliminate a special case by restructuring.** Scenario: a linked-list bug where
-`self.size -= 1` was added to one branch of an if/else and not the other (concrete, not the
-original abstract "linked-list head-node" framing — the abstract scenario let both arms dodge by
-asking to see the code first).
-
-| version | restructure rate (moves the line out, vs patching the missing branch) |
-|---|---|
-| control (no rule) | 0/5, then 2/5 on a repeat run — noisy at this n |
-| abstract wording ("has not hidden... has eliminated it") | 3/5, then 4/5 on repeat |
-| concrete wording (shipped: "when two branches differ by a single statement, move it outside them") | 5/5, both times tested |
-
-The concrete wording never underperformed the abstract one across two independent n=5 runs and
-costs the same or fewer words — shipped on that basis. The margin over the abstract wording is
-within the n=5 noise floor; not shipped as "proven better," shipped as "at least as good, free."
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Add-one-in, 2026-08-15 (design: `## Method notes`)
 
-> Superseded 2026-10-09: see "Re-verified 2026-10-09 on the current models" below.
-
-| section | probe | RULE | CONTROL | verdict |
-|---|---|---|---|---|
-| Code Style (general) | `match` over an if/elif chain on four string values | 6/6 | 0/6 | load-bearing |
+> Archived 2026-10-15: superseded by the re-verified rows. Full text under the same heading in `maintainer-notes-archive.md`.
 
 ### Re-verified 2026-10-09 on the current models
 
@@ -908,7 +881,7 @@ Nothing is deletable.
 
 Treat any earlier n=3 or n=5 result in this file as provisional for the same reason.
 
-The harness lives in `skills/validate-prompt-rules/`: `ab.sh` (arms x models, parallel, contamination canary, failure detection), `tourney.sh` (aggregates to a Pareto front), `route.sh` (swaps the whole skills tree through `CLAUDE_CONFIG_DIR` to A/B skill descriptions).
+The harness lives in `skills/validate-prompt-rules/`: `legacy/ab.sh` (arms x models, parallel, contamination canary, failure detection), `legacy/tourney.sh` (aggregates to a Pareto front), `route.sh` (swaps the whole skills tree through `CLAUDE_CONFIG_DIR` to A/B skill descriptions).
 
 ### Three new rules, added 2026-08-25 — pilot only, not shipping-grade
 

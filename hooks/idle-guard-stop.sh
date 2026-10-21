@@ -3,6 +3,9 @@
 # turn-end time. This matters for long agentic turns whose API requests keep the
 # cache warm well past the user's original submit -- without it, idle would be
 # measured from the submit and false-block the next prompt.
+#
+# Also registered on PostCompact: idle compaction (2.1.299+, ~54 min idle, 200K+
+# tokens) rewrites the cache before the 1h TTL expires, so the next prompt is warm.
 
 input=$(cat)
 sid=$(printf '%s' "$input" | jq -r '.session_id // "default"' 2>/dev/null || echo default)

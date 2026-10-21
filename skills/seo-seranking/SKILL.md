@@ -51,4 +51,4 @@ adds every entry to the DataForSEO daily budget in USD.
 ## Cross-skill delegation
 
 - For traditional backlinks + content audit, fall back to `seo-backlinks` / `seo-content`.
-- For platform-specific deep-dives (ChatGPT only, Perplexity only), prefer the dedicated `seo-geo` skill which has Brand Mention Correlation guidance.
+- For platform-specific deep-dives (ChatGPT only, Perplexity only), read `~/.claude/skills/seo-geo/SKILL.md`, which has Brand Mention Correlation guidance.

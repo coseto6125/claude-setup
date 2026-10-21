@@ -210,9 +210,47 @@ describe('language drift', () => {
     expect(r).toContain('# Language')
   })
 
-  test('test_drift_chinese_response_clears_note', async ($, on) => {
+  test('test_drift_one_chinese_response_keeps_note', async ($, on) => {
     passAttachments(on)
     await respond($, [text(EN)])
+    await respond($, [text(ZH)])
+    expect(await styleReminder($)).toContain('# Language')
+  })
+
+  test('test_drift_ten_chinese_responses_clear_note', async ($, on) => {
+    passAttachments(on)
+    await respond($, [text(EN)])
+    for (let i = 0; i < 9; i++) await respond($, [text(ZH)])
+    expect(await styleReminder($)).toContain('# Language')
+    await respond($, [text(ZH)])
+    expect(await styleReminder($)).toBe(null)
+  })
+
+  test('test_drift_english_mid_hold_restarts_count', async ($, on) => {
+    passAttachments(on)
+    await respond($, [text(EN)])
+    for (let i = 0; i < 9; i++) await respond($, [text(ZH)])
+    await respond($, [text(EN)])
+    for (let i = 0; i < 9; i++) await respond($, [text(ZH)])
+    expect(await styleReminder($)).toContain('# Language')
+  })
+
+  test('test_drift_blocks_in_one_response_each_count', async ($, on) => {
+    passAttachments(on)
+    await respond($, [text(EN), ...Array.from({ length: 10 }, () => text(ZH))])
+    expect(await styleReminder($)).toBe(null)
+  })
+
+  test('test_drift_short_block_does_not_count_down', async ($, on) => {
+    passAttachments(on)
+    await respond($, [text(EN)])
+    for (let i = 0; i < 9; i++) await respond($, [text(ZH)])
+    await respond($, [text('Done.')])
+    expect(await styleReminder($)).toContain('# Language')
+  })
+
+  test('test_drift_chinese_without_english_adds_no_note', async ($, on) => {
+    passAttachments(on)
     await respond($, [text(ZH)])
     expect(await styleReminder($)).toBe(null)
   })

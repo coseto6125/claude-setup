@@ -21,7 +21,9 @@ with a `worker_done` message carrying its report, and you wait on that message.
 Delivery is then a fact the runtime states, not a shape you look for in a file.
 `ORCA` is the placeholder the `orca-cli` skill resolves: `orca-ide` on Linux, never bare
 `orca`, which outside an Orca terminal is the GNOME screen reader. Confirm Orca is up with
-`ORCA status --json`, then follow the `orchestration` skill: `task-create`, `dispatch --inject`, and
+`ORCA status --json`, then follow the `orchestration` skill. When that skill does not load, read
+the version-matched guide with `ORCA skills get orchestration`. Start the peer with
+`worker-start --spec "<task>" --worktree new-child --agent codex --json`, and wait with
 `check --wait --types worker_done,escalation,question --timeout-ms <n>`. A
 review-only `worker_done` reports findings and authorises no edits of yours.
 **Ack every delivery the wait returns, heartbeats included,** with `check --ack <delivery_id>` on the next wait. `check --wait` re-delivers the

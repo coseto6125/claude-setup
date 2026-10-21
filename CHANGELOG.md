@@ -3,6 +3,87 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.11 — 2026-10-21
+
+### Added
+
+- Skills `diagnose`, `external-writing`, `handoff`, `pr-body` and `retro`. `diagnose` ships
+  `scripts/loop.sh` and its test.
+- `hooks/guard-podman-prune.sh`: blocks `image prune -a`, `system prune -a` and `rmi -a` on
+  podman or docker when no `--filter` limits them.
+- `skills/simplify/review-mark.sh`: records the content a `/simplify` review covered, so the
+  push guard checks the pushed content, not only that a review ran.
+- `skills/validate-prompt-rules`:
+  - `archive.sh` copies a run's probes, labels, scorers and packed raw rows to
+    `~/.claude/prompt-runs/`. `preloaded.sh` and `agentic.sh` call it at the end of a run and
+    keep their own exit code when it fails.
+  - `snapshot.sh` freezes `CLAUDE.md`, `RTK.md` and `ECP.md` into `<WORK>/preload/` on the
+    first run, so every step of one run reads the same text.
+  - `isolation_gate.py` runs the isolation checks once per CLI version.
+  - A call budget: screen each probe with its control at n=5 first, and put the small edits
+    in one B arm.
+- `maintainer-notes-archive.md` holds the superseded measurements.
+- `skill_script/`: `pr-finalize.sh`, `sweep-merged-worktrees.sh` and `ecp-adoption.sh`, with
+  tests. The `pr-finalize` skill and the `limit-worktrees.sh` message already pointed at them.
+- Tests for the new hooks, `limit-worktrees.sh`, `lang-anchor.sh`, `patch-tool-persist.py`,
+  the token-saver mod, `audit.py`, `archive.sh` and `snapshot.sh`. The hook tests run the
+  sibling `review-mark.sh` and `skill_script/`, not the installed copies.
+
+### Changed
+
+- `CLAUDE.md`, `skills/writing-for-agents/SKILL.md` and `SKILL-MECHANICS.md`: a token pass.
+  Each cut was measured with `validate-prompt-rules` against a preloaded control, on the
+  models that read the file. A cut that dropped a hit rate past the threshold was not taken.
+  `maintainer-notes.md` and `measurements.md` record the rows.
+- `ECP.md` and `CLAUDE.md`: a breaking change asks for the user's judgement only when it
+  changes what an end user or an agent calls or reads, or when the options trade off
+  architecture.
+- `hooks/guard-push-simplify.sh` also blocks `rm -r` on a path built from a variable or a
+  glob, and follows the push through `cd`, `git -C` and a commit in the same command. A
+  review of this release closed these gaps, each with a test:
+  - `rm` after `xargs -0`, `sudo -u`, `sudo -n`, `doas -u`, `command -p`, `nice -n`,
+    `env -i`, `timeout -s KILL 5`, `timeout "$limit"`, `chrt "$p"`, `nohup`, `if`, `while`, `do`, `then`, `&`, inside `( )`, `{ }`,
+    `$( )` or backticks, as `\rm` or `/bin/rm`, with a backtick path, or under `find -exec`.
+    Each prefix word skips only the values of its own options. `git rm`, `aws s3 rm` and
+    `env printf … rm` stay allowed.
+  - A quoted or variable refspec source (`"feat"`, `$BR`, `HEAD@{u}`) now has to resolve to
+    a commit. Before, it read as "nothing to review" and the push went through.
+  - `git --git-dir X push`, `pushd`, `cd --`, a `cd` into a missing directory, a `#` comment
+    after the push, and push config that picks the refs (`push.default=matching`,
+    `remote.<name>.push` on the remote git would pick, `git -c push.*`).
+  - `tag <name>`, a redirect (`> out.log`, `2>err.log`) and a fully quoted refspec
+    (`"HEAD:refs/heads/x"`) are parsed, not read as refs. An escaped `\>` inside a ref is
+    part of the ref, not a redirect. `--repo=` yields to a positional
+    repository, as in git.
+  - `review-mark.sh` fails closed when a git command it reads from fails, and `check` costs
+    one `ls-tree` instead of one `rev-parse` per path (1500 paths: 5.5 s to 0.06 s). A file
+    replaced by a directory no longer reads as unreviewed after a review.
+- `hooks/guard-podman-prune.sh` also catches `image rm -a`, `/usr/bin/podman`,
+  `bash -c "…"`, `--all=true`, `rmi $(podman images -q)` and `xargs podman rmi`. A
+  `--filter` in a comment or another `&` segment no longer excuses the command. A listing
+  that filters (`docker rmi $(docker images -f dangling=true -q)`) stays allowed, but only
+  when that listing feeds the removal: a filtered `images` before a `;`, or after the
+  `rmi` in the pipeline, excuses nothing.
+- `skill_script/pr-finalize.sh` stops with a message on a dirty worktree when no terminal
+  can answer the prompt, before it unlinks `.venv`. `sweep-merged-worktrees.sh` leaves the
+  12-hour throttle open when `gh` fails, and scans `/proc` only once the throttle lets it
+  run. `ecp-adoption.sh` counts 0 for an empty window instead of every transcript.
+- `hooks/limit-worktrees.sh` matches `git -C <dir> worktree add`, counts the worktrees of
+  that repo (quoted, or after other git options), and ignores `worktree add` inside a
+  commit message that does not start with `git`.
+- `hooks/lang-anchor.sh` also runs after each tool result, and skips sub-agents. It spawns
+  one `jq` instead of three.
+- `skills/validate-prompt-rules/archive.sh` keeps `*.patch` files and skips the `base/` repo
+  snapshot. `snapshot.sh` removes its staging directory on failure.
+- `hooks/idle-guard-stop.sh` is also registered on `PostCompact`.
+- `skills/seo-technical` and `skills/seo-content`: long tables moved to `references/`.
+- `skills/rust-perf`, `skills/simplify`: measurement notes moved to `measurements.md`.
+- `settings.example.json` regenerated from the live settings.
+
+### Moved
+
+- `skills/validate-prompt-rules/ab.sh` and `tourney.sh` to `legacy/`.
+
 ## v0.1.10 — 2026-10-09
 
 ### Changed
