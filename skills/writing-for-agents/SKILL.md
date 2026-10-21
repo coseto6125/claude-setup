@@ -9,6 +9,12 @@ When the document is a skill, read [`SKILL-MECHANICS.md`](SKILL-MECHANICS.md) fo
 
 When the reader is a local model smaller than haiku, read [`SMALL-MODELS.md`](SMALL-MODELS.md). Several levers here invert for that reader.
 
+## Before you add a sentence
+
+1. Find the section that owns its meaning, and write there (**co-location**). Open a new section only for a meaning that no section owns.
+2. Read that section, its code blocks, and the scripts it names. When one of them already carries the meaning, change that one. Never add a sentence that restates a flag, a default or a command that a code block or a script already shows (**duplication**).
+3. Write the instruction alone, with no **rationale clause**.
+
 ## Context pointers
 
 A **context pointer** is a reference in the agent's context. It names material outside the context, and it states the condition to reach that material. A skill's description is a pointer. A line in `AGENTS.md` that names a doc is a pointer too.
@@ -18,8 +24,6 @@ The pointer's wording decides when the agent reaches the material, and how relia
 A pointer does two jobs. It states what the material is. It lists the **branches** that trigger the reach. A branch is a distinct case that the document handles, so different runs take different paths through it.
 
 Write each trigger as a **moment**: an event the agent can see without judgement ("Before you rename a symbol", "After two failed attempts at the same problem"). A trigger that names a **category** ("when you are stuck", "for code-structure questions") makes the agent classify its own situation first, and the rule dies at that step. This applies to the trigger of every rule, not only to pointers.
-
-> Measured 2026-10-09 on claude-haiku-5-5, 2 x n=15: "when you are stuck" scored 0 and 2. "After two failed attempts at the same problem" scored 10 and 13.
 
 Every word of an always-loaded pointer costs on every turn. Prune a pointer harder than a body:
 
@@ -35,7 +39,6 @@ Every document and every pointer spends one of two budgets:
 - **Cognitive load** is the cost on the human: which documents exist, and when to reach for each. The human is the index. This cost buys human agency. Spend it where human judgement matters, and remove it where human judgement does not.
 
 Material behind a pointer pays only the pointer's line in context. Material with no pointer rides entirely on cognitive load.
-
 ## Information hierarchy
 
 A document holds two content types. **Steps** are the ordered actions the agent performs. **Reference** is the definitions, rules and facts the agent consults on demand. The two mix freely: all steps (a recipe), all reference (a review's rules, this skill), or both.
@@ -82,20 +85,16 @@ A **leading word** is a compact concept that already lives in the model's pretra
 
 Repeat the word as a token, never as a sentence. It then accumulates a distributed definition.
 
-> Measured 2026-10-09 on claude-opus-5-5, n=10: a `subagent_type` named once, as a code token in its own sentence, was picked 10/10. A block that named it twice was picked 0/10.
-
-A leading word anchors twice. In the body it anchors _execution_: the agent reaches for the same behaviour every time the word appears. Inside flat reference the word focuses attention on a class of thing to look for. In a pointer it anchors _invocation_. Put the same word in your prompts, your docs and your codebase. The agent then links that shared language to the material, and reaches it more reliably.
+A leading word anchors twice. In the body it anchors _execution_: the agent reaches for the same behaviour every time the word appears. Inside flat reference the word focuses attention on a class of thing to look for. In a pointer it anchors _invocation_. Make the word a *ubiquitous language*: the same token in your prompts, your docs and your codebase.
 
 Hunt for passages that refactor into leading words. A triad spelled out at three sites is one such passage. A pointer that spends a sentence to gesture at one idea is another. Each one collapses into a single token:
 
 - "fast, deterministic, low-overhead" becomes _tight_ (a _tight_ loop).
 - "a loop you believe in" becomes _red_. A fuzzy gate becomes a binary observable state: the loop goes _red_ on the bug, or it does not.
 
-The result is fewer tokens and a sharper hook for the agent's thinking. Assume every document carries restatements that leading words retire, and go find them.
+Assume every document carries restatements that leading words retire, and go find them.
 
 **Class and instance.** A class sentence names the whole category ("name each input's atypical states"). An instance list names members ("empty, absent, a list where a scalar is expected"). Each one covers what the other misses. The instances make the agent recognise the named members. The class sentence carries the rule past the end of the list. Write the class sentence in the always-loaded file. Add the instance list where a haiku or sonnet reader loads the same text, such as an implementer's prompt. When each instance carries its own concrete prescription, such as an analogy per audience, keep the instances for every reader.
-
-> Measured 2026-10-09 on claude-haiku-5-5, n=6: a list-only rule never named the problem as a category, 0/6. With a class sentence added, it did 6/6.
 
 **Negation** is the failure mode beside this lever. A prohibition of a vague behaviour ("don't be verbose", "avoid a generic look") drags that behaviour into context and makes it more available. The negation is a weak modifier, and the strongly-activated concept overruns it. State the target behaviour instead ("write one-line comments").
 
@@ -106,24 +105,20 @@ A prohibition earns its place in two cases:
 
 Pair every prohibition with the positive target. Before you rewrite an existing red line as a positive, A/B both wordings with `validate-prompt-rules`. Keep the negative if the rewrite measurably leaks.
 
-> Measured 2026-10-09 on claude-haiku-5-5, n=15: "Never field-split a delimited format by hand (`awk -F,`, `split(',')`, `cut -d`)" scored 15/15. A positive parser rule with no named command scored 8/15. Anthropic's Opus 5.5 guidance reaches the same form for frontend design: a list of named defaults to avoid works, and a vague "avoid a generic look" does not.
-
 ## Sentence style
 
 Write every sentence to **ASD-STE100**, the aerospace standard for Simplified Technical English. `CLAUDE.md`'s **Writing discipline** holds the core rules: one term per concept, one idea per sentence, active voice, present tense, articles kept, normative sentences under 20 words, a long enumeration as a table. This section adds the rules that one leaves out:
 
 - Keep a noun cluster to three words.
 - Replace a phrasal verb with the single plain verb. Write "start the job", not "spin up the job".
-- Write two sentences instead of one semicolon. STE bans that one mark, and permits every other one.
+- Write two sentences instead of one semicolon.
 - Put a sequence of actions on separate lines, one action per line.
 
 **Ambiguity** is the failure mode here: the agent can read a sentence two ways, or the sentence runs so long that the action inside it is buried. Either way the agent guesses, and the run varies.
 
-Language splits two ways in one document. Write the document itself in English, and keep its rules in English. The agent's user-facing output is a separate choice, so name that output language as an instruction inside the document. `CLAUDE.md`'s Language rule holds the authority on which output goes to which language.
+Write the document in English. Name the agent's user-facing output language as an instruction inside it. `CLAUDE.md`'s Language rule is the authority.
 
-STE's rules split in two, and only one half is checkable here. The **structural** rules describe sentence shape, so you apply them from the description alone. The **lexical** rules come from ASD's approved dictionary, which this skill does not carry. Apply the lexical rules as a direction of travel. Hold one term per concept inside your own document, and claim no dictionary compliance. A defined leading word survives this rule, because STE admits technical names. Coin the word once, define it, then spend that one token on that one meaning everywhere.
-
-> Rule numbers and the semicolon detail come from ASD-STE100 Issue 9 (Jan 2025): 53 rules in 9 sections, over a dictionary of ~900 approved words. Public summary, including the structural/lexical split: https://github.com/danyuchn/asd-ste100-skill
+STE's rules split in two, and only one half is checkable here. The **structural** rules describe sentence shape, so you apply them from the description alone. The **lexical** rules come from ASD's approved dictionary, which this skill does not carry. Apply the lexical rules as a direction of travel. Hold one term per concept inside your own document, and claim no dictionary compliance.
 
 Apply STE to the sentences, not to the document's shape. The hierarchy, the disclosure and the completion-criterion levers still decide what goes where.
 
@@ -131,10 +126,11 @@ Apply STE to the sentences, not to the document's shape. The hierarchy, the disc
 
 - Keep each meaning in a **single source of truth**: one authoritative place, so a behaviour change is a one-place edit. **Duplication** puts the same meaning in more than one place. It costs maintenance and tokens, and it lifts a meaning's prominence past its real rank. A leading word repeats a token on purpose. Duplication repeats the meaning by accident. Its cross-artifact form is **derived-mirror drift**: two documents that express one policy disagree. Name the authority, then align the mirror or remove it. An always-loaded summary of a canonical policy is worth keeping aligned, and is not automatically a copy to delete.
 - The **environment** is a source of truth too: `package.json` scripts, config files, the directory layout, `--help` output. A document that restates the environment is a **cache**, a copy of a lookup. A cache earns its load only when the lookup is expensive. Cache what the agent cannot find by looking: the unwritten convention, the reason behind a choice, the gotcha no config confesses.
+- A **mechanical rule** names a fixed pattern: a banned command, an import shape, a file location. Back it with a check, such as a lint rule, a hook or a CI job. Before you build the check, run its pattern once over real past artifacts, and build it only when that run finds a true violation. Plant one violation and watch the check block it before you trust the check. Keep the prose line while its measurement shows it still moves behaviour.
 - Check every line for **relevance**: does the line still bear on what the document does? A line loses relevance in two ways. It never bore on the task, because it is exposition or a branch that belongs behind a pointer. Or it goes stale as the behaviour or the world it describes changes. Without a pruning discipline the default fate is **sediment**: stale layers settle because adding feels safe and removing feels risky.
-- A measurement goes stale with its model. Label every measurement with the model ID it ran on, never an alias such as `opus`: an alias moves to the next model at a release. After a model release, treat each measured status (load-bearing, no-op, saturated) as unverified until you run it again on the new model.
-- Hunt **no-ops** sentence by sentence. A no-op is an instruction the model already obeys by default, so it pays load and says nothing. The test is one question: does this line change behaviour against the default? The test is model-relative. Two people who disagree about a no-op disagree about the default, and they settle it by running the document with `validate-prompt-rules`. A null result reads _no effect detected for this model and probe set_. That is grounds to nominate the line for deletion, and never proof the line is inert. When a sentence fails the test, delete the whole sentence rather than trim words from it. A leading word too weak to beat the default, such as _be thorough_, is a no-op too. Delete it, and put the demand in the completion criterion instead ("every modified model accounted for").
-- A **rationale clause** is a no-op at inference: the rule moves behaviour, and the "why" appended to it does not. Keep a why only where a human maintainer would otherwise delete the rule, and put it in a `>` blockquote that cites the measurement. One sentence shape looks like rationale and is instruction: a sentence that closes an escape the sentence before it opened ("None of them lets the report name the problem and stop there").
+- A measurement goes stale with its model. Label every measurement with the model ID it ran on, never an alias such as `opus`. After a model release, treat each measured status (load-bearing, no-op, saturated) as unverified until you run it again on the new model.
+- Hunt **no-ops** sentence by sentence. A no-op is an instruction the model already obeys by default, so it pays load and says nothing. The test is one question: does this line change behaviour against the default? The test is model-relative. Settle a disagreement by running the document with `validate-prompt-rules`. A null result reads _no effect detected for this model and probe set_. That is grounds to nominate the line for deletion, and never proof the line is inert. When a sentence fails the test, delete the whole sentence rather than trim words from it. A leading word too weak to beat the default, such as _be thorough_, is a no-op too. Delete it, and put the demand in the completion criterion instead ("every modified model accounted for").
+- A **rationale clause** is a no-op at inference: the rule moves behaviour, and the "why" appended to it does not. Keep a why only where a human maintainer would otherwise delete the rule, and record it with its measurement in the `measurements.md` next to the document (`maintainer-notes.md` for `CLAUDE.md`), not in the body. One sentence shape looks like rationale and is instruction: a sentence that closes an escape the sentence before it opened ("None of them lets the report name the problem and stop there").
 
 ## Reviewing a document
 
@@ -152,7 +148,7 @@ For a full review or a material rewrite, account for every one of the seven, and
 
 ## Finishing a change
 
-Before you change a sentence, look for its measurement: a `>` blockquote beside it, `maintainer-notes.md`, or a `measurements.md` next to the document. A measured wording has no slack. A shorter paraphrase of it is a behaviour change, not an edit.
+Before you change a sentence, look for its measurement in the `measurements.md` next to the document, or in `maintainer-notes.md` for `CLAUDE.md`. A measured wording has no slack. A shorter paraphrase of it is a behaviour change, not an edit.
 
 A change is done when all three hold:
 
@@ -160,6 +156,6 @@ A change is done when all three hold:
 - `audit.py spans <old copy> <new file>` lists no code span you meant to keep. Copy the file before the first edit.
 - Every changed sentence with a measured wording is measured again with `validate-prompt-rules`, or your report names it as unmeasured.
 
-`audit.py --all` checks every skill against the measurable rules. `audit.py refs` reports cross-references that point at a removed or user-invoked skill. **Call them, do not read them.** The findings they print are the whole contract, and the source is large.
+`audit.py --all` checks every skill against the measurable rules. `audit.py refs` reports cross-references that point at a removed or user-invoked skill. **Call them, do not read them.** The findings they print are the whole contract.
 
 Rows and numbers behind this file: `measurements.md`.

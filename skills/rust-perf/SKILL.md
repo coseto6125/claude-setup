@@ -14,7 +14,6 @@ When you delegate Rust work to a sub-agent, paste the relevant lines into its pr
 A proposed fix is a hypothesis. That includes a follow-up's `next-action`, a commit message that argues from ratios, and your own first guess. Profile the stage costs first, then pick the fix.
 
 1. **Compute the ceiling.** Count the operations the change removes and multiply by their unit cost. When the ceiling is inside the noise, drop the change without building it.
-   > Measured: a skip justified by "81% of nodes have no calls" had a ceiling of 84M cheap compares, about 20 ms of 6.85 s (0.3%). The A/B read noise.
 2. **Find the real stage.** Instrument each phase with a temporary `eprintln!("[t] phase {:?}", t.elapsed())` patch. Remove the patch before the commit. This works where `perf`, `strace` and `valgrind` are absent (WSL2 has no PMU).
 3. **Split aggregated telemetry.** Read a median per repo and per mode. One busy repo can own the whole tail of a mixed median.
 4. **Subtract the fixed cost.** Process start, `mmap` of the data file and subprocess spawns count against every run. Measure them once and report the query cost without them.
@@ -30,8 +29,6 @@ A proposed fix is a hypothesis. That includes a follow-up's `next-action`, a com
 ### Layout noise needs a third binary
 
 A change to unrelated code moves the binary layout. The layout alone moves wall time by about ±3%. A two-binary A/B therefore cannot see a regression under 5%.
-
-> Measured: one change read +5%, +1% and +3.5% across three rounds. A binary whose hot path was byte-identical to the baseline ran 4 ms faster than the baseline.
 
 Use three binaries and one control workload:
 
@@ -54,8 +51,6 @@ Rebuild `variant` after every edit to the change. A stale `variant` contaminates
 Parallelise a stage only when the profile shows that the stage is more than 30% of wall time.
 
 `rayon` on allocation-heavy work keeps each thread's heap resident, because the allocator (mimalloc) retains per-thread memory. Check RSS on every parallel change, not only wall time.
-
-> Measured: parallel parse on 16 threads gave 3.1 s to 2.9 s wall (-7%) and 138 MB to 350 MB RSS (600 MB without chunking). The change was dropped.
 
 A parallel map with a serial merge must produce byte-identical output to the serial path. Write an equivalence test that compares both paths before you measure speed.
 

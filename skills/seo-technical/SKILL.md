@@ -36,62 +36,7 @@ metadata:
   AMP Viewer, or signed exchange maintenance. Audit AMP against the same content,
   action-parity, and quality requirements as other pages.
 
-#### AI Crawler Management
-
-As of 2025-2026, AI companies actively crawl the web to train models and power AI search. Managing these crawlers via robots.txt is a critical technical SEO consideration.
-
-**Known AI crawlers:**
-
-| Crawler | Company | robots.txt token | Purpose |
-|---------|---------|-----------------|---------|
-| GPTBot | OpenAI | `GPTBot` | Model training (NOT ChatGPT Search) |
-| OAI-SearchBot | OpenAI | `OAI-SearchBot` | ChatGPT Search citability |
-| ChatGPT-User | OpenAI | `ChatGPT-User` | Real-time browsing (user-triggered) |
-| ClaudeBot | Anthropic | `ClaudeBot` | Model training (NOT Claude search citability) |
-| Claude-SearchBot | Anthropic | `Claude-SearchBot` | Claude search-result citability |
-| PerplexityBot | Perplexity | `PerplexityBot` | Search index + training |
-| Bytespider | ByteDance | `Bytespider` | Model training |
-| Google-Extended | Google | `Google-Extended` | Gemini training (NOT search) |
-| Applebot-Extended | Apple | `Applebot-Extended` | Apple Intelligence training opt-out (NOT Siri/Spotlight/Safari) |
-| CCBot | Common Crawl | `CCBot` | Open dataset |
-
-**Key distinctions:**
-- Blocking `Google-Extended` prevents Gemini training use but does NOT affect Google Search indexing or AI Overviews (those use `Googlebot`)
-- Blocking `GPTBot` prevents OpenAI training but does NOT affect ChatGPT Search
-  citability, which is governed by `OAI-SearchBot`, nor user-triggered browsing
-  (`ChatGPT-User`). Check `OAI-SearchBot` for any citability claim; `GPTBot`
-  status is evidence about training use only
-- Blocking `ClaudeBot` prevents Anthropic model training but does NOT affect
-  citability in Claude's own search features, which is governed by
-  `Claude-SearchBot` (per Anthropic's crawler support article). Check
-  `Claude-SearchBot` for any Claude-search citability claim; `ClaudeBot` status
-  is evidence about training use only
-- Blocking `Applebot-Extended` opts out of Apple Intelligence / generative-model
-  training use but does NOT affect discoverability via Siri, Spotlight, or Safari,
-  which follows `Applebot` (per Apple's support article); `Applebot-Extended` does
-  not itself crawl
-- ~3-5% of websites now use AI-specific robots.txt rules
-
-**Example, selective AI crawler blocking:**
-```
-# Allow search indexing, block AI training crawlers
-User-agent: GPTBot
-Disallow: /
-
-User-agent: Google-Extended
-Disallow: /
-
-User-agent: Bytespider
-Disallow: /
-
-# Allow all other crawlers (including Googlebot for search)
-User-agent: *
-Allow: /
-```
-
-**Recommendation:** Consider your AI visibility strategy before blocking. Being cited by AI systems drives brand awareness and referral traffic. Cross-reference the `seo-geo` skill for the full AI crawler/fetcher taxonomy.
-
-> **User-triggered fetchers ignore robots.txt by design.** Google now documents **Google-Agent** (Project Mariner, agentic browsing) plus **Google-NotebookLM** and **Google Messages** as *user-triggered* fetchers that **cannot be blocked via robots.txt**. Use server-side access controls instead. By contrast, `Google-Extended` and `Google-CloudVertexBot` obey robots.txt. Emerging: **Web Bot Auth** (RFC 9421) lets bots authenticate cryptographically via a `Signature-Agent` header + key directory at `agent.bot.goog` (used by Google-Agent); reverse-DNS verification remains the fallback.
+Before you audit AI crawler rules in robots.txt, read `references/ai-crawlers.md`.
 
 ### 2. Indexability
 - Canonical tags: self-referencing, no conflicts with noindex
@@ -157,26 +102,7 @@ Allow: /
   complexity and resource cost.
   See https://developers.google.com/search/docs/crawling-indexing/javascript/dynamic-rendering
 
-**Recommended rendering strategy:**
-
-| Strategy | Use Case |
-|----------|----------|
-| **SSR** | Public SEO content, dynamic pages |
-| **SSG** | Static content, blogs, docs |
-| **CSR** | Authenticated / behind-login content only |
-
-**Preferred frameworks:** Next.js, Astro, React Router v7 (Remix), SvelteKit
-
-#### JavaScript SEO: Canonical & Indexing Guidance (December 2025)
-
-Google updated its JavaScript SEO documentation in December 2025 with critical clarifications:
-
-1. **Canonical conflicts:** If a canonical tag in raw HTML differs from one injected by JavaScript, Google may use EITHER one. Ensure canonical tags are identical between server-rendered HTML and JS-rendered output.
-2. **noindex with JavaScript:** If raw HTML contains `<meta name="robots" content="noindex">` but JavaScript removes it, Google MAY still honor the noindex from raw HTML. Serve correct robots directives in the initial HTML response.
-3. **Non-200 status codes:** Google does NOT render JavaScript on pages returning non-200 HTTP status codes. Any content or meta tags injected via JS on error pages will be invisible to Googlebot.
-4. **Structured data in JavaScript:** Product, Article, and other structured data injected via JS may face delayed processing. For time-sensitive structured data (especially e-commerce Product markup), include it in the initial server-rendered HTML.
-
-**Best practice:** Serve critical SEO elements (canonical, meta robots, structured data, title, meta description) in the initial server-rendered HTML rather than relying on JavaScript injection.
+Before you audit a JavaScript-rendered site, read `references/javascript-rendering.md`.
 
 ### 9. IndexNow Protocol
 - Check if site supports IndexNow for Bing, Yandex, Naver
@@ -253,29 +179,7 @@ If DataForSEO MCP tools are available, use `on_page_instant_pages` for real page
 
 If Google API credentials are configured, use `"$HOME/.claude/skills/seo/scripts/claude-seo" run pagespeed_check.py <url> --json` for real PSI + CrUX field data (replaces lab-only CWV estimates), `"$HOME/.claude/skills/seo/scripts/claude-seo" run crux_history.py <url> --json` for 25-week CWV trends, and `"$HOME/.claude/skills/seo/scripts/claude-seo" run gsc_inspect.py <url> --json` for real indexation status per URL.
 
-## Auditing a Local or Private Host
-
-`url_safety` refuses loopback and private addresses by default, so `http://localhost:3000` and a staging host on Tailscale fail with "Blocked hostname" or "Blocked IP literal". That default is deliberate: these scripts follow URLs found on the pages they crawl.
-
-To audit a pre-deployment host, the operator names it in `CLAUDE_SEO_LOCAL_TARGETS`, a comma-separated list of `host` or `host:port` entries:
-
-```bash
-CLAUDE_SEO_LOCAL_TARGETS="localhost:3000,127.0.0.1:8080,100.101.102.103" \
-  "$HOME/.claude/skills/seo/scripts/claude-seo" run fetch_page.py http://localhost:3000/
-```
-
-What it does and does not cover:
-
-| Behaviour | Allowlisted host |
-|-----------|------------------|
-| First, top-level URL over raw HTTP | Allowed |
-| Redirect target reached from that URL | Refused |
-| Subresource fetched by a rendered page | Refused |
-| Playwright renders (`--render`, screenshots) | Refused; use the raw-HTTP path |
-| A host not named in the variable | Refused |
-| Cloud metadata endpoints, even when listed | Refused |
-
-`host:port` matches that port only; a bare `host` matches any port. With the variable unset the policy is unchanged. Never suggest setting it for a host the user does not control.
+Before you audit a localhost, staging or other private host, read `references/local-hosts.md`.
 
 ## Error Handling
 

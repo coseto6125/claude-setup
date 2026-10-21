@@ -50,3 +50,113 @@ Re-run 2026-10-09 on the current models, CLI 2.1.295 (raw rows: session c7da8904
 ## 2026-10-09 — recount command (unmeasured)
 
 The Classifier section now asks for a read-only recount command. Origin: the main session re-ran a delegate's `grade.py` to verify its counts. That scorer calls a judge model and writes `graded.jsonl` in place. The judge's credentials were already removed, so every row came back ERR and overwrote the delegate's per-row verdicts. The per-model summaries survived in `grade.out`. The wording is a report-format rule, so it was shipped unmeasured.
+
+## 2026-10-17 — call budget, saturation stop, `--tools ""`
+
+claude-sonnet-5-5, n=5, skill body injected as the Skill tool delivers it, old file (A) against new file (B), single-line asks. "Call count before trial 1": A 0/5 (answered "predeclare the target"), B 5/5 (computed arms × probes × models × n). "Control saturated twice, next action": A 0/5 (all redesign and rerun), B 5/5 (report saturated and stop); hand-graded, because the regex scored a negated "don't rewrite" as a miss. The exploratory-probe and cheapest-reader sentences are unmeasured. `--tools ""` on a no-tools probe: one call each, input about 20k to 2.4k tokens, cost $0.0090 to $0.0045. Rows: session c6a25fc8 scratchpad `minab.*/` (labels-final.tsv, recount.py).
+
+## Moved from SKILL.md, 2026-10-17
+Each entry sat beside the rule it names. The rule text stays in SKILL.md.
+
+### Isolation
+
+Rule: Create every probe cwd with `mktemp -d /tmp/<name>.XXXXXX`, never under `$HOME`. Keep your outputs wherever you like.
+
+Measured 2026-10-09 on claude-haiku-5-5, one run, n=10 per side: one preloaded arm scored 6/10 with its cwd under `/tmp` and 0/10 with its cwd in a scratchpad under `$HOME`. The scratchpad cwd loaded the live `CLAUDE.md`.
+
+### Isolation
+
+Rule: Create every probe cwd with `mktemp -d /tmp/<name>.XXXXXX`, never under `$HOME`. Keep your outputs wherever you like.
+
+Verified 2026-10-09, CLI 2.1.295, on claude-haiku-5-5, claude-sonnet-5-5 and claude-opus-5-5: the sentinel came back with the file, and NONE came back without it. With `--disable-slash-commands`, the skill list returned NONE. Without it, the skill list returned 25 names on CLI 2.1.280.
+
+### Isolation
+
+Rule: ```
+
+Measured: this wording caught a known-contaminated config 2 of 3 runs. A gate that reads a Yes/No token passed a contaminated control 3 times in 4.
+
+### The method
+
+Rule: - **Probe the case the rule might break**, not only the case it targets.
+
+Measured: on a scenario whose wording implied its own verdict, control and rule arms scored alike 5/5. On a generative one, the control went 0/5. A multi-slot ask turned a 1/5 into a 5/5.
+
+### The method
+
+Rule: **Probe on the model that reads the artifact in deployment.** The main session reads `CLAUDE.md` and skills. A sub-agent reads its brief, and `CLAUDE.md` when i…
+
+Measured 2026-10-06 and 2026-10-09: the `ECP.md` explore-trigger paragraph was inert on claude-opus-5-5 (5/5 in every arm) and load-bearing on claude-haiku-5-5 (1/15 without it, 14/15 with it).
+
+### Three questions, three controls
+
+Rule: When the preloaded files already state the answer, every arm copies it, and the probe measures the preload. To test a general lever of a document, pick a scenar…
+
+Measured 2026-09-23 on claude-opus-5-5: two probes on CSV splitting and on codex escalation scored 5/5 in all three arms, because the preloaded `CLAUDE.md` holds both rules word for word.
+
+### When the behaviour is "go and look"
+
+Rule: A scenario that pastes the code puts the plant in view, and any rule about *finding* the plant saturates by construction. Probe that class agentically. `agentic…
+
+Measured 2026-09-11: the historical miss the rule targeted was fixed 3/3 by the preloaded control in a fresh session. The rule arm matched it and cost 30% more.
+
+### The classifier
+
+Rule: Before you report a count, save each row's hit or miss to a file beside the raw rows. Report a recount command with the count: it reads that file and prints the…
+
+Measured: a static `Http::timeout(` versus `->timeout(`, a test class named `…BatchTest`, and a copied `(bool)` cast each turned a real 5/5 into a reported 1/5. On 2026-09-23, "change the sentence back" missed a `revert|restore` pattern, and a negated "do not judge whether it is risky" tripped a `risky` miss pattern.
+
+### How many trials
+
+Rule: Before trial 1, write the call count: arms × probes × models × n. Report the calls spent with the result.
+
+Measured 2026-10-17 on claude-sonnet-5-5 and claude-opus-5-5: a first round saturated all 20 cells and spent 200 of the run's 362 calls.
+
+### How many trials
+
+Rule: - **Compare arms inside one run.** Never compare a cell with a cell from another run.
+
+Measured 2026-10-09 on claude-haiku-5-5: five runs of one arm scored 8 to 11 of 15, inside sampling noise. A cwd change between two runs moved the same arm from 6/10 to 0/10.
+
+## 2026-10-21 — classifier native defaults, token-cut test, script contracts (unmeasured)
+
+- The classifier: "Build the plausible hit the way the reader would…". Origin: an agentic pptx-cleaning probe (session 207afb98, scratchpad `agentic-gen.ItvRLG/score.py`). The hand-built hit renamed shapes to "物件 N". Every real run wrote PowerPoint's native "Table 3", and a `(Text|Shape|Image|Table) \d+` pattern scored it as a leftover trace in 10/10 runs. Reading two rows per cell caught it before any arm comparison.
+- Token-cut test: added on the user's goal of total tokens (document plus run). Unmeasured.
+- `preloaded.sh` header claimed probe JSONs need `hit_regex` and `scope`, and named a missing `score26.py`. The runner reads only `scenario` and `ask`. `agentic.sh` header omitted that `repo_path` keeps the work tree. Both cost a read of the script source; both headers now state it.
+
+### 2026-10-21 — measured: classifier line, token-cut test, script headers
+
+Text, preloaded, claude-opus-5-5, n=5, blind labels (scratchpad `vpr-ab.KvtDcy/`, `wfa-ab2.O9zHmx/`):
+- Classifier "native default names" line: plausible hit made of native defaults, control 0/5, old 0/5, new 5/5.
+- Token-cut test: "next action measures the run itself" saturated (5/5 all arms). Not predeclared: new named `total_cost_usd`/`num_turns` 5/5, old 0/5.
+- writing-for-agents detour paragraph: KEEP a header line that says where outputs stay, saturated 5/5 all arms.
+
+Agentic, outer claude-opus-5-5 with the skill body in the task, inner claude-haiku-5-5 6-call A/B, n=10 per arm, mechanical trace scoring (`agentic-gen.ItvRLG/detour_score.py`, scratchpad `detour-old.WlvXtp/`, `detour-new.eVjtzf/`, $5.65):
+- All 20 runs finished the task. Median cost $0.28 old vs $0.27 new, turns 7 vs 6.
+- Runs that read script source: old 4/10, new 3/10. Unsettled.
+- The header fix removed its own detour: `grep scope preloaded.sh` 3/10 old, 0/10 new. New runs still read the header with `head -40` / `sed`: the skill says "do not read" and names no way to see usage.
+
+### 2026-10-21 — v2 vs v3 (the `--help` line, the I/O-free script table, `legacy/`)
+
+Same agentic task and scorer, n=10 each, run together (scratchpad `detour-v2.rkLBAn/`, `detour-v3.LNWob1/`, $5.69):
+- Success 10/10 both. Runs that read script source: 1/10 both. Runs that called `--help`: v2 9/10 (no instruction), v3 10/10.
+- Median cost $0.25 v2 vs $0.32 v3, turns 5 vs 7.5: the predeclared "not higher" check fails at face value.
+- The extra cost is hand-run isolation proofs (the four checks in Isolation, run with `claude -p` outside the script): runs that did them were old 3/10, new 3/10, v2 2/10, v3 5/10. Unsettled, and the Isolation text is the same in all four cells. A run that does the proof costs 7 to 10 calls; one that skips it costs 4.
+- Open: `preloaded.sh` and `agentic.sh` print no isolation gate, so the proof is left to each agent and runs split between doing it and skipping it.
+
+### 2026-10-21 — `isolation_gate.py` (v3 rerun vs v4)
+
+Same agentic task, n=10 each, run together (scratchpad `detour-v3b.X87dGB/`, `detour-v4.sQAuvv/`, $5.40). v4 = the gate in both scripts plus the Isolation sentence that hands the proof to the scripts.
+- Success 10/10 both. Runs with a hand-run isolation proof: v3b 3/10, v4 0/10. All 10 v4 runs printed the gate line.
+- Before the gate, the same task across five cells (old, new, v2, v3, v3b): 16/50 hand-run proofs.
+- Cost: median $0.25 vs $0.24, sum $2.94 vs $2.46. Tool calls per run: v3b 4 to 7, v4 4 to 5. Script-source reads 1/10 vs 0/10.
+- The v3 cell's $0.32 median (previous section) did not repeat: v3b, the same files, scored $0.25. Read it as run-to-run noise.
+- Gate cost: uncached 4.1 s, 3 claude-haiku-5-5 calls; cached 0.05 s. `test_isolation_gate.py`: 4 live tests, the three plants (no `--disable-slash-commands`, `--setting-sources project`, cwd under `$HOME`) each fail the named check.
+
+## 2026-10-21 — call budget of one token pass
+
+A token pass over `~/.claude/CLAUDE.md` and `writing-for-agents` spent about 2,200 `claude -p` calls on about 25 edits, for about 330 tokens saved per load. Two runs with JSON usage cost US$11.58 for 340 calls and US$9.64 for 308 calls, about US$0.03 per call at API prices. Seven probes saturated on the control and still had arms planned; screening first would have skipped their arms. One rationale cut ("so the user can override") had a control at 0/5 and changed behaviour (claude-sonnet-5-5 9/10 to 0/10), so the screen must run on every edit, not only on a class of edits. Parallelism: 340 calls at 8 workers, 0 failures; about 2,400 calls that day, 5 failures, all near a credit cut-off. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-{r1,ae,fi,wfa,mech}/`, raw rows in each `raw.tar.gz`.
+
+## 2026-10-21 — blind hand labels: not added
+
+Probe 05b of the `SKILL-MECHANICS.md` run was first hand-labelled with the arm visible in the file names, then relabelled blind (shuffled IDs, key opened after labelling). The blind pass changed 0 of 60 A/B labels. The same day's real labelling risk was a metric picked after reading rows (the "so the user can override" offer), which blinding does not catch; "label a probe you add after you read the data as exploratory" covers it. No `blind.py` and no blind-label rule were added. Revisit when a hand-labelled cell sits within 1 trial of a ship threshold. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-mech/` (`blind/`, `blind-d/`).

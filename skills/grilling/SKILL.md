@@ -22,7 +22,7 @@ decision hinges on, then stop. Every choice goes in the list below, never inline
 ➡️ **選 [b]**：<why this one, and what the other choices cost>
 ```
 
-Keep the list-item dash before each `**[a]**:` label: a bare `[a]:` at column 0 parses as a link-reference definition and disappears. Read a bare letter in the user's reply (`Q18 B`) as that question's choice. A choice that needs more than one line gets a second indented line under its bullet. Separate consecutive questions with a blank line and a `---` rule.
+Keep the list-item dash before each `**[a]**:` label: a bare `[a]:` at column 0 parses as a link-reference definition and disappears. Read a bare letter in the user's reply (`Q18 B`) as that question's choice. Read a bare `好`, `ok` or `yes` as the ➡️ choice: for the named question, or for every question in the round when the reply names none. A choice that needs more than one line gets a second indented line under its bullet. Separate consecutive questions with a blank line and a `---` rule.
 
 Each round the user answers reshapes the tree: settled decisions push the frontier outward and unblock questions that depended on them. Recompute the frontier and ask the next round. A question whose answer depends on another question still open in this round belongs to a _later_ round, not this one.
 

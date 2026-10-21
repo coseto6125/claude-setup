@@ -2,34 +2,35 @@
 
 > This file is loaded by every model that runs here — including Haiku sub-agents dispatched by workflows. **Write for the weakest reader**, except where a section scopes itself in its own first line. Before you reword or delete any rule in this file, read that rule's section of `maintainer-notes.md`, found through the Index at its top: it records which wordings are measured and which rules were deliberately left out.
 
-**Language:** write your thinking, commit/PR bodies and sub-agent prompts in English. Every text block the user sees is user-facing prose, including a one-line note between tool calls. The `colleague-zh` output style sets its language, voice and word choice, and only the main session loads it.
+**Language:** write your thinking, commit/PR bodies and briefs (sub-agent prompts) in English. Every text block the user sees is user-facing prose, including a one-line note between tool calls. The `colleague-zh` output style sets its language, voice and word choice, and only the main session loads it.
 
-**Writing discipline:** write **ASD-STE100** (Simplified Technical English), in whatever language the document already uses. Give one concept one term for the whole document, with no synonym rotation. Put one idea in one sentence, in the active voice and the present tense, and keep the articles in. Normative text (steps, clauses, criteria, specs, rules) holds sentences under 20 words, and a long enumeration becomes a table. Explanatory text keeps its connectives so the reader sees why. Domain terms and defined leading words are STE technical names, so keep them as they are.
+**Writing discipline:** write **ASD-STE100** (Simplified Technical English), in whatever language the document already uses. One term per concept, document-wide. Put one idea in one sentence, in the active voice and the present tense, and keep the articles in. Normative text (steps, clauses, criteria, specs, rules) holds sentences under 20 words, and a long enumeration becomes a table. Explanatory text keeps its connectives so the reader sees why. Domain terms and defined leading words are STE technical names, so keep them as they are.
 
 ## Core Philosophy
 
-**Maximum performance at minimum runtime cost — code must remain human-readable.** (What a *session* should spend is a separate question; see Dispatch.)
+**Maximum performance at minimum runtime cost — code must remain human-readable.** (Session spend: see Dispatch.)
 **Consolidate, don't accumulate:** integrate into existing files/modules first; create new only when no home exists.
 
 - Always use the highest-level stdlib API available — don't build from lower-level primitives
 - Choose the lowest complexity — analyze the theoretical minimum first
 - In-place over copying when no side effects
-- Prove perf claims with profiling (`cProfile`): profile → top-5 hotspots → optimize → re-profile → delegate bench verification to a subagent. This is a standing exception to Dispatch.
-- **Delete before you optimize.** When a change keeps the same functionality at equal or better performance: delete the step, simplify what remains, make it faster, then replace a hardcoded value with a derived one. Confirm a test exercises the path before you delete it; no coverage is a sign you don't know it's dead, not permission to skip the check.
+- Prove perf claims with profiling (`cProfile`): profile → top-5 hotspots → optimize → re-profile → delegate bench verification to a subagent. Paste this check into its brief: "Removing a piece that takes 10% of the run makes the run at most about 11% faster. A result past the bound measured a cache, a no-op or a bug." This is a standing exception to Dispatch.
+- **Delete before you optimize.** When a change keeps the same functionality at equal or better performance: delete the step, simplify what remains, make it faster, then replace a hardcoded value with a derived one. Confirm a test exercises the path before you delete it. No coverage means unknown, not dead.
 
 ## Proactive Engineering
 
 - Before modifying logic, think top-down: architecture fit, existing similar functionality, correct placement
-- A breaking change to a public interface or an existing caller needs the user's explicit sign-off before you make it — a low count from `ecp impact` lowers the review bar, not the requirement to ask.
+- Before the first edit on work that leaves this machine, list every place a reader could inspect, and the check for each.
+- Before a breaking change, apply the breaking-change rule in `ECP.md`. An upgrade that runs by itself, such as a format version that triggers an automatic rebuild, usually needs no question. Verify that it leaves no old data behind, and report the rebuild and that check.
 - Investigate with tools before you ask. For a decision you can resolve, take the superset option and state choice + why in one line. Reserve an AskUserQuestion menu for a real fork: the answer changes the next action and no code, memory or default settles it
 - After fixing a bug, scan the same file/module for similar issues
-- When debugging: repeating a tweak on the same spot means the strategy is wrong, so switch it
+- When debugging: a second tweak on the same spot means switch strategy
 - Surface multiple interpretations instead of picking silently; if a simpler approach than asked exists, push back before implementing
 - Prefer structured parsing over regex for ambiguous boundaries. Never field-split a delimited format by hand (`awk -F,`, `split(',')`, `cut -d`) — use its reader, even when the sample rows look clean
 
 ## Surgical Changes
 
-- Keep scope to the user's request. For an off-task issue you spot (including existing dead code, orphan, or bug), end on either fixing it or asking: for a **Minor** one (style, dead code, micro-perf, naming), ask "fix now? y/n". The only exit is the user explicitly saying to leave it.
+- Keep scope to the user's request. For an off-task issue you spot (including existing dead code, orphan, or bug), end on either fixing it or asking. A bug with a small, local fix: fix it and report the fix. A bug whose fix is large or changes behaviour that others rely on: ask, and include the fix you propose. For a **Minor** one (style, dead code, micro-perf, naming), ask "fix now? y/n". The only exit is the user explicitly saying to leave it.
 - If 200 lines could be 50, rewrite to 50. No speculative flexibility; no error handling for impossible scenarios.
 
 ## Test Discipline
@@ -46,18 +47,18 @@
 ## Commit & PR Authorship
 
 - **Never** add a `Co-Authored-By: Claude …` trailer to commit messages, nor a `🤖 Generated with Claude Code` footer to PR bodies, comments, or issues — whether direct or via sub-agent.
-- When delegating a task that ends in a commit or `gh pr create`, include this no-attribution rule verbatim in the sub-agent prompt.
+- When delegating a task that ends in a commit or `gh pr create`, include this no-attribution rule verbatim in the brief.
 
 ## Important Reminders
 
 - Before pushing to remote, run `/simplify`.
-- **Never run `rm -rf` / `rm -r` on a path built from a variable or a glob.** Delete only named files by literal absolute path, and only files you created. When a step needs an empty directory, create a new one: `mktemp -d "<scratch dir>/name.XXXXXX"`, or move the old one aside with `mv` first. `mkdir -p` into a directory that may already exist mixes in its old files. When you delegate shell work to an agent that does not load this file, such as codex, paste this rule verbatim into its prompt.
+- **Never run `rm -rf` / `rm -r` on a path built from a variable or a glob.** Delete only named files by literal absolute path, and only files you created. When a step needs an empty directory, create a new one: `mktemp -d "<scratch dir>/name.XXXXXX"`, or move the old one aside with `mv` first. `mkdir -p` into a directory that may already exist mixes in its old files. When you delegate shell work to an agent that does not load this file, such as codex, paste this rule verbatim into its brief.
 - **Never delete `.claude/worktrees/` directories** — they belong to other running Claude instances. If lint fails on their imports, fix the lint config to exclude `.claude/`; do not delete the worktree.
-- **Before you write a loop that waits for another process,** start that process as a background call and act on its completion notification. In a sub-agent, run it in the foreground instead, in steps that each end within the 10-minute Bash timeout: a completion notification never wakes an idle sub-agent. Never poll with `pgrep -f '<its command>'`: the pattern matches the loop's own command line, so the loop never ends. When you delegate shell work, paste this rule into the sub-agent prompt.
+- **Before you write a loop that waits for another process,** start that process as a background call and act on its completion notification. In a sub-agent, run it in the foreground instead, in steps that each end within the 10-minute Bash timeout: a completion notification never wakes an idle sub-agent. Never poll with `pgrep -f '<its command>'`: the pattern matches the loop's own command line, so the loop never ends. End a turn only when the work is done or blocked, never to report progress. When you delegate shell work, paste this rule into the brief.
 
 ## Prompt Writing Guide
 
-Governs every artifact a model reads: skill `description` + `SKILL.md`, sub-agent prompts, tool descriptions, system prompts. This block is the authority for a line you write in passing. **Invoke `writing-for-agents` before you write, edit or review one of those artifacts as the task itself.** It carries the levers this block does not: the information hierarchy, progressive disclosure, completion criteria, the seven review modes, and `audit.py`.
+Governs every artifact a model reads: skill `description` + `SKILL.md`, briefs, tool descriptions, system prompts. This block is the authority for a line you write in passing. **Invoke `writing-for-agents` before you write, edit or review one of those artifacts as the task itself.** It carries the levers this block does not: the information hierarchy, progressive disclosure, completion criteria, the seven review modes, and `audit.py`.
 
 - Constrain at the decision level: goals and boundaries, not the implementation.
 - Phrase each instruction as the action to take ("return an empty list for empty input", not "don't crash"). Keep the explicit negative for a red line, or for a rule that fights a strong model prior.
@@ -71,12 +72,12 @@ Governs every artifact a model reads: skill `description` + `SKILL.md`, sub-agen
 1. **String literals / config keys / fs layout / vendored deps (`node_modules/`, `.venv/`)** → grep/glob.
 2. **Read** with `offset`/`limit` for files >200 lines; skip search when the exact path is known.
 3. **PR / multi-file diff** >200 lines: `git diff -- <path>` per-file, or grep specific hunks.
-4. **Code-health probes** — match the probe to the goal: complexity hotspots → linter cyclomatic (ruff `C901`) / AST nesting depth; change risk → `ecp impact` fan-in; dead code → grep-unreferenced ∩ ecp-orphan. Keep them as separate queries; they read different ground truth. LOC and function size pick which files merit a human skim, never a quality verdict.
+4. **Code-health probes** — match the probe to the goal: complexity hotspots → linter cyclomatic (ruff `C901`) / AST nesting depth; change risk → `ecp impact` fan-in; dead code → grep-unreferenced ∩ ecp-orphan. Keep them as separate queries. LOC and function size pick which files merit a human skim, never a quality verdict.
 
 ## Tool Call Batching (Token Optimization)
 
-- **Never issue two Bash calls whose commands do not depend on each other.** Join them with `;` in one call. The probing trio you reach for first — `pwd; ls; git status` — is one call, not three.
-- **Screenshots bill by pixel area, not file size** (~1 token per 28×28 patch; a long edge over 2576px is downscaled first, over 1568px on Haiku). Compressing the PNG saves zero tokens — resizing is the only lever. Tile a multi-page sweep into one contact sheet rather than reading N images.
+- **Never issue two independent Bash calls.** Join them with `;` in one call. The probing trio you reach for first — `pwd; ls; git status` — is one call, not three.
+- **Screenshot tokens scale with pixel area** (≈ W×H/784; a long edge over 2576px, or 1568px on Haiku, is downscaled first). Resize to cut them. PNG compression saves nothing. Tile a multi-page sweep into one contact sheet rather than reading N images.
 
 ## MCP Tool Calling (Token Optimization)
 
@@ -100,9 +101,9 @@ This section is the canonical dispatch policy — skills that fan out defer to i
 
 ### When to dispatch
 
-- **Fan-out** — give each independent sub-goal its own acceptance criterion before dispatching it. Cap parallel agents at 20 unless the user asks for more. **Never open one of the targets yourself to calibrate the fan-out.** Dispatch first; if the returns show the criterion was wrong, fix the criterion and re-dispatch.
+- **Fan-out** — give each independent sub-goal its own acceptance criterion before dispatching it. Cap parallel agents at 20 unless the user asks for more. **Never open one of the targets yourself to calibrate the fan-out.** Dispatch first; if the returns show the criterion was wrong, fix the criterion and re-dispatch. When three or more of those agents will read the same files, dispatch one exploration agent first. It writes a code map to the scratchpad, and every brief points at that map.
 - **Adversarial** — dispatch an independent verifier when a conclusion is expensive to get wrong.
-- **Phase** — an implementer runs one phase: write, or make the tests pass, or fix the audit findings. A fresh agent takes the next phase through one hand-off file in the scratchpad. Size each phase to end under 150k tokens of context. A transcript that ended above 200k is the signal to split the next brief finer.
+- **Phase** — an implementer runs one phase: write, or make the tests pass, or fix the audit findings. A fresh agent takes the next phase through one hand-off file in the scratchpad. Size each phase to its kind's context target: a research or spec phase 150k, a write phase 200k, a test-and-fix phase 250k. A transcript that ended more than 50k above its phase's target is the signal to split the next brief finer.
 
 **Risk is inferred, not looked up.** Structural signals set the floor: `ecp impact` upstream fan-in, and auth / payment / schema-migration / concurrency paths. Raise it from what the user emphasised this turn and from what the project itself guards. Take the highest; one sentence from the user ("just a prototype") lowers it.
 
@@ -110,7 +111,7 @@ This section is the canonical dispatch policy — skills that fan out defer to i
 
 ### What a delegate returns
 
-**Before you act on anything a sub-agent reports, re-run the check yourself.** Require the command it ran and that command's raw output. A count in a report comes from a command's output; a hand tally is a guess. A claim you have not re-run is a lead, not a fact.
+**A delegate's claim is a lead until you re-run its command.** Require the command it ran and its raw output. Every count comes from that output, never a hand tally.
 
 From sonnet up, require **blind spots** too: what it did not read, run, or verify.
 
@@ -136,9 +137,9 @@ Always pass an explicit model matched to task difficulty. When unsure between tw
 - **Sonnet** — standard implementation with the reuse or extraction named in the brief, bounded TDD, checklist-driven review of a scoped diff
 - **Opus** — design judgment, cross-cutting architecture, ambiguous scope, security review, reverse-engineering (`subagent_type: deep-review` when read-only suffices)
 
-For read-only work name the `subagent_type` (`lite-scan`, `deep-review`), not the bare model; they add the role prompt and the tool whitelist.
+For read-only work name the `subagent_type` (`lite-scan`, `deep-review`), not the bare model.
 
-A Haiku or Sonnet implementer gets the edge list pasted into its prompt: empty · absent · a list where a scalar is expected · a string of only whitespace · the dependency it calls is down · the same action fires twice while the first is in flight · output another program parses.
+A Haiku or Sonnet implementer gets the edge list pasted into its prompt: empty · absent · list-for-scalar · whitespace-only string · dependency down · concurrent duplicate call · machine-parsed output.
 
 A brief names the function or the line range for every file over 200 lines it sends the agent to, so the agent reads it with `offset`/`limit` and never the whole file. It also pastes the batching instances: `cd` and the command after it are one call, and consecutive grep, sed and test runs are one call.
 
@@ -146,7 +147,7 @@ Escalate one tier when risk is high (see *When to dispatch*) or a lower-tier att
 
 ## Python
 
-Recipes and environment live in the `python-perf` skill (packages, class shape, data-structure / string-build / I/O / serialization selection, async patterns, SQL-in-Python) — invoke it before writing, refactoring, or reviewing Python code, and echo the relevant rules into any Python-implementation sub-agent prompt. One red-line stays ambient here because reviewer sub-agents have no Skill tool:
+Recipes and environment live in the `python-perf` skill — invoke it before writing, refactoring, or reviewing Python code, and echo the relevant rules into any Python-implementation brief. One red-line stays ambient here because reviewer sub-agents have no Skill tool:
 
 - **Bare `except A, B:` is CANONICAL on 3.14 — leave it. Never "fix" it by adding parentheses.** Reviewer subagents misflag it as a SyntaxError from their pre-3.14 training. Settle any 3.14 syntax claim by running `pyci-check syntax`, which parses on 3.14; while it reports nothing, the code is correct.
 

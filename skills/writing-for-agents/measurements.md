@@ -61,3 +61,108 @@ claude-sonnet-5-5, n=15: control 0/15, file without either rule 1/15, shipped 15
 ## 2026-10-09 — `audit.py` rule 6 and `spans` (unmeasured)
 
 Rule 6 flags a `> Measured` blockquote that names a model family without a full ID. It found 0 lines in the tree on its first run, because the day's re-run had already relabelled them. `spans` lists code spans an old copy has and the new file lacks. Origin: a trim of peer-agent dropped the only `check --ack <delivery_id>`, and claude-opus-5-5 then invented a command 7/7 (memory `evidence-sentence-can-carry-the-only-anchor`). The "Finishing a change" bullet that calls `spans` is a report-format rule and shipped unmeasured. Tests: `test_audit.py`, 45 cases after the review round.
+
+## Moved from SKILL.md, 2026-10-17
+Each entry sat beside the rule it names. The rule text stays in SKILL.md.
+
+### Context pointers
+
+Rule: Write each trigger as a **moment**: an event the agent can see without judgement ("Before you rename a symbol", "After two failed attempts at the same problem")…
+
+Measured 2026-10-09 on claude-haiku-5-5, 2 x n=15: "when you are stuck" scored 0 and 2. "After two failed attempts at the same problem" scored 10 and 13.
+
+### Leading words
+
+Rule: Repeat the word as a token, never as a sentence. It then accumulates a distributed definition.
+
+Measured 2026-10-09 on claude-opus-5-5, n=10: a `subagent_type` named once, as a code token in its own sentence, was picked 10/10. A block that named it twice was picked 0/10.
+
+### Leading words
+
+Rule: **Class and instance.** A class sentence names the whole category ("name each input's atypical states"). An instance list names members ("empty, absent, a list …
+
+Measured 2026-10-09 on claude-haiku-5-5, n=6: a list-only rule never named the problem as a category, 0/6. With a class sentence added, it did 6/6.
+
+### Leading words
+
+Rule: Pair every prohibition with the positive target. Before you rewrite an existing red line as a positive, A/B both wordings with `validate-prompt-rules`. Keep the…
+
+Measured 2026-10-09 on claude-haiku-5-5, n=15: "Never field-split a delimited format by hand (`awk -F,`, `split(',')`, `cut -d`)" scored 15/15. A positive parser rule with no named command scored 8/15. Anthropic's Opus 5.5 guidance reaches the same form for frontend design: a list of named defaults to avoid works, and a vague "avoid a generic look" does not.
+
+### Sentence style
+
+Rule: STE's rules split in two, and only one half is checkable here. The **structural** rules describe sentence shape, so you apply them from the description alone. T…
+
+Rule numbers and the semicolon detail come from ASD-STE100 Issue 9 (Jan 2025): 53 rules in 9 sections, over a dictionary of ~900 approved words. Public summary, including the structural/lexical split: https://github.com/danyuchn/asd-ste100-skill
+
+## 2026-10-17 — "Before you add a sentence", step 2
+
+Task: the bash example and the named scripts already pass `--tools ""`; write the rest of the edit or NO EDIT. Miss = a new prose line about tools that replaces no existing line.
+- Old step 2 ("When a sentence there already carries the meaning, change that sentence"): claude-sonnet-5-5 5/5 misses; claude-opus-5-5 1/5 misses.
+- Widened scope only ("its code blocks, and the scripts it names ... add no sentence"): claude-sonnet-5-5 4/5 misses. No effect, not shipped.
+- Shipped wording (names the pattern: "Never add a sentence that restates a flag, a default or a command ..."): claude-sonnet-5-5 0/5 misses (4 edited the existing line, 1 NO EDIT); claude-opus-5-5 0/5.
+- Limits: the sonnet rows ran with `--tools ""` and the miss criterion was fixed after round 2, so they are exploratory. The opus rows ran with the deployed tool set under a predeclared criterion, n=5, and do not separate the arms. Rows: session c6a25fc8 scratchpad `step2ab.jkl2Yd/` (raw2/, opus.h7WkR2/).
+
+The block itself (all three steps against the old skill): claude-opus-5-5, n=5, new `## ` section opened 4/5 without the block, 0/5 with it at the top, at the end, or alone (9 lines). Rows: `wfa-cause/run/`.
+
+## 2026-10-21 — edit round: one revert, two withdrawals, one unmeasured addition
+
+Preloaded user CLAUDE.md, skill body before the scenario, claude-opus-5-5, NO_TOOLS. Arms: control (no body), old, new. Rows: session 207afb98 scratchpad `wfa-ab.CB6lXi/` (`recount.sh`).
+
+| probe | control | old | new |
+|---|---|---|---|
+| shorten a rule with "unless the user has already decided" | 5/5 | 5/5 | 5/5 |
+| shorten a rule with "work that leaves this machine" | 5/5 | 5/5 | 5/5 |
+| teammate note to one rule, longest sentence ≤ 19 words | 2/15 | 14/15 | 11/15 |
+| a "work in the DISC C style" line: DELETE or rewrite | 5/5 | 5/5 | 5/5 |
+
+- Sentence style: the edit cut the inline list of `CLAUDE.md`'s core rules. 14/15 against 11/15 is unsettled at n=15, and it leans against the cut. The list was restored. Every miss was a bold lead-in clause of 20 to 23 words.
+- A scope-clause sentence ("a scope clause is instruction too; keep it when you trim") and a persona-label instance in the no-op bullet were withdrawn: control already scores 5/5.
+- Persona label as a rule: in a separate run the same day (scratchpad `disc-c.75ENUi/`), "work in the DISC C style" moved nothing on 6 probes against control.
+- Kept, unmeasured: two rationale clauses cut ("The result is fewer tokens…", "and the source is large"), and the **execution load** / **detour** paragraph in "The two loads". The paragraph names today's detours: a read of `agentic.sh` to find the work tree, a refused sub-agent `REPORT.md`, a rescore after a regex matched PowerPoint's native `Table 3`.
+- Update, same day: the execution-load / detour paragraph was removed. Its probe (KEEP a header line that says where outputs stay) scored 5/5 in control, old and new (scratchpad `wfa-ab2.O9zHmx/`). The operational form lives in validate-prompt-rules as the token-cut test.
+
+## 2026-10-21 — `SKILL-MECHANICS.md` rewritten to STE, one paragraph kept
+
+The file went from 422 to 353 words: STE sentences, no dashes and no semicolons. The "Splitting by invocation" paragraph stays word for word. Preloaded user `CLAUDE.md`, the `SKILL.md` body, then the mechanics text; NO_TOOLS. Hand labels; the 05b rounds were labelled blind (shuffled IDs). Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-mech/` (`labels.tsv`, `blind/`, `blind-d/`).
+
+| probe | model | control | old | full rewrite |
+|---|---|---|---|---|
+| 02 skill another skill calls | claude-opus-5-5 | 0/5 | 4/15 | 5/15 |
+| 02 | claude-sonnet-5-5 | 4/5 | 9/10 | 10/10 |
+| 04b router for forgotten skills | claude-opus-5-5 | 0/5 | 15/15 | 15/15 |
+| 04b | claude-sonnet-5-5 | 3/5 | 10/10 | 10/10 |
+| 05b split one skill in two | claude-opus-5-5 | 3/5 | 6/15 | 0/15 |
+| 05b | claude-sonnet-5-5 | 2/5 | 14/15 | 9/15 |
+
+Probes 01 (hand-only skill) and 03 (shared reference) saturate on the control (5/5 on both models, each rebuilt once).
+
+- The 05b loss traces to one sentence. The full rewrite dropped "a trigger word you actually use in your prompts" and wrote "its own leading word". `SKILL.md` defines a leading word as a pretrained concept, so readers answered "no leading word of its own" and did not split.
+- Re-adding "its own trigger word, one that you use in your prompts and that should fire it on its own": sonnet 14/15 against 15/15 old (same run), opus 4/15 against 11/15. Not shipped.
+- Shipped arm, old paragraph restored, A and D trials interleaved in one run: opus old 4/15, shipped 3/15. Sonnet old 10/10, shipped 9/10.
+- Opus on 05b is noisy: the old arm scored 6/15, 11/15 and 4/15 in three runs with the same inputs. Compare 05b cells only inside one run.
+- Lesson for "Leading words": a term this skill defines narrowly cannot stand in for a plain phrase that names the action. The rewrite swapped a trigger-word phrase for the defined term, and the decision changed.
+
+## 2026-10-21 — token pass on `SKILL.md`: five cuts shipped, two withdrawn
+
+Preloaded live `CLAUDE.md` + `ECP.md` + `RTK.md`, skill body injected as a Skill tool result, NO_TOOLS, JOBS=2. A = old body, B = cuts, G = B plus a boundary sentence in Leading words. Saturated = control 5/5 at n=5, after one rebuild. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-wfa/` (`recount.py`, `submetrics.py`, `handlabels.tsv`).
+
+| item | model | control | A | B | G | verdict |
+|---|---|---|---|---|---|---|
+| A cut the inline list of core rules | claude-opus-5-5 | 1/5 | 2/15 | 0/15 | 2/15 | withdrawn (see below) |
+| A | claude-sonnet-5-5 | 0/5 | 0/10 | 1/10 | 0/10 | |
+| B Language paragraph to 3 sentences | claude-sonnet-5-5 | 1/5 | 10/10 | 10/10 | 9/10 | shipped; opus saturated |
+| C "A defined leading word survives…" cut | both | 5/5, rebuild 5/5 | – | – | – | shipped, saturated |
+| D two sentences to "ubiquitous language" | claude-opus-5-5 | 3/5 | 10/10 | 10/10 | 10/10 | shipped |
+| D | claude-sonnet-5-5 | 4/5 | 2/10 | 6/10 | 5/10 | |
+| E1 alias rationale cut | both | 5/5, rebuild 5/5 | – | – | – | shipped, saturated |
+| E2 no-op dispute sentence shortened | both | 0/5 | 10/10 | 10/10 | 10/10 | shipped |
+| E3 semicolon rationale cut | both | 5/5, rebuild 5/5 | – | – | – | shipped, saturated |
+| G probe 1, shorten a rule set with a named-command red line | claude-opus-5-5 | 4/5 | 15/15 | 15/15 | 15/15 | G withdrawn: no headroom |
+| G probe 1 | claude-sonnet-5-5 | 3/5 | 13/15 | 15/15 | 15/15 | |
+| G probe 2, "make the agent more careful" | both | 5/5, rebuild 5/5 | – | – | – | saturated |
+
+- Item A stays. The opus sentence-length sub-metric (longest sentence under 20 words) reads A 9/15, B 6/15, G 13/15; B and G cut the same list, so this run alone does not separate the arms. Session 207afb98 measured the same cut the same day at 14/15 against 11/15 and restored the list. Two of three readings lean against the cut.
+- E2: the control proposes a with/without run 10/10 but never names `validate-prompt-rules`; only the naming moves.
+- Sonnet D arm A (2/10) scores below its control (4/5); unexplained, stem scorer, 2 rows read by hand.
+- Not run: haiku. Tools off, no output style, no skill listing.

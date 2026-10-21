@@ -67,8 +67,6 @@ A third argument naming a context file (the full text of the touched files, plus
 
 Launch exactly one, and only at Tier 1 or Tier 2: its recall falls as the diff grows, and parallel calls hang. A `TRUNCATED` line at the end of its report means the tail is missing, not clean. A non-zero exit prints its reason; report it as `free reader skipped: <reason>` and carry on.
 
-> Measured 2026-09-11 on the earlier `nemotron-3-super-120b-a12b:free`, not yet on ultra: 4 of 5 planted defects located per trial, every failure_scenario invented, a lock held across a network call missed in every read; 4 of 4 on a 52-line diff, 2.3 of 4 on a 2034-line one.
-
 **Dispatching is part of the invocation.** The agents the tier names need no separate approval; launch them.
 
 Walk the dimensions yourself only when the `Agent` tool is absent from your tool set, and open the summary with `Tier <n>, run inline: Agent tool unavailable`. That is a downgrade you report, not a judgement call you justify.
@@ -110,6 +108,8 @@ Fix everything you can reach. Three classes stay unapplied and go to the summary
 - a fix big enough to be its own change: a refactor, an API change, a migration
 
 A false positive at any confidence → note it and move on. After fixing, `ecp find <changed-symbol> --repo .` confirms the fixed symbols still resolve.
+
+After the last fix in a local repo, run `~/.claude/skills/simplify/review-mark.sh mark <repo>`. Skip it for a GitHub PR you reviewed without a local checkout.
 
 Summarise what was fixed (or that the diff was already clean), and which tier ran and why. Report the cross-family findings separately from the tier's. A finding two model families reach independently outranks its confidence score. A finding only codex reached is the reason it runs. Rank Correctness findings above Reuse, Quality, Conventions, and Efficiency findings.
 

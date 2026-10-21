@@ -4,7 +4,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from audit import audit, bundled_skills, drift, help_subcommands, lost_spans, main, measured_aliases, refs
+import audit as audit_mod
+from audit import audit, bundled_skills, drift, drop_exempt, help_subcommands, lost_spans, main, measured_aliases, refs
 
 SKILL_HEAD = "---\nname: probe\ndescription: Use when a test needs a skill file with a description long enough to clear the minimum length check.\n---\n"
 
@@ -266,3 +267,26 @@ def test_bundled_skills_version_compared_numerically(tmp_path):
 def test_bundled_skills_non_version_dir_ignored(tmp_path):
     (tmp_path / "claude-1000/bundled-skills/tmp-extract/h1/stray").mkdir(parents=True)
     assert bundled_skills(tmp_path) == set()
+
+
+def _exemptions(tmp_path, monkeypatch, text):
+    path = tmp_path / "audit-exemptions.md"
+    path.write_text(text, encoding="utf-8")
+    monkeypatch.setattr(audit_mod, "EXEMPTIONS", path)
+
+
+def test_drop_exempt_ref_line_drops_matching_refs_finding(tmp_path, monkeypatch):
+    _exemptions(tmp_path, monkeypatch, "seo-hreflang | ref en-uk | an invalid locale code shown as an example\n")
+    finding = "seo-hreflang: points at `en-uk`, which is not a skill here. Update or drop the reference."
+    assert drop_exempt([finding]) == ([], 1)
+
+
+def test_drop_exempt_ref_line_keeps_other_name(tmp_path, monkeypatch):
+    _exemptions(tmp_path, monkeypatch, "seo-hreflang | ref en-uk | example code\n")
+    finding = "seo-hreflang: points at `en-us`, which is not a skill here. Update or drop the reference."
+    assert drop_exempt([finding]) == ([finding], 0)
+
+
+def test_drop_exempt_rule_line_still_drops_rule_finding(tmp_path, monkeypatch):
+    _exemptions(tmp_path, monkeypatch, "eli5 | rule 3 | judgement calls\n")
+    assert drop_exempt(["eli5: rule 3: no script"]) == ([], 1)

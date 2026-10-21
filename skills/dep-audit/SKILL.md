@@ -10,7 +10,7 @@ Refresh all dependencies in a repo with evidence. The scope of one run covers ma
 
 Rules that bind the whole run:
 
-- Create a worktree on a new branch before the first edit. Base it on main.
+- Create a worktree on a new branch before the first edit. Base it on main. When the project's `CLAUDE.md` overrides Branch Discipline, edit on the current branch instead.
 - Every claim you record cites a source URL, or carries the word UNVERIFIED.
 
 ## 1. Inventory
@@ -60,7 +60,7 @@ Done when: every notable bump answers both questions with citations or UNVERIFIE
 
 ## 4. Upgrade
 
-Run the table's ecosystem-wide upgrade command inside the worktree first, so transitive packages move together with the direct ones. Drop to a per-package upgrade only for a package whose ecosystem-wide bump fails a gate, and write the reason that package stays behind. Then run the repo's gates through the project's environment: tests, lint, typecheck.
+Run the table's ecosystem-wide upgrade command in the checkout you edit first, so transitive packages move together with the direct ones. Drop to a per-package upgrade only for a package whose ecosystem-wide bump fails a gate, and write the reason that package stays behind. Then run the repo's gates through the project's environment: tests, lint, typecheck.
 
 Triage each failure: regression or pre-existing. Prove pre-existing on the base commit before fixing.
 

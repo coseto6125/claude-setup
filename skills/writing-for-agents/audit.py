@@ -235,7 +235,7 @@ def exempt() -> set[tuple[str, str]]:
     pairs = set()
     for line in EXEMPTIONS.read_text(encoding="utf-8").splitlines():
         parts = [p.strip() for p in line.split("|")]
-        if len(parts) == 3 and parts[1].startswith("rule"):
+        if len(parts) == 3 and parts[1].startswith(("rule", "ref ")):
             pairs.add((parts[0], parts[1]))
     return pairs
 
@@ -246,7 +246,8 @@ def drop_exempt(findings: list[str]) -> tuple[list[str], int]:
     held = 0
     for finding in findings:
         skill, _, rest = finding.partition(": ")
-        rule = rest.split(":", 1)[0].strip()
+        ref = re.match(r"points at `([^`]+)`", rest)
+        rule = f"ref {ref.group(1)}" if ref else rest.split(":", 1)[0].strip()
         if (skill, rule) in known:
             held += 1
         else:

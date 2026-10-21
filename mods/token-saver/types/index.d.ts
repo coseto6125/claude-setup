@@ -7,8 +7,8 @@ declare module 'claude-code' {
       docsDelivered: Record<string, true>
       /** The largest remaining-token figure seen in this session, the baseline for BUDGET_SHOW_BELOW. */
       tokenBudgetMax: number
-      /** True while the main loop's last decidable text block to the user was in English. */
-      langDrift: boolean
+      /** Chinese main-loop text blocks still needed to clear the drift note; DRIFT_HOLD after an English one, 0 when off. */
+      langDriftHold: number
     }
   }
 }

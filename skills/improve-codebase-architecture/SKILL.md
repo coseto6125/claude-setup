@@ -24,15 +24,17 @@ This command is _informed_ by the project's domain model and built on a shared d
 
 Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching first.
 
-**Graph before prose.** Run the structure side of these questions through ecp first: `ecp summary` to orient, then the verb map in the `ecp` skill (`ecp admin index --repo .` if unindexed). Then spawn a sub-agent to read the texture around what the graph surfaces. Texture reading is retrieval and summarisation, so it dispatches cheap per the CLAUDE.md Dispatch tiers; the design judgment stays with you. Don't follow rigid heuristics; explore organically and note where you experience friction:
+**Graph before prose.** Run the structure side of these questions through ecp first: `ecp summary` to orient, then the verb map in the `ecp` skill (`ecp admin index --repo .` if unindexed). Then spawn a sub-agent to read the texture around what the graph surfaces. Texture reading is retrieval and summarisation, so it dispatches cheap per the CLAUDE.md Dispatch tiers; the design judgment stays with you. Don't follow rigid heuristics; explore organically and note where you experience friction. Each question has a graph check; run it to turn a hunch into a count, then read the code it points at:
 
-- Where does understanding one concept require bouncing between many small modules?
-- Where are modules **shallow**, with an interface nearly as complex as the implementation?
-- Where have pure functions been extracted just for testability, but the real bugs hide in how they're called (no **locality**)?
-- Where do tightly-coupled modules leak across their seams?
-- Which parts of the codebase are untested, or hard to test through their current interface?
+| Friction question | Graph check | Signal |
+|---|---|---|
+| Where does understanding one concept require bouncing between many small modules? | `ecp path <from> <to> --repo .` | Many hops that cross files |
+| Where are modules **shallow**, with an interface nearly as complex as the implementation? | `ecp inspect <name> --repo .` | A signature about as large as the body |
+| Where have pure functions been extracted just for testability, but the real bugs hide in how they're called (no **locality**)? | `ecp impact --target <name> --direction upstream --repo .` | One production caller, plus tests |
+| Where do tightly-coupled modules leak across their seams? | `ecp cypher` for the edges that cross a module (query shapes in the `ecp` skill) | High fan-in from other modules |
+| Which parts of the codebase are untested, or hard to test through their current interface? | `ecp impact --target <name> --direction upstream --repo .` | No caller in a test file |
 
-Apply the **deletion test** to anything you suspect is shallow: would deleting it concentrate complexity, or just move it? A "yes, concentrates" is the signal you want.
+Apply the **deletion test** to anything you suspect is shallow: would deleting it concentrate complexity, or just move it? A "yes, concentrates" is the signal you want. `ecp impact --target <name> --direction upstream` sizes it: one caller means inlining concentrates; many callers mean the module carries **leverage**. The caller count is a lower bound (see the `ecp` skill), so grep the call sites before you call a count low.
 
 ### 2. Present candidates as an HTML report
 

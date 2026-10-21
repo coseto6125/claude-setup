@@ -12,35 +12,40 @@ A working Claude Code configuration: global instructions, an output style, sub-a
 | `output-styles/colleague-zh.md` | main session only | voice and language for user-facing prose |
 | `agents/` | on dispatch | effort-pinned and role-scoped sub-agent definitions |
 | `hooks/` | per the events in `settings.example.json` | shell hooks |
-| `skills/` | description resident, body on invocation | 30 written here, plus 32 directories vendored from `claude-seo` |
-| `mods/token-saver/` | every session, through `env.CLAUDE_CODE_PLUGIN_DIRS` in `settings.example.json` | a mod that trims the session prompt; `claude plugin test mods/token-saver` runs its 56 checks |
+| `skills/` | description resident, body on invocation | 35 written here, plus 32 directories vendored from `claude-seo` |
+| `mods/token-saver/` | every session, through `env.CLAUDE_CODE_PLUGIN_DIRS` in `settings.example.json` | a mod that trims the session prompt; `claude plugin test mods/token-saver` runs its checks |
 | `settings.example.json` | copy to `~/.claude/settings.json` | read the security notes first |
 
-### The 30 skills written here
+### The 35 skills written here
 
 | Skill | What it does | Origin |
 | --- | --- | --- |
 | `agent-routing` | Picks the runner for a piece of work, and which browser drives a page | — |
 | `authority-check` | The design questions to settle before writing code that carries authority | — |
-| `context-audit` | Audit what fills the context window, examine usage and dependencies, and recommend changes that fit the user's | — |
 | `codebase-design` | Vocabulary for deep modules: interfaces, seams, testability | mattpocock |
+| `context-audit` | Audit what fills the context window, examine usage and dependencies, and recommend changes that fit the user's | — |
 | `decider-2b` | Calls and tunes a local Decider-2B endpoint, and measures whether a prompt change helped | — |
 | `dep-audit` | Upgrades every dependency to latest and audits the breakage against real usage | — |
+| `diagnose` | Debugs a failing test or wrong output, starting before the first edit | — |
 | `domain-modeling` | Ubiquitous language and ADRs | mattpocock |
 | `ecp` | Structural code queries: definitions, callers, blast radius, routes | — |
 | `eli5` | Explains a topic for a named audience, shaped for an ADHD reader | [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5) |
+| `external-writing` | Writes for a reader outside the project: a client letter, a report, a résumé | — |
 | `gh-report` | Files issues and PRs against repositories we do not own | — |
 | `grill-me` | A relentless interview to sharpen a plan or design | mattpocock |
 | `grill-with-docs` | The same interview, writing ADRs and a glossary as it goes | mattpocock |
 | `grilling` | Stress-tests a plan, decision or idea on request | mattpocock |
+| `handoff` | Writes a hand-off document so a fresh session can continue the work | — |
 | `improve-codebase-architecture` | Scans for deepening opportunities, reports them as HTML | mattpocock |
 | `mpm` | Reads and updates the cross-session follow-ups log through the `mpm` CLI | — |
 | `notebooklm` | Hands a large external read to NotebookLM through the `nlm` CLI, so only its answers enter context | — |
 | `peer-agent` | Runs codex or another Claude as the implementer while you gate the merge | — |
-| `preflight` | Six design questions answered in one line each before a new module; user-invoked | — |
+| `pr-body` | Writes a PR title and body in a fixed four-section shape, with a rollback call | — |
 | `pr-finalize` | Removes a finished PR's worktree and branch | — |
 | `pr-review-multiagent` | Six-angle merge-readiness review, posted to the PR | — |
+| `preflight` | Six design questions answered in one line each before a new module; user-invoked | — |
 | `python-perf` | Package defaults, class shape and the selection tables for Python | — |
+| `retro` | Looks back at a session and proposes changes to the environment, not the code | — |
 | `rust-perf` | Rust performance measurement and the Rust traps that pass review | — |
 | `simplify` | The code review skill on this machine | — |
 | `to-questionnaire` | Turns a decision you cannot answer into a questionnaire for someone else | mattpocock |
@@ -57,7 +62,7 @@ The `mattpocock` rows started as [mattpocock/skills](https://github.com/mattpoco
 
 ```bash
 git clone <this repo> ~/claude-setup
-cp -r ~/claude-setup/{CLAUDE.md,RTK.md,ECP.md,maintainer-notes.md,agents,hooks,mods,output-styles,skills} ~/.claude/
+cp -r ~/claude-setup/{CLAUDE.md,RTK.md,ECP.md,maintainer-notes.md,agents,hooks,mods,output-styles,skill_script,skills} ~/.claude/
 cp ~/claude-setup/settings.example.json ~/.claude/settings.json
 ```
 
@@ -81,11 +86,11 @@ These are properties of this configuration, not defects. Read them before you co
 
 **`settings.example.json` turns the permission prompts off.** It carries `"defaultMode": "bypassPermissions"` together with `"skipDangerousModePermissionPrompt": true` and `"skipAutoPermissionPrompt": true`. Copied as-is, Claude Code runs shell commands, edits files and reaches the network with no confirmation step. That suits one machine whose owner watches every session, and it removes a safety boundary everywhere else. Set `"defaultMode": "default"` and drop both `skip*` keys unless you want the same trade.
 
-**The permission `allow` list runs to 45 entries.** Each one is a subcommand pattern rather than a whole command family, and the widest of them (`Bash(python3:*)`, `Bash(xargs:*)`, `Bash(cat:*)`) approve an arbitrary argument to a general-purpose program. Combined with the mode above, that is the real reach. Cut the list down to what you run.
+**The permission lists gate almost nothing.** `settings.example.json` ships no `allow` list, `deny` holds only `SendFeedback`, and `ask` is empty. Combined with the mode above, every other tool call runs unasked. Add `deny` and `ask` entries for what you want stopped.
 
-**Hooks execute on every matching event.** `hooks/` holds fourteen scripts and `settings.example.json` wires nine of them: `auto-etoon.sh`, `limit-worktrees.sh`, `guard-main-edit.sh`, `guard-push-simplify.sh` and `ecp-graph-nudge.sh` on `PreToolUse`, `idle-guard-stop.sh` on `Stop`, `idle-guard-submit.sh` on `UserPromptSubmit`, `patch-tool-persist.py` and `prune-scratchpad.sh` on `SessionStart`. Read each one before you install it. `guard-main-edit.sh` enforces a rule `CLAUDE.md` only states — it refuses an edit to a file on the default branch and prints the worktree command to use instead. `guard-push-simplify.sh` blocks `git push` until `/simplify` has run in that session. `ecp-graph-nudge.sh` hands over the exact `ecp impact` command a symbol's direct callers cannot answer on their own. `prune-scratchpad.sh` deletes every session temp directory under `$CLAUDE_CODE_TMPDIR` in which nothing changed for 14 days (`SCRATCH_KEEP_DAYS`), so a file you parked in a scratchpad is gone two weeks after its session last wrote there. Run it with `--dry-run` first to see the list.
+**Hooks execute on every matching event.** `hooks/` holds sixteen scripts and `settings.example.json` wires twelve of them: `auto-etoon.sh`, `limit-worktrees.sh`, `guard-main-edit.sh`, `guard-push-simplify.sh`, `guard-podman-prune.sh` and `ecp-graph-nudge.sh` on `PreToolUse`, `audit-skill.sh` and `lang-anchor.sh` on `PostToolUse`, `idle-guard-stop.sh` on `Stop` and `PostCompact`, `idle-guard-submit.sh` and `lang-anchor.sh` on `UserPromptSubmit`, `patch-tool-persist.py`, `prune-scratchpad.sh` and `lang-anchor.sh` on `SessionStart`. Read each one before you install it. `guard-main-edit.sh` enforces a rule `CLAUDE.md` only states — it refuses an edit to a file on the default branch and prints the worktree command to use instead. `guard-push-simplify.sh` blocks `rm -r` on a path built from a variable or a glob, and blocks `git push` until `skills/simplify/review-mark.sh` has recorded that a review covered the content the push sends. `guard-podman-prune.sh` blocks an unfiltered "remove all images" on podman or docker. `settings.example.json` also runs `skill_script/sweep-merged-worktrees.sh` on `SessionStart`: at most once per 12 hours per repo, it removes each idle, clean worktree whose PR merged at least 2 hours ago at the local tip, and deletes that branch. Run it with `--dry-run` to see what it would remove. The hooks and scripts assume Linux: GNU coreutils, `flock` and bash 5. `ecp-graph-nudge.sh` hands over the exact `ecp impact` command a symbol's direct callers cannot answer on their own. `prune-scratchpad.sh` deletes every session temp directory under `$CLAUDE_CODE_TMPDIR` in which nothing changed for 14 days (`SCRATCH_KEEP_DAYS`), so a file you parked in a scratchpad is gone two weeks after its session last wrote there. Run it with `--dry-run` first to see the list.
 
-The other five ship unwired, so wire them yourself or delete them. `audit-skill.sh` belongs on `PostToolUse` for `Edit`, `Write` and `MultiEdit`, and checks a `SKILL.md` against the measurable rules the moment it is written. `worktree-symlinks.sh` is the second. The three `eywa-*.sh` scripts are the rest: they inject coding principles on `UserPromptSubmit`, capture them on `Stop`, and clear the session cache on `PreCompact`. They read `$HOME/.eywa/` and query a local server on `127.0.0.1:8788`; without that server running, `eywa-inject.sh` is a no-op.
+The other four ship unwired, so wire them yourself or delete them. `worktree-symlinks.sh` is one. The three `eywa-*.sh` scripts are the rest: they inject coding principles on `UserPromptSubmit`, capture them on `Stop`, and clear the session cache on `PreCompact`. They read `$HOME/.eywa/` and query a local server on `127.0.0.1:8788`; without that server running, `eywa-inject.sh` is a no-op.
 
 **Four programs run from hooks and none of them ships here** (`eywa` is the fourth, wired by nothing in `settings.example.json`): `rtk` on `PreToolUse`, `$HOME/.local/bin/ecp` on `PreToolUse`, `SessionStart` and `UserPromptSubmit`, and `$HOME/.orca/agent-hooks/claude-hook.sh` on twelve events. Only the Orca one tests for the file first: it branches on `$OSTYPE`, runs the `.cmd` variant on Windows shells, and falls back to draining stdin and printing `{}` when the file is missing. The `ecp` and `rtk` entries have no guard at all, so a missing binary is a failed hook rather than a no-op. `settings.example.json` also sets `~/.claude/statusline.sh` as the status line, and that script is not in this repo either. Install those programs, or delete the entries.
 

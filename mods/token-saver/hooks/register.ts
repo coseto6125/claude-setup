@@ -44,11 +44,15 @@ const tokenBudgetMax = atom({ plugin: 'token-saver', key: 'tokenBudgetMax' } as 
 // above 12% (5.8% on 2026-09-26..10-02, re-counted 2026-10-03 with the fixed scanner).
 const DROP_STYLE_REMINDER = true
 
-// After a text block to the user drifts into English, the style reminder comes back with this note until a
-// Chinese block clears it: drift is sticky, and a reminder on a schedule did not stop it.
+// After a text block to the user drifts into English, the style reminder comes back with this note until
+// DRIFT_HOLD Chinese blocks in a row clear it: drift is sticky, and a reminder on a schedule did not stop it.
+// lang-drift-scan.py 2026-10-03..10-15, next block English: 1.0% before any English block, 37.6% right after
+// one, then 18.4% 1-2 Chinese blocks later, 9.4% 3-9 later, 1.4% from 10 on.
+const DRIFT_HOLD = 10
 const DRIFT_NOTE =
-  'Your last text block to the user was in English. Write the next one, and every one after it, in the language the `# Language` section names.'
-const langDrift = atom({ plugin: 'token-saver', key: 'langDrift' } as const, false)
+  'A recent text block to the user was in English. Write the next one, and every one after it, in the language the `# Language` section names.'
+// Chinese blocks still needed to clear the note; 0 when it is off.
+const langDriftHold = atom({ plugin: 'token-saver', key: 'langDriftHold' } as const, 0)
 
 const CJK = /[\u3400-\u9fff\u3000-\u303f\uff00-\uffef]/g
 const LATIN = /[A-Za-z]/g
@@ -164,7 +168,7 @@ export const register: Register = on => {
 
   on('prompt.attachment', { type: 'output_style' }, async ($, e, next) => {
     const r = await next(e)
-    if (r.text && (await read($, langDrift))) return { ...r, text: `${r.text}\n${DRIFT_NOTE}` }
+    if (r.text && (await read($, langDriftHold)) > 0) return { ...r, text: `${r.text}\n${DRIFT_NOTE}` }
     return DROP_STYLE_REMINDER ? { ...r, text: null } : r
   })
 
@@ -174,9 +178,11 @@ export const register: Register = on => {
       for (const block of e.message.content) {
         if (block.type !== 'text') continue
         const english = isEnglish(block.text as string)
-        // A lost write race is harmless: the next text block sets the flag again.
-        if (english !== undefined && english !== (await read($, langDrift)))
-          await update($, langDrift, () => english).catch(() => {})
+        if (english === undefined) continue
+        const hold = await read($, langDriftHold)
+        // A lost write race is harmless: it shifts the count by one block.
+        if (english ? hold !== DRIFT_HOLD : hold > 0)
+          await update($, langDriftHold, h => (english ? DRIFT_HOLD : Math.max(h - 1, 0))).catch(() => {})
       }
     }
     return next(e)
