@@ -102,15 +102,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "rtk hook claude"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
             "command": "~/.claude/hooks/limit-worktrees.sh"
           }
         ]
@@ -203,6 +194,11 @@
             "command": "bash $HOME/.claude/skill_script/sweep-merged-worktrees.sh",
             "timeout": 300,
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash $HOME/.claude/hooks/guard-rtk-hook.sh",
+            "timeout": 3
           }
         ]
       },

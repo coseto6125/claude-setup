@@ -43,7 +43,7 @@ Applies only when a spec source resolved; with none, record "no spec available" 
 ## Correctness (bugs)
 
 1. **Logic errors** — inverted conditions, off-by-one, wrong operator, dead branches that should be live
-2. **Removed invariants** — for every line the diff DELETES or replaces, name the guard, validation, error path, or test case it enforced, then find where the new code re-establishes it; unfound is a finding
+2. **Removed invariants** — for every line the diff DELETES or replaces, or that a new branch now routes around, name the guard, validation, error path, side effect (a log line, a stderr forward, a metric) or test case it enforced, then find where the new code re-establishes it; unfound is a finding
 3. **Boundary/empty cases** — empty input, zero/one element, max sizes, saturating vs wrapping arithmetic
 4. **Error-handling gaps** — swallowed errors, unwrap/expect on fallible paths reachable in production, partial-failure states left inconsistent
 5. **Null/None/undefined flows** — optional values dereferenced on paths where absence is possible
@@ -56,10 +56,15 @@ Applies only when a spec source resolved; with none, record "no spec available" 
 12. **Mirror drift** — a sentinel, cache key, or validator that must resolve the same way as the reader it guards. Open both and compare the resolution order (`ecp find "<the other half>"` locates the other half). Each half reads as correct alone, so a mismatch fails silently
 13. **Recalled contracts** — shell quoting, CLI flag semantics, or library behaviour written from recall. Run the real thing once (`bash -c`, `--help`, `ctx7`), then build the tokenizer or the flag table from that output
 14. **Test that cannot go red** — a test shipped with a fix pins that fix only when it fails without it.
-    1. Revert the fix in the working tree and run that test. Require the failure.
+    1. Revert the fix in the working tree. Rebuild any binary the test runs, then run that test. Require the failure.
     2. Read the failure message: it names the defect, or the test watches something else.
     3. Two shapes stay green either way: the setup fails for its own reason before the guarded line runs, or the assertion watches an artifact the unfixed path never produces.
     4. When the signature change stops the test compiling, take the same proof from the released binary.
+    5. A test that the CI command never selects (`#[ignore]`, a skip marker, a file outside the CI glob) cannot go red in CI. Read the CI workflow's test command, and confirm that it selects the test.
+15. **Format upgrade** — a diff that reads data an earlier release wrote. A fixture built by the new code checks only its own reading of the format.
+    1. Require a test on data that the earlier release wrote.
+    2. That data holds records for more than one value of each key that groups records.
+    3. The test states the expected record count before it runs.
 
 ## Security (authority and trust)
 
@@ -116,8 +121,8 @@ These rungs say what to look for. When a rung fires, or when the diff touches a 
 8. **Nested conditionals 3+ deep** — flatten with early returns, guard clauses, lookup tables
 9. **Nested ternaries** — replace with `match`/switch, or if-else for two branches
 10. **WHAT-comments** — delete (identifiers say it); keep only non-obvious WHY
-11. **Unverified claims** — a comment that asserts a fact about the world, not intent: "output is unchanged", "these layouts share a path". It carries the command that proves it. Run that command, mark the sentence as an assumption, or delete it
-12. **Ambient test state** — a new test reads env vars, cwd, process-global statics, or a shared test binary. Name what it reads, then pin it or remove it. A pass counts as evidence once its reason is established
+11. **Unverified claims** — a comment that asserts a fact about the world, not intent: "output is unchanged", "these layouts share a path". It carries the command that proves it. Run that command, mark the sentence as an assumption, or delete it. A comment that says how another function behaves, as proof that this line is safe, is such a claim. Open that function and read it
+12. **Ambient test state** — a new test reads env vars, cwd, process-global statics, or a shared test binary. Name what it reads, then pin it or remove it. A pass counts as evidence once its reason is established. A suite that skips tests when a dependency is down still reads as green. Report the skip count beside the pass count, and name the run each count comes from
 13. **Prose drift** — the diff changes behaviour, but a sentence that describes the old behaviour stays.
     1. List every name and value the diff changes: a symbol, a renamed or deleted name, a parameter, a flag, a config key, a default, a return shape, an output format, a file path.
     2. For each one, read the docstring and comments of its enclosing function, and of each caller that `ecp impact --target X --direction upstream` names.

@@ -25,7 +25,7 @@
 - Investigate with tools before you ask. For a decision you can resolve, take the superset option and state choice + why in one line. Reserve an AskUserQuestion menu for a real fork: the answer changes the next action and no code, memory or default settles it
 - After fixing a bug, scan the same file/module for similar issues
 - When debugging: a second tweak on the same spot means switch strategy
-- Surface multiple interpretations instead of picking silently; if a simpler approach than asked exists, push back before implementing
+- Surface multiple interpretations instead of picking silently. When a simpler approach than the one the user asked for exists, push back and wait for the answer before you implement either one
 - Prefer structured parsing over regex for ambiguous boundaries. Never field-split a delimited format by hand (`awk -F,`, `split(',')`, `cut -d`) — use its reader, even when the sample rows look clean
 
 ## Surgical Changes
@@ -102,7 +102,7 @@ This section is the canonical dispatch policy — skills that fan out defer to i
 ### When to dispatch
 
 - **Fan-out** — give each independent sub-goal its own acceptance criterion before dispatching it. Cap parallel agents at 20 unless the user asks for more. **Never open one of the targets yourself to calibrate the fan-out.** Dispatch first; if the returns show the criterion was wrong, fix the criterion and re-dispatch. When three or more of those agents will read the same files, dispatch one exploration agent first. It writes a code map to the scratchpad, and every brief points at that map.
-- **Adversarial** — dispatch an independent verifier when a conclusion is expensive to get wrong.
+- **Adversarial** — dispatch an independent verifier when a conclusion is expensive to get wrong. Before you call a deliverable ready to send to an outside reader, when it carries claims you took from documentation or code (versions, dates, steps the reader must run), dispatch the cross-family verifier on it.
 - **Phase** — an implementer runs one phase: write, or make the tests pass, or fix the audit findings. A fresh agent takes the next phase through one hand-off file in the scratchpad. Size each phase to its kind's context target: a research or spec phase 150k, a write phase 200k, a test-and-fix phase 250k. A transcript that ended more than 50k above its phase's target is the signal to split the next brief finer.
 
 **Risk is inferred, not looked up.** Structural signals set the floor: `ecp impact` upstream fan-in, and auth / payment / schema-migration / concurrency paths. Raise it from what the user emphasised this turn and from what the project itself guards. Take the highest; one sentence from the user ("just a prototype") lowers it.

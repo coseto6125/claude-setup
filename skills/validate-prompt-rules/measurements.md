@@ -2,6 +2,47 @@
 
 Evidence for SKILL.md sections, one dated section each. Read when you doubt a rule; SKILL.md carries the rule.
 
+## 2026-08-15, from memory measured-rules-have-no-slack (harness part)
+
+The delegate re-check rule rows are in `maintainer-notes.md`, `## Dispatch, "What a delegate returns"`. The harness findings from the same day:
+
+- 隔離 probe 是空 cwd、無工具、單回合、極短 context。真正的失誤發生在跑了兩百多次工具呼叫之後的長 session。opus 在乾淨單回合 25/25 做對,不代表它在 context 很長時做得到,而當天的實例是它沒做到。量不到效果在這裡等於「這個工具測不到我要測的東西」,不等於「規則沒用」。這一類要靠機制(本機已有的 `guard-main-edit.sh` / `guard-push-simplify.sh`),不是靠加字。
+- `ab.sh` now saves every reply (`AB_RAW_DIR`, one file per trial, `umask 077`). It paid for itself the same round: the first classifier version judged one deletion as a check, because the closing reason sentence repeated a noun from the situation and that noun was in the verify list. Reading the rows caught it; the count was recomputed offline with the fix and no extra call.
+
+## 2026-08-13, from memory classifier-artifacts-outrank-data
+
+Lessons the memory stated, with their status on 2026-10-22:
+
+- Prefer a ratio of canonical term to drift variants over a distinct-form count. [not shipped: one run, a form metric]
+
+About 1200 isolated probes while compressing `~/.claude/CLAUDE.md`. Three headline findings came from a clean-looking number and reversed on reading the rows; the user caught two before the wrong thing shipped.
+
+1. A form metric decided a content question. Median longest-sentence length scored the merged rule "equivalent". Content scoring (does the output keep three distinct escalation targets, does it hold one term per concept) told a different story.
+2. A regex missed a format, not a behaviour. `escalate to X` failed on `escalate to the lead **with** a summary` and on `[bracketed placeholder]`, and scored a perfect row as 0 targets. The fixed classifier cut the reported effect from "collapses 3 targets into 2" to 73% against 89%.
+3. A coarse count invented a difference. Counting distinct term forms per row scored a form that appeared once the same as the dominant form, and produced a fake "compression degrades term discipline". The ratio of canonical term to drift variants showed the arms were identical. A ratio is better than a distinct-form count, because a count treats a one-off and a dominant form alike.
+
+## 2026-08-08, from memory probe-design-failure-modes
+
+Lessons the memory stated, with their status on 2026-10-22:
+
+- Record an item as 'not settleable with this instrument', not 'unmeasured'. [covered: validate-prompt-rules/SKILL.md, saturated and unsettled readings]
+- Fix a losing caveat by restructuring, not by more caveat; a document can be worse than no document. [not shipped: one run]
+- Check the criterion is not in the cut-off half of a truncated output; the finding must be the model's own, not supplied by the prompt. [covered in part: validate-prompt-rules/SKILL.md, "Check that the control can fail"; the truncation half is not shipped]
+
+Three rounds (2026-08-07/08), about 10 probe sets on haiku (claude-haiku-4-5 (inferred from the date; the memory says only the family)); six-plus scenarios were invalid or misleading on first design. The scenario triad and the saturation-reading fix shipped in SKILL.md (item-1 restructure measured at n=30). Rows not yet recorded here:
+
+- The two shipped scenario conditions (the control can fail, the control can answer) can conflict. When the thing under test is a wording whose text is the answer, no middle ground exists. Record such an item as "not settleable with this instrument", not "unmeasured", so nobody spends trials there again.
+- ASK shape is a first-class confound. A forced-single-slot ASK turns reordering into fake displacement; a multi-slot ASK ("conclusion and next action") finds secondary considerations and inflated a 1/5 to a ship-ready 5/5. Strict single-slot ASK for ship decisions; multi-slot only to explore.
+- n=5 is a pilot. A predeclared, clean-classifier n=5 run pointed opposite to two concordant n=15 replications (1/5 against 12/15 and 13/15, about a 1-in-280 outlier). Any 1-2 trial margin at n=5 is below the measured noise floor. The 2026-08 rule "ship only on two concordant n>=15 runs" was replaced on 2026-09-23 by stepped n=5, 7, 10, 15 (see the 2026-09-23 section).
+- Row-reading overturned a regex four times: recited format words scored as applied verdicts, and refusals matched negative-wording patterns. Recitation is not application: a coverage or format classifier must check the verdict attached to actual content.
+- A run where nothing executed is output-identical to a clean null; `validate.sh` now exits 2 on zero probes.
+- 2026-08-29, one completion criterion, three probes in a row. (1) Output truncated at 300 characters (`cut -c1-300`): the control looked like it under-reported, a false signal; the full output named everything 7/7. (2) Untruncated, but the scenario said "privacy.html and terms.html turned up nothing", which hands the model the answer: control 7/7, saturated. (3) Five real `.html` files built in a temp directory, the model ran `find` and read them itself: the arms separated. When the behaviour under test is "report everything you found", the finding must be the model's own, not supplied by the prompt. Check that the criterion is not in the cut-off half of a truncated output.
+- The same rule can work for the weak reader only. That completion criterion was control 0/3, rule 3/3 on haiku, and 2/2 in both arms on opus (saturated). It stays for the weakest reader. Another rewrite of the same session was flat on haiku and opus (44 trials) and was deleted.
+- A document can be worse than no document. At n=30, a confident primary clause ("no difference = grounds to nominate deletion") produced 60% wrong-deletion verdicts, where bare control produced 0%. Prepended or appended caveats never beat the primary clause (27-33%). The fix that worked was structural: reorder so the gating classification happens first (83%). Fix a losing caveat by restructuring, not by more caveat.
+- Reading-based wording instincts went 0-for-3+ against measurement while structural findings all survived. One reviewer's round-1 record: three refuted, one confirmed, one converted, one self-reversed, plus one ship-ready result overturned by its own stricter re-run.
+- Open, post-hoc or ceiling-limited: position equivalence is established only at high compliance, unverified at the margin. One n=5 post-hoc observation: a co-located instruction made haiku fabricate rule content where the control correctly refused.
+- 2026-09-08, haiku (claude-haiku-4-5 (inferred from the date; the memory says only the family)): one identical arm (same wording, scenario and model) scored 9/15, 4/15 and 7/15 in three n=15 runs. The per-arm total across runs is the only number worth quoting: arm A 20/45 against arm E 14/30, tied. The first run alone read as a clean 9-against-3 win that the second run erased. The 9/15, 4/15, 7/15 spread is also in "Older-model evidence" below.
+
 ## 2026-09-11 — two controls, "go and look", classifier check
 
 Two questions need two controls. Bare control answers "is this rule anything at all"; the deployed question is "does this line add to what the reader already loads", and that control preloads `~/.claude/CLAUDE.md` (+`@` siblings) into `CLAUDE_CONFIG_DIR` plus the project `CLAUDE.md` in the cwd, with any always-loaded skill description appended (skills do not load in `-p`).

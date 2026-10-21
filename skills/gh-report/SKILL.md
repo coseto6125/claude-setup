@@ -18,7 +18,7 @@ own files before you draft anything.
      `gh api "repos/OWNER/REPO/discussions?per_page=100" --jq '.[] | "\(.number) [\(.category.name)] \(.title)"'`
    - For a behavior report, fetch the relevant source file from the default branch
      (`gh api repos/OWNER/REPO/contents/<path> --jq .content | base64 -d`) and confirm
-     the defect still exists there. If main already fixes it, tell the user and stop;
+     the defect still exists there. If the default branch already fixes it, tell the user and stop;
      the remaining action is a release question, not a report.
    - Report the evidence to the user in this format:
 
@@ -26,7 +26,7 @@ own files before you draft anything.
      |---|---|---|
      | Issues | `<query>` | N hits / none |
      | Discussions | category scan | N hits / none |
-     | main branch | `<file>` | defect present / already fixed |
+     | default branch (`<name>`) | `<file>` | defect present / already fixed |
 2. **Read the intake rules** on the default branch, and name each artifact
    present or absent before you go on:
    - `CONTRIBUTING.md` (root or `.github/`) covers who may open Issues and PRs,

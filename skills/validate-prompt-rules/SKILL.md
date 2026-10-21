@@ -106,6 +106,8 @@ When the preloaded files already state the answer, every arm copies it, and the 
 
 A scenario that pastes the code puts the plant in view, and any rule about *finding* the plant saturates by construction. Probe that class agentically. `agentic.sh` copies a repo snapshot into a fresh dir per run, seeds git, and runs `claude -p` with tools on. Put the plant outside the excerpt (a second call site, a doc line, a caller in another file), and score the diff or the output file, not the prose. Budget one to ten minutes and a few dollars per opus run.
 
+A failure that appears only after hundreds of tool calls is out of reach of every harness here. Back that rule with a hook.
+
 ## The classifier
 
 Before trial 1, run the classifier against one hand-written plausible hit **and** one plausible miss. Build the plausible hit the way the reader would, with the tool's native default names and formats.

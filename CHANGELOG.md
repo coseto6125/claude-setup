@@ -3,6 +3,54 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.12 — 2026-10-22
+
+### Added
+
+- `hooks/guard-rtk-hook.sh` and its test. On `SessionStart` it warns when `settings.json`
+  holds a standalone `rtk hook claude` entry, which `rtk init -g --auto-patch` adds.
+- Tests for `auto-etoon.sh` and `ecp-graph-nudge.sh`.
+- `skills/agent-routing`: a section on a sub-agent's report. Ask for the report as the final
+  reply. A teammate's idle notice cuts at about 3,000 characters. Check a background job with
+  `ps` before you wake the agent. Label each number as measured, inferred or guessed.
+  `measurements.md` holds the evidence.
+- `skills/simplify/CHECKLIST.md`:
+  - Rung 15, *Format upgrade*: test on data an earlier release wrote, with the record count
+    stated first.
+  - Rung 14: rebuild the binary a test runs before the red run, and confirm that the CI
+    command selects the test.
+  - Rung 11: a comment that vouches for another function is a claim to verify.
+  - Rung 12: report the skip count beside the pass count.
+- `skills/simplify/security/SURFACES.md`: `ecp flow --direction backward` for value origins.
+- `skills/writing-for-agents`: look for an existing setting before you build a check; put a
+  broken rule's step at the moment the wrong text was written; write a rewrite yourself and
+  dispatch its measurement; keep a number as a number.
+- `skills/validate-prompt-rules`: back a failure that appears only after hundreds of tool
+  calls with a hook.
+
+### Changed
+
+- `CLAUDE.md`: when a simpler approach exists, push back and wait for the answer before you
+  implement either one. Measured: claude-sonnet-5-5 9/15 to 15/15 on the half-done probe.
+- `CLAUDE.md`: before you call a deliverable for an outside reader ready, run the
+  cross-family verifier on the claims it took from documentation or code.
+- `skills/simplify/CHECKLIST.md` rung 2 also covers a line that a new branch routes around,
+  and names the side effects to look for. Measured on claude-sonnet-5-5 and claude-opus-5-5;
+  rows in `skills/simplify/measurements.md`.
+- `skills/simplify/SKILL.md`: tier a diff that fixes review findings, or a peer's diff, by its
+  own size and risk.
+- `skills/gh-report`: check the default branch, not a branch named `main`.
+- `hooks/auto-etoon.sh` runs `rtk hook claude` first and keeps `description`, `timeout` and
+  `run_in_background` in its `updatedInput`. `settings.example.json` drops the separate rtk
+  hook and wires `guard-rtk-hook.sh`.
+- `hooks/ecp-graph-nudge.sh` hands ecp the repo of a leading literal `cd`. A `cd` after another
+  command, after `||`, in a pipe or in a subshell keeps the session cwd. The suggested command
+  quotes the dir with `printf %q`.
+- `hooks/auto-etoon.sh` strips trailing newlines before it appends `| etoon`, and skips a command
+  that ends in a line-continuation backslash.
+- `maintainer-notes.md` and the skills' `measurements.md` hold provenance moved out of
+  machine-local memory, each lesson labelled with its status.
+
 ## v0.1.11 — 2026-10-21
 
 ### Added

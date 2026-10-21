@@ -1,6 +1,84 @@
 # Measurements behind the SKILL.md rules
 
-Evidence for SKILL.md sections, one dated section each. Read when you doubt a rule. SKILL.md carries the rule and the shortest evidence.
+Evidence for SKILL.md sections, one dated section each. Read when you doubt a rule. SKILL.md carries the rule only.
+
+## 2026-10-15, from memory hand-called-skills-default-manual
+
+Provenance, no measurement. On 2026-10-15 the user chose manual invocation twice in one session, to keep the per-session description cost at zero: `external-writing` ("感覺讓這個技能手動就好了") and `retro` ("這個應該可以手動呼叫就好"). For `retro` an auto-trigger had been offered and a trigger-rate A/B dispatched; the user reverted to manual and the A/B was stopped unused. The mechanics of the two modes are in `SKILL-MECHANICS.md`.
+
+Lessons the memory stated, with their status on 2026-10-22:
+- A new skill that the user calls by hand gets `disable-model-invocation: true` by default. Make it model-invoked only when an agent or sub-agent must reach it on its own, such as `diagnose`. [covered: writing-for-agents/SKILL-MECHANICS.md, Invocation]
+- Dispatch a description trigger A/B only after the user confirms model invocation. [covered: follows from SKILL-MECHANICS.md, Invocation]
+
+## 2026-10-09, from memory prompt-docs-cite-current-models
+
+Provenance, no measurement. The user said on 2026-10-09 that work always runs on the newest model, so a skill that quotes claude-haiku-4-5 numbers points the reader at a model nobody deploys. Rule as recorded: a SKILL.md or CLAUDE.md cites evidence from the current generation only (2026-10: claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5). Older-model rows move to `measurements.md` or `maintainer-notes.md`, labelled with the full model ID.
+
+Lessons the memory stated, with their status on 2026-10-22:
+- After a model release, grep the skills for old model IDs and bare aliases in `> Measured` blockquotes. Replace each with a current-model measurement when one exists; otherwise move it to the provenance file and leave the rule without a blockquote. [covered: writing-for-agents/SKILL.md Pruning and audit.py rule 6]
+- Default probe model IDs in scripts track the newest release. [not shipped: script defaults, not a rule]
+
+## 2026-09-23, from memory rewrite-myself-measure-via-opus-agent
+
+Provenance, no measurement. On 2026-09-23 the user stopped four drafting sub-agents ("改稿的部分應該由你來改"). The user also rejected "main-session text needs no measuring" ("主session自讀的內容依然需要量測，只是丟給另一個opus5.5來量測"). Measuring followed stepped n=5, 7/10, 15.
+
+Lessons the memory stated, with their status on 2026-10-22:
+- When you re-evaluate and rewrite skills or prompts, the main session writes every rewrite itself. Never dispatch sub-agents to draft rewrites. [shipped 2026-10-22: writing-for-agents/SKILL.md, Finishing a change]
+- Measurement is what gets delegated: an Opus 5.5 sub-agent runs the `validate-prompt-rules` harness on old against new, with predeclared targets, one agent per batch, after you back up the original. [shipped 2026-10-22: writing-for-agents/SKILL.md, Finishing a change]
+- Text only the main session reads is still measured, with claude-opus-5-5 as the subject. Text pasted into a haiku or sonnet brief is measured on that lower tier. For a skill with low-tier readers, also judge whether a wording makes the low tier perform well. [covered: validate-prompt-rules/SKILL.md, "Probe on the model that reads the artifact"]
+
+## 2026-09-23, from memory evidence-sentence-can-carry-the-only-anchor
+
+A trim of `peer-agent` cut a dated evidence sentence ("Measured 2026-09-09: ... before an `--ack` let the report through"). It read as a rationale clause, but it held the only `check --ack <delivery_id>` in the file. The rule sentence said "ack every delivery" and never said how. claude-opus-5-5: old file 7/7 used the real form; new file 0/7 (every row invented `orchestration ack`, which does not exist). After the rule sentence itself named the flag: 7/7. The 7/7 invented-command count and the `spans` origin are also in the `audit.py` section below.
+
+## 2026-09-11, from memory class-sentence-covers-what-instances-miss
+
+Lessons the memory stated, with their status on 2026-10-22:
+
+- Naming the class with a leading word and spelling it out are indistinguishable in a single probe; the name pays in cross-file reference. [not shipped: an observation from one probe]
+
+Class and instance, rows not yet in the section below (models as written in the source; "haiku" before 2026-10-09 is claude-haiku-4-5 (inferred from the date; the memory says only the family)).
+
+- 2026-08, `ui-ux-pro-max/local/anti-patterns.md`, AI slop section. Scenario: a cloud-monitoring product for platform engineers, home page in a Victorian-apothecary style (aged paper texture, engraved illustrations, small-caps serif). The three listed instances (monospace, block shadow, emoji as icons) match none of it. No rule 0/6; the three instances alone 0/6 (the model also refused: "I need to see the page"); instances plus a class-level sentence 6/6, every row saying "borrowed / unearned category", and the model generalised to unlisted instances.
+- 2026-09-09, `eli5` Part 1, haiku, n=15 x three arms, ask "explain database index to my 15-year-old". Hit = the main analogy comes from a teenager's daily life. No rule 0/15; four audience tables without the class sentence 15/15; class sentence only (tables deleted) 2/15. Control and class-only rows write "like the index at the back of a textbook" or "like a phone book"; the table arm writes "like your phone contacts" or "like finding a song in a music app". The class sentence tested was "pick the analogy from things the reader touches every day".
+- Same document, the example block (three `User says / Audience / Response style` entries): deleting it took the same ask from 28/30 to 17/30 (two rounds, n=15). The Age 5 example uses the "very thick book" analogy, the opposite direction, so the effect is the demonstration that a new audience means a new frame, not the example answer.
+- Naming the class (a leading word) against spelling the concept out: 6/6 each, token-aligned 100 against 98. The gain of a name sits in cross-file reference, not in single-probe effect.
+- Rewording an opening ("Avoid all of them" to "defaults, not bans, the brief can earn them back"): 44 trials on haiku and opus, all flat. A no-op.
+- 2026-09-11, edge-case rule (a client project's keyword-search plant, CLAUDE.md preloaded in every arm, n=5). Target: the new endpoint handles a whitespace-only keyword. opus: control 0/5, class-only 5/5, class plus seven-item list 5/5. haiku: control 0/5, class-only 0/5, class plus list 4/5. Same session, a class-level security sentence ("foreign value"): saturated on opus (control already guarded the new query param 5/5), inert on haiku (0/5, 1/5, 0/5). Rows were in scratchpad `raw26/27-*`, `raw26/28-*` (gone since).
+
+## 2026-09-09, from memory rule-rationale-clauses-are-noops
+
+The rationale clause is a no-op at inference (SKILL.md, "Hunt no-ops"). Rows for the replications; the opus dispatch-rule cases sit in `maintainer-notes.md`, `## Dispatch, "When to dispatch"`; the simplify CHECKLIST replication sits in `skills/simplify/measurements.md`. "haiku" before 2026-10-09 is claude-haiku-4-5 (inferred from the date; the memory says only the family).
+
+- 2026-08-05, Opus 5 (claude-opus-5 (inferred from the date; the memory says only the family)), `validate-prompt-rules`, n=3 per arm, 96 probes in 3 rounds, run while writing the Dispatch section of `~/.claude/CLAUDE.md`. Every rule tested as `rule + rationale` scored the same as `rule alone`; both differed from the no-rule control.
+  - "Treat unverifiable claims as leads" + "this is not redoing the delegate's work": 3/3, same as the rule alone; the control left it undecided.
+  - "Dispatch a verifier when a conclusion is expensive to get wrong" + "it buys correctness only, and that is the point": 3/3, same as the rule alone.
+  - The control names the tradeoff correctly and then declines to commit ("whether the caller list is trustworthy enough to skip verification"). It holds the reasoning and lacks the decision.
+- A no-op is not only wasted tokens: adding an already-default requirement to a rule displaced the non-default half of it, 3/3 down to 1/3.
+- A numeric threshold beat its countable rephrase ("about three source files") 3/3 against 0/3. Replicated 2026-08-13 on haiku, 2 x n=15, on the `codex` rule: "an independent hypothesis when you are stuck" fired 2/15 and 1/15; "After two failed attempts at the same problem, run codex" fired 8/15 and 12/15, in a version 150 tokens shorter (rows in the 2026-08-13 entry below).
+- 2026-08-07, haiku, on a skill body: cutting three rationale clauses (315 characters, about 78 tokens) from the ported sections of `writing-for-agents` held every branch. Review checklist 5/5 both ways; red-line negation 3/3 up to 5/5; mirror drift 3/3 with the align branch intact.
+- 2026-08-08, third replication: a provenance blockquote sourcing two counterintuitive claims in `validate-prompt-rules` was not load-bearing. The document minus it scored 5/5 (control 0/5) on a generative probe of the decision it sources. Kept on the human-maintainer clause; the `>` blockquote form is the standing pattern there (three instances).
+- 2026-08-21, fourth replication, first with n=15 controls: the `## What ADHD changes about reading` block in `i-have-adhd/SKILL.md` (now merged into `eli5/SKILL.md`, 2026-09-08): five numbered facts, 101 words, no instruction. Opus 5, two probes x n=15 x three arms (90 trials). Deleted against kept: first line is an executable action 26/30 against 28/30; closes with a concrete next action 30/30 both ways; gives a specific time estimate 15/15 both ways. The block was deleted. Control proves the probes could detect an effect: first-line action 0/30, next action 0/30, answers 717 words against about 315 with the skill.
+- Opposite finding, same session: the four audience tables in `eli5/SKILL.md` (450 words, 36% of the skill) are load-bearing. Leave-one-out, haiku, n=5, ask "explain to a 15-year-old": full skill used a social-media or phone analogy 5/5; skill minus tables 0/5 and bare control 0/5 (book-index and phonebook analogies). A table that maps a case to a concrete prescription is instruction; a list of facts that explains why the instructions exist is not. Length does not tell them apart; leave-one-out does.
+- 2026-09-09, `eli5/SKILL.md`: `If the audience isn't explicitly stated, default to "Age 5"` scored 5/15 against a 13/15 no-rule control on a question written in engineer vocabulary (p99, read replica). The default clause dragged an engineer's question down to a child's explanation, so a sensible-reading default can sit below the control.
+- 2026-09-09, `eli5` Part 2 rule 9 (cap lists at 5). haiku: 5/15 rule against 4/15 control, both at the floor. opus: 14/15 against 8/15; the opus rule arm opens `Check these five before your first production deploy:` with exactly five items 13/15, while the control hands over 16 to 27 items. The control's 8/15 is inflated: the judge read "roughly in order of what bites people" as a priority group on 21- and 27-item lists. A haiku null is not a deletion licence.
+
+## 2026-08-13, from memory vague-trigger-is-the-real-cost
+
+20 rounds, about 3000 isolated probes on `~/.claude/CLAUDE.md`, haiku (claude-haiku-4-5 (inferred from the date; the memory says only the family)), 2 x n=15 per finding, `validate-prompt-rules`. Five rules loaded on every turn did almost nothing; each triggered on a category the model must classify. Rewriting the trigger as a moment revived all five. Net across the five rewrites: -135 tokens.
+
+| rule | trigger before | trigger after | before | after |
+|---|---|---|---|---|
+| reach for codex | "when you are stuck" | "After two failed attempts at the same problem" | 1-2/15 | 8-12/15 |
+| re-check a delegate's claim | "any claim you cannot re-check on the spot" | "Before you act on anything a sub-agent reports" | 6-7/15 | 12-14/15 |
+| regression test first | "bug fix ships with a failing test first" | "When you have reproduced a bug, write the failing test before the fix" | 0-1/15 | 10-12/15 |
+| worktree per change | "make every code change in a worktree" | "Before your first edit to any file, create the worktree" | 0/15 | 5/15 |
+| `match` over if/elif | "over if/elif chains" | "three or more string or enum values" | 13-14/15 | 15/15 |
+
+- The codex rewrite was 167 tokens shorter and six times more effective: a vague trigger is the expensive part of a rule, not the length.
+- The delegate rule was a safety bug: under the old wording the model answered "Delete the auth module." 7/15 and 5/15, acting on an unverified sub-agent claim. After the rewrite that answer never appeared.
+- Same failure in two files: `## Search & Read Strategy` "Code structure → ecp" scored 0/15, while `ECP.md` "Before any refactor / rename / signature change: `ecp impact`" scored 15/15. One names a category, the other a moment.
+- A moment-shaped trigger still scored 0/12 until the wrong command was named: see `maintainer-notes.md`, `### The regex bullet, extended 2026-08-21`.
 
 ## 2026-10-09 — re-run on the current models (CLI 2.1.295)
 
@@ -94,6 +172,14 @@ Measured 2026-10-09 on claude-haiku-5-5, n=15: "Never field-split a delimited fo
 Rule: STE's rules split in two, and only one half is checkable here. The **structural** rules describe sentence shape, so you apply them from the description alone. T…
 
 Rule numbers and the semicolon detail come from ASD-STE100 Issue 9 (Jan 2025): 53 rules in 9 sections, over a dictionary of ~900 approved words. Public summary, including the structural/lexical split: https://github.com/danyuchn/asd-ste100-skill
+
+## 2026-10-17, from memory fix-at-generation-not-post-hoc
+
+Provenance, no measurement. On 2026-10-17 the user rejected a "name each of the seven review modes in your report" completion criterion for `writing-for-agents`: "是開始寫就要能做到，而不是凡事事後要求". Post-hoc checks pile up and still let the first draft come out wrong. The miss (new section, duplicated meaning, rationale clause) happened at the moment of adding a sentence. The rule is in `SKILL.md` ("find the moment it writes the wrong text. Move the rule's step to that moment, and add no check after it").
+
+Lessons the memory stated, with their status on 2026-10-22:
+- Mechanical checks (`audit.py`, hooks) stay for what a script can decide. [covered: writing-for-agents/SKILL.md, mechanical rule bullet]
+- Ask "at which moment was the wrong thing produced?" and put 2 to 3 imperative steps there, first in the document. [shipped 2026-10-22: writing-for-agents/SKILL.md, after the completion-criteria paragraph]
 
 ## 2026-10-17 — "Before you add a sentence", step 2
 

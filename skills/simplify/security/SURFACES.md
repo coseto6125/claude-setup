@@ -26,6 +26,7 @@ Structural questions (which routes exist, what reaches this sink, who calls this
 |---|---|
 | What is the whole route surface? | `ecp routes --format toon` |
 | Who handles this route, and what chain reaches it? | `ecp routes /api/o/<org>/knowledge/web` — prints handlers plus the `EntryPoint` chain |
+| Where does this value come from? | `ecp flow --file <path> --line <n> --column <n> --direction backward` |
 | Where does the code talk to the outside? | `ecp tool-map --category http` (also `db`, `redis`, `queue`) — the sink inventory, per call site |
 | Does an entry point reach this sink? | `ecp impact --target <sink> --direction up --depth 6` |
 | …for a whole list of sinks at once | `printf '%s\n' <sinks> \| ecp impact --batch --direction up` |

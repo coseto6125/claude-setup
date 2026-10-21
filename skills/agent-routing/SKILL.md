@@ -72,13 +72,24 @@ receives one `worker_done` carrying the conclusion. When a peer exchange changes
 task's scope or settles a decision the coordinator is tracking, send that back as a
 `status` message so the DAG reflects what the workers agreed.
 
+## A sub-agent's report
+
+- Ask an Agent-tool sub-agent for its report as its final reply. Ask it for a file
+  only for data, such as a `.tsv`.
+- A teammate's idle notice cuts its result at about 3,000 characters. Ask a teammate
+  for a report under 2,500 characters, or for numbered parts.
+- When a sub-agent goes idle while its own background job still runs, check the job
+  with `ps -eo etimes,args`. After the job ends, wake the agent with `SendMessage`.
+- In a message to another session, label each number as measured, inferred or guessed.
+
 ## Where this overrides the Orca guides
 
 The `orchestration` and `orca-cli` guides predate cross-session messaging, so they
 route every handoff prompt through a terminal. Two of their instructions take the
 routing above on top. Each quote is a heading in the guide that `ORCA skills get orca-cli`
 serves (`ORCA` is the binary the `orca-cli` skill resolves: `orca-ide` on Linux). When a quote no longer matches that guide, re-read its section before you trust
-the override.
+the override. Write every override of an Orca guide in this section. Never edit a
+file under `~/.agents/skills/`.
 
 - "Independent new-worktree handoff:" starts a worker with `worktree create --prompt`.
   Use it for a worker that does not exist yet. A worker being created is not yet in
