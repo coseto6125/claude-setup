@@ -38,3 +38,7 @@ When delegating Python implementation to a sub-agent, echo the relevant recipe l
 
 - Keep SQL strings comment-free (comments hurt the DB query cache); comment externally via Python concatenation
 - SQLAlchemy `text()`: use `CAST(:param AS jsonb)` not `:param::jsonb` — `::` clashes with `:name` bind-parameter syntax
+
+## Benchmarks
+
+Before you write a bench brief, read [`benchmarks.md`](benchmarks.md).

@@ -5,6 +5,18 @@ coding agent. Apache-2.0, spec at `github.com/google-labs-code/design.md`,
 `docs/spec.md`. Cursor, Copilot, Claude Code and this skill can all read the
 same file, which is the point of using it.
 
+## Persisting the design system
+
+Add `--persist` together with `--output-dir` pointed at the project root — without `--output-dir` the files land in whatever directory the tool happened to run from:
+
+```bash
+python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system --persist -p "Project Name" --output-dir "<project-root>" [--page "dashboard"]
+```
+
+Writes `design-system/<project-slug>/MASTER.md` (global source of truth) and `design-system/<project-slug>/pages/`; `--page` adds `pages/<page>.md`.
+
+When `MASTER.md` already exists, `--persist` silently leaves it untouched unless you pass `--force` — so a run that looks successful may have written nothing.
+
 ## When to write one
 
 Write a `DESIGN.md` at the project root when the project outlives this session,
@@ -136,6 +148,8 @@ Component property tokens: `backgroundColor`, `textColor`, `typography`,
 When a project already holds a `DESIGN.md`, its tokens outrank anything
 `--design-system` proposes. Read it before running the search, and treat a
 generated palette as a suggestion the file has already overruled.
+
+When your work extends that system, keep the existing tokens. Report drift you find between the file and the code, and repair it only when the user asks. Write to the file only when the design itself changed.
 
 ## Mapping MASTER.md to DESIGN.md
 

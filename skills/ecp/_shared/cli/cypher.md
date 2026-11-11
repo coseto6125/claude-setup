@@ -11,23 +11,31 @@ ecp cypher "MATCH (a)-[r]->(b) RETURN a,b" [--repo <PATH>]
 - **Boolean WHERE**: `AND`, `OR`, `NOT`.
 - **Comparisons**: `=`, `!=`, `<`, `<=`, `>`, `>=`.
 - **String Ops**: `STARTS WITH`, `ENDS WITH`, `CONTAINS`, `=~`, `IN [...]`.
-- **Null / existence**: `IS [NOT] NULL` (pair with `OPTIONAL MATCH`), `[NOT] EXISTS((a)-[:Rel]->(b))` (multi-hop + `*min..max` supported; multi-hop needs a var bound by an outer MATCH).
-- **Aggregations**: `COUNT(*)`.
-- **Pathing**: Variable-length paths `[:Rel*1..2]`, reverse arrows `<-[r]-`.
+- **Null / existence**: `IS [NOT] NULL` (pair with `OPTIONAL MATCH ... WITH f, c WHERE c IS NULL`; a `WHERE` directly after `OPTIONAL MATCH` is refused), `[NOT] EXISTS((a)-[:Rel]->(b))` (multi-hop + `*min..max` supported; multi-hop needs a var bound by an outer MATCH).
+- **Functions**: only `type`, `id`, `labels`, `count`, `sum`, `avg`, `min`, `max`, `collect`. Any other name (`size`, `toLower`, ...) is an error.
+- **Clauses**: one `WITH` per query; no `MATCH` after `WITH`. `ORDER BY` must name a projected key (alias it in `RETURN`). Comma patterns `(a)-[:X]->(m), (b)-[:Y]->(m)` join on shared variables. Each hop, pattern and clause extends every row before it, before `WHERE` and `LIMIT` run: unrelated patterns, and hops through a node with many edges, multiply. A non-aggregate MATCH whose hops, patterns and clauses build more than 2,000,000 rows in total is refused; the opening scan and its first single hop are not counted. Pin a node inline (`(a:Function {name:'x'})`). To find a value several nodes share, group instead of joining: `MATCH (a:Function) WITH a.name AS n, count(*) AS c WHERE c > 1 RETURN n, c`.
+- **Pathing**: Variable-length paths `[:Rel*1..2]` need `RETURN DISTINCT` (or `count(DISTINCT x)`), no edge variable, and a minimum of 0 or 1. Reverse arrows `<-[r]-` work on fixed-length patterns.
+- **Lists**: index or slice a list value: `labels(n)[0]`, `xs[-1]`, `xs[1..3]`.
+- **Column names**: an unaliased function column takes the function name in lower case and keeps its arguments: `count(b)`, `count(DISTINCT b)`, `labels(a)[0]`. `DISTINCT` is upper case, `count(*)` stays `count(*)`, and an argument other than a variable, property, literal, subscript or function call reads `expr`. `UNION` branches need equal column names, so alias such columns with `AS`.
 
 ## NodeKinds
 `Function`, `Method`, `Class`, `Property`, `Constructor`, `Interface`, `Const`, `Variable`, `Import`, `Route`, `Process`, `File`, `Struct`, `Enum`, `Trait`, `Impl`, `Module`, `Namespace`, `Typedef`, `Macro`, `Annotation`, `SchemaField`, `EventTopic`, `TransactionScope`, `PathLiteral`.
 
 Category labels expand in MATCH and WHERE: `:Callable` (Function|Method|Constructor), `:Type` (Class|Interface|Struct|Enum|Typedef|Trait), `:Data` (Property|Variable|Const|EnumVariant|SchemaField). Prefer `:Callable` over bare `:Function` — the latter skips methods.
 
+## Owner properties
+`n.ownerClass` is the stored owner: the class of a method, null for a nested fn or closure. `n.lexicalParent` is the enclosing chain of a nested fn (`outer`, `K::m`), else the stored owner. `WHERE n.ownerClass = 'outer'` matches no closure in `outer`; write `WHERE n.lexicalParent = 'outer'`.
+
 ## RelTypes
-`Calls`, `Extends`, `Imports`, `Implements`, `HasMethod`, `HasProperty`, `Accesses`, `HandlesRoute`, `References`, `Defines`, `Fetches`, `MirrorsField`, `Publishes`, `Subscribes`, `EventTopicMirror`, `OpensTxScope`, `Overrides`, `UsesPathLiteral`.
+`Calls`, `Extends`, `Imports`, `Implements`, `HasMethod`, `HasProperty`, `Accesses`, `ReadsField`, `HandlesRoute`, `References`, `Defines`, `Fetches`, `MirrorsField`, `Publishes`, `Subscribes`, `EventTopicMirror`, `OpensTxScope`, `Overrides`, `UsesPathLiteral`, `StepInProcess`, `Decorates`, `CompensatedBy`, `QueriesTable`, `PartOf`.
+
+A C# `partial` type has one node per part. Every other part has a `PartOf` edge to the representative part. `Extends` and `Implements` end at the representative. `ecp inspect` on any part lists the members of every part.
 
 ## Common patterns
 
 ### Path-literal split-brain (find filenames written one way, read another)
 ```cypher
-MATCH (n:PathLiteral) WHERE n.name =~ ".*meta\\.json" RETURN n.name, n.file_path
+MATCH (n:PathLiteral) WHERE n.name =~ ".*meta\\.json" RETURN n.name, n.filePath
 ```
 
 ### Who reads / writes a specific file?
@@ -38,6 +46,14 @@ RETURN s.name, r.reason
 ```
 The `r.reason` payload is `sink:read|confidence:high`, `sink:write|confidence:high`, `sink:join|confidence:medium`, `sink:free|confidence:high`, etc. — split readers from writers without re-parsing.
 
+### Who reads a constant, or passes a function as a callback?
+```cypher
+MATCH (s)-[r]->(c {name: "MAX_RETRIES"})
+WHERE r.reason IN ["value_read", "function_reference"]
+RETURN s.name, s.filePath, r.reason, r.confidence
+```
+A bare-name read of a constant or variable is a `ReadsField` edge with reason `value_read`. A function named without a call (a callback argument, a method reference) is a `References` edge with reason `function_reference`. `ecp impact` on the target already counts these readers.
+
 ## Process Tracing (Leiden-community-aware execution paths)
 
 Processes are detected via forward BFS through the call graph, grouped by Leiden community. Each `Process` node represents an entry→terminal path; `StepInProcess` edges link member functions into that trace with a 1-indexed `step:N` reason label. Use these patterns to analyze execution flows, blast radius, and architectural bottlenecks.
@@ -45,9 +61,8 @@ Processes are detected via forward BFS through the call graph, grouped by Leiden
 ### 1. List all processes with member count
 Enumerate all processes, sorted by trace length.
 ```cypher
-MATCH (p:Process)
-WITH p, size([(member)<-[:StepInProcess]-(p) | member]) AS step_count
-RETURN p.name, step_count, p.file_path
+MATCH (p:Process)-[:StepInProcess]->(member)
+RETURN p.name, count(member) AS step_count, p.filePath
 ORDER BY step_count DESC
 ```
 **CLI equivalent**: `ecp processes` shows all processes with stats; `ecp processes trace <name>` shows the full member chain for one process.
@@ -57,7 +72,7 @@ Locate processes whose entry or terminal function contains a given substring (e.
 ```cypher
 MATCH (p:Process)
 WHERE p.name CONTAINS "render"
-RETURN p.name, p.file_path, p.community_id
+RETURN p.name, p.filePath
 ```
 **CLI equivalent**: `ecp processes | grep render` or `ecp processes trace render` (if exact match found).
 
@@ -66,28 +81,26 @@ Retrieve all functions in a process trace, ordered by step index.
 ```cypher
 MATCH (member)<-[step:StepInProcess]-(p:Process)
 WHERE p.name = "Main → HTTPServer"
-RETURN member.name, step.reason, member.file_path
+RETURN member.name, step.reason, member.filePath
 ORDER BY step.reason
 ```
 **CLI equivalent**: `ecp processes trace "Main → HTTPServer"` — returns the trace with step numbers inline.
 
-### 4. Cross-community processes (members span multiple Leiden groups)
-Find processes whose member functions belong to different communities — useful for identifying architectural boundaries.
+### 4. Processes whose members span several files
+Find processes with two members in different files. Process nodes carry no community property, so file is the available boundary signal.
 ```cypher
-MATCH (member)<-[:StepInProcess]-(p:Process)
-WITH p, collect(DISTINCT member.community_id) AS communities
-WHERE size(communities) > 1
-RETURN p.name, size(communities) AS distinct_communities, p.file_path
-ORDER BY distinct_communities DESC
+MATCH (a)<-[:StepInProcess]-(p:Process)-[:StepInProcess]->(b)
+WHERE a.filePath <> b.filePath
+RETURN DISTINCT p.name, p.filePath
 ```
-**CLI equivalent**: No direct shortcut; `ecp processes` lacks a `--cross-community` filter.
+**CLI equivalent**: No direct shortcut; `ecp processes` lacks a cross-file filter.
 
 ### 5. Upstream callers into a process entry
 Trace who calls the entry function of a process (one hop back via `Calls`).
 ```cypher
 MATCH (caller)-[:Calls]->(entry)<-[:StepInProcess]-(p:Process)
 WHERE p.name = "Main → HTTPServer"
-RETURN DISTINCT caller.name, caller.file_path
+RETURN DISTINCT caller.name, caller.filePath
 ```
 **CLI equivalent**: Combine `ecp processes trace` + `ecp impact <entry-fn>` to list callers; requires two queries.
 
@@ -95,8 +108,7 @@ RETURN DISTINCT caller.name, caller.file_path
 Identify files that host the most process members — potential architectural hubs.
 ```cypher
 MATCH (member)<-[:StepInProcess]-(p:Process)
-WITH member.file_path AS file, count(DISTINCT p) AS process_count
-RETURN file, process_count
+RETURN member.filePath AS file, count(DISTINCT p) AS process_count
 ORDER BY process_count DESC
 LIMIT 10
 ```
@@ -105,10 +117,10 @@ LIMIT 10
 ### 7. Long-tail processes (highest step count)
 Find the longest execution traces — useful for refactor prioritization and complexity reduction.
 ```cypher
-MATCH (p:Process)
-WITH p, size([(member)<-[:StepInProcess]-(p) | member]) AS step_count
+MATCH (p:Process)-[:StepInProcess]->(member)
+WITH p, count(member) AS step_count
 WHERE step_count >= 5
-RETURN p.name, step_count, p.file_path
+RETURN p.name, step_count, p.filePath
 ORDER BY step_count DESC
 ```
 **CLI equivalent**: `ecp processes` output (if sortable).
@@ -117,8 +129,8 @@ ORDER BY step_count DESC
 Find processes that share a member function — indicates tightly-coupled execution paths.
 ```cypher
 MATCH (member)<-[:StepInProcess]-(p1:Process), (member)<-[:StepInProcess]-(p2:Process)
-WHERE p1 <> p2
-RETURN p1.name, p2.name, member.name, member.file_path
+WHERE id(p1) <> id(p2)
+RETURN p1.name, p2.name, member.name, member.filePath
 ORDER BY p1.name, p2.name
 ```
 **CLI equivalent**: No built-in co-occurrence query; requires custom Cypher or post-processing.

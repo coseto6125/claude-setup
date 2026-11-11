@@ -201,3 +201,40 @@ A token pass over `~/.claude/CLAUDE.md` and `writing-for-agents` spent about 2,2
 ## 2026-10-21 — blind hand labels: not added
 
 Probe 05b of the `SKILL-MECHANICS.md` run was first hand-labelled with the arm visible in the file names, then relabelled blind (shuffled IDs, key opened after labelling). The blind pass changed 0 of 60 A/B labels. The same day's real labelling risk was a metric picked after reading rows (the "so the user can override" offer), which blinding does not catch; "label a probe you add after you read the data as exploratory" covers it. No `blind.py` and no blind-label rule were added. Revisit when a hand-labelled cell sits within 1 trial of a ship threshold. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-mech/` (`blind/`, `blind-d/`).
+
+## 2026-10-22, route.sh mirrors the deployed skill surface
+
+Probed by hand on CLI 2.1.307 with `claude-haiku-5-5`, each from an empty `CLAUDE_CONFIG_DIR` without `--disable-slash-commands`:
+
+- With no skills tree, 14 bundled skills list, a bundled `simplify` among them.
+- A `skills/simplify/SKILL.md` in the config dir replaces the bundled `simplify`: one `simplify` lists, with the planted description.
+- `skillOverrides` in the config dir's `settings.json` hides a skill set to `off` or `user-invocable-only` from the model's list.
+
+route.sh had copied `{}` as settings, so the arms saw bundled skills that the user's `skillOverrides` hide in a real session. It also preloaded no user `CLAUDE.md`, and its gate demanded NONE skills, which no route arm can meet. Since 2026-10-22 route.sh copies only `skillOverrides`, preloads CLAUDE.md, RTK.md and ECP.md (PRELOAD_USER=0 turns that off), and gates with `isolation_gate.py --skills-surface`. A live run passed `surface, shadow, preload, leak`. Later the same day the surface gained the rest of a real session: `mirror_surface.py` copies each enabled user-scope plugin (without its `.in_use` pid markers, so the live cache stays untouched) and rewrites `installed_plugins.json` to the copies; the claude.ai skills under `skills/synced/` copy with their marker files, which makes them list on the first call instead of after a runtime sync (0 of 13 listed on a first call without the copy, 13 of 13 with it); `rules/` preloads with CLAUDE.md in route.sh, preloaded.sh and agentic.sh, through the snapshot. A live route run on `claude-opus-5-5` routed a plugin skill (`frontend-design:frontend-design`) and a claude.ai skill (`anthropic-skills:docs`) 2/2 each. With rules/ mirrored, the gate's leak check has no absent word and skips itself; it still runs under PRELOAD_USER=0. To keep the one known leak path covered either way, the gate now fails `leak` at once, with no call and no cache, when `--cwd-base` resolves under `$HOME`.
+
+## 2026-10-28 Dispatch model for the harness agent
+
+Provenance, no measurement. A sample of 20 from 339 `general-purpose` dispatches on `opus` (2026-09-28 to 2026-10-28) held 4 harness runs whose briefs fixed the probes and the scoring. The user decided on 2026-10-28: the harness agent runs on sonnet by default ("量測 agent 除特殊需求，基本用 sonnet"). This supersedes the 2026-09-23 "丟給另一個opus5.5來量測" instruction recorded in `writing-for-agents/measurements.md`. Shipped as `SKILL.md` § Dispatch; `writing-for-agents/SKILL.md` § Finishing a change now points here without a model name.
+
+### Resume a cut real session (2026-11-05, CLI 2.1.318, claude-haiku-5-5)
+
+Probe session: a two-turn `claude -p` run (`echo hello` through Bash), cut at its tool_result entry. Raw outputs were printed, not kept.
+
+| Variant | cache read | cache write | cost USD |
+|---|---|---|---|
+| `--fork-session`, trial 2 with a different prompt | 9155 | 17405 | not read |
+| fixture id, same prompt, trial 1 | 9155 | 17410 | 0.00362 |
+| fixture id, same prompt, trials 2 and 3 | 26565 | 0 | 0.00039 |
+| `--append-system-prompt` added | 0 | 26571 | not read |
+| `--no-session-persistence`, 2 trials | 26565 | 0 | fixture md5 unchanged |
+
+- `--fork-session` gives each trial a new session id, and the history missed the cache on every trial. The cause is not confirmed: the system prompt holds that id (the scratchpad path).
+- A resume reuses the system prompt the session recorded unless `--system-prompt-snapshot off` is passed: `--append-system-prompt` then has no effect (codeword test, 2026-11-05 run below).
+- A resume with no prompt fails: "No deferred tool marker found ... Provide a prompt to continue the conversation."
+- A resume without `--no-session-persistence` appends to the fixture, and a later trial with the same id then saw the earlier trial's turns.
+- Hidden flag `--resume-session-at <uuid>` (with `--resume`, print mode) cuts in place, but needs `--fork-session` to leave the source untouched, so it inherits the first row's cache miss.
+- Hooks run on a resumed `-p` call: lang-anchor's text reached the model and the reply came back in Chinese.
+
+### Think-before-text rule against reply-language drift (2026-11-05, claude-opus-5-5, effort high)
+
+Resumed design, 4 probes cut from this machine's client-project sessions, read-only tools. Control arm: 0/25 trials and 0/33 post-tool text blocks in English; 28/33 had a thinking block before them already. Arm B ran on one probe (0/5). The probes are saturated: trials end after 2 to 8 turns, while the drift appears in long runs of edits and scripts. No effect can be read either way. Spend 15.69 USD. Rows: `~/.claude/prompt-runs/2026-11-05-langdrift-think-first/` (`recount.py`, `ro_gate.py` for the read-only Bash gate).

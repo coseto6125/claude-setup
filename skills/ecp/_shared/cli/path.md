@@ -22,16 +22,16 @@ ecp path <FROM> <TO> [--direction down] [--depth 8] [--repo <PATH>]
 - `--depth`: maximum hops searched. Default 8.
 - `--relation_types calls,extends`: restrict which edges may be steps. Default
   is every non-containment relation.
-- `--include-tests`: allow test files on the route. Off by default, so a
-  production path is not routed through a test helper that calls both ends.
+- `--include-tests`: allow tests on the route: nodes in test files and functions
+  the index flags as tests. Off by default, so a production path is not routed through a test helper that calls both ends.
 - `--min-confidence 0.8`: drop low-confidence edges. Default 0.0 is
   recall-first, matching `ecp impact`. Values outside 0.0–1.0 are rejected
   rather than filtering every edge into a `found: false` you cannot tell from
   a real miss.
 - `--from-file` / `--to-file`: substring on the file path, to pin an
   overloaded endpoint to one definition.
-- `--include-heuristic`: allow heuristic edges (MirrorsField, EventTopicMirror)
-  as steps.
+- `--include-heuristic`: allow heuristic edges (MirrorsField, EventTopicMirror,
+  CompensatedBy) as steps.
 
 ## Reading the output
 
@@ -91,10 +91,12 @@ other direction (upstream, 3 hops): rerun with --direction upstream."
 
 The reverse of `ecp impact`, on purpose. `impact` can include heuristic edges
 because it buckets them separately and tags them `requires_verification`; a
-path has no second bucket — a step is in the chain or it is not. So the default
-answer is the one that is safe to act on. `--include-heuristic` opts in, marks
-every inferred step `requiresVerification: true`, and adds a caveat naming how
-many hops are inferred.
+path has no second bucket — a step is in the chain or it is not. So heuristic
+relations stay out of the walk unless `--include-heuristic` opts in. A
+deterministic edge below 0.7 confidence can still be a step: every step that is
+heuristic or below 0.7 is `requiresVerification: true`, and a caveat names how
+many such hops the path holds. Among routes of the shortest length, a fully
+verified one wins. Check those hops before you act on the route.
 
 ## Shortest only
 

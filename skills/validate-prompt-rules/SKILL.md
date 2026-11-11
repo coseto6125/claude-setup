@@ -17,6 +17,10 @@ A rule in a prompt is a *claim* that the model behaves differently because of th
 - After a model release, for each rule whose status was measured on the previous model.
 - When two arms tie and the baseline may load the rule.
 
+## Dispatch
+
+Pass `model: sonnet` when you dispatch a sub-agent to run this harness. Pass `opus` only when the brief leaves the probe design to that agent. The probe model is a separate choice: the `--model` flag of each `claude -p` call.
+
 ## Isolation
 
 `~/.claude/CLAUDE.md` is a **user setting-source**. Skills load in `-p` too. Only this combination removes both:
@@ -106,7 +110,11 @@ When the preloaded files already state the answer, every arm copies it, and the 
 
 A scenario that pastes the code puts the plant in view, and any rule about *finding* the plant saturates by construction. Probe that class agentically. `agentic.sh` copies a repo snapshot into a fresh dir per run, seeds git, and runs `claude -p` with tools on. Put the plant outside the excerpt (a second call site, a doc line, a caller in another file), and score the diff or the output file, not the prose. Budget one to ten minutes and a few dollars per opus run.
 
-A failure that appears only after hundreds of tool calls is out of reach of every harness here. Back that rule with a hook.
+## When the behaviour needs a long real context
+
+A failure that appears only after hundreds of tool calls, such as the reply language drifting, does not reproduce in a fresh `claude -p`. Before you probe one, read [`long-context.md`](long-context.md): it resumes a real session cut before the turn you measure.
+
+A failure that this resume still does not reproduce is out of reach of every harness here. Back that rule with a hook.
 
 ## The classifier
 
@@ -170,7 +178,8 @@ A sentence can be inert alone and load-bearing in combination with another. Test
 | `validate.sh` | many rules or documents, bare control, retries, contamination gate |
 | `preloaded.sh` | preloaded control, rule files or whole skill bodies per arm |
 | `agentic.sh` | "go and look", tools on, one fresh work tree per run |
-| `route.sh` | skill-description routing, swaps the whole skills tree |
+| `fork_fixture.py` | a real session cut at one entry, resumed for each trial |
+| `route.sh` | skill-description routing on the deployed skill surface: bundled, plugin and claude.ai skills, `skillOverrides`, preload |
 | `archive.sh` | copies a run's probes, labels, scorers and packed raw rows to `~/.claude/prompt-runs/` |
 
 `legacy/` holds the scripts of old runs.

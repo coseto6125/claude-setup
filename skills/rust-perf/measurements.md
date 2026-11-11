@@ -20,3 +20,9 @@ Measured: one change read +5%, +1% and +3.5% across three rounds. A binary whose
 Rule: `rayon` on allocation-heavy work keeps each thread's heap resident, because the allocator (mimalloc) retains per-thread memory. Check RSS on every parallel chan…
 
 Measured: parallel parse on 16 threads gave 3.1 s to 2.9 s wall (-7%) and 138 MB to 350 MB RSS (600 MB without chunking). The change was dropped.
+
+### Decision before the first run, added 2026-11-01
+
+Rule: the first bullet under "A/B protocol". Source: pstack `benchmark-checklist`. Preloaded A/B, `NO_TOOLS=1`, claude-opus-5-5, n=3 per arm. Probe: "HashMap to sorted Vec in src/index.rs, write the A/B brief". Rows: session 9a45f906 scratchpad `ab.XS6DSU/c4` (ephemeral).
+
+Measured: control 0/3, B 3/3. The control briefs already state a win rule, but never fix it before the first run. Effect. [shipped]

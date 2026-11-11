@@ -153,7 +153,7 @@ For a full review or a material rewrite, account for every one of the seven, and
 
 Before you change a sentence, look for its measurement in the `measurements.md` next to the document, or in `maintainer-notes.md` for `CLAUDE.md`. A measured wording has no slack. A shorter paraphrase of it is a behaviour change, not an edit.
 
-Write the rewrite yourself. Dispatch the `validate-prompt-rules` run to an Opus sub-agent.
+Write the rewrite yourself. Dispatch the `validate-prompt-rules` run to a sub-agent.
 
 A change is done when all three hold:
 

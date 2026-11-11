@@ -35,7 +35,9 @@ One command covers every lockfile. The scan reads transitive packages, which the
 
 Query registries concurrently. Record failures as unknown; an unknown never counts as up to date.
 
-Done when: every ecosystem has both paths and a version map, every installed package has a registry answer or an unknown marker, and the advisory scan output is recorded package by package.
+List the open dependency-bot PRs, and the dependency commits merged since the last release tag. This run covers, supersedes or merges each one.
+
+Done when: every ecosystem has both paths and a version map, every open bot PR is listed, every installed package has a registry answer or an unknown marker, and the advisory scan output is recorded package by package.
 
 ## 2. Classify
 
@@ -60,7 +62,7 @@ Done when: every notable bump answers both questions with citations or UNVERIFIE
 
 ## 4. Upgrade
 
-Run the table's ecosystem-wide upgrade command in the checkout you edit first, so transitive packages move together with the direct ones. Drop to a per-package upgrade only for a package whose ecosystem-wide bump fails a gate, and write the reason that package stays behind. Then run the repo's gates through the project's environment: tests, lint, typecheck.
+Run the table's ecosystem-wide upgrade command in the checkout you edit first, so transitive packages move together with the direct ones. Drop to a per-package upgrade only for a package whose ecosystem-wide bump fails a gate, and write the reason that package stays behind. A bump that needs a manifest edit, such as a major version or a git pin that a release now covers, is in this run's scope. It stays behind only for a failing gate or an upstream constraint. The size of the change is not a reason. Then run the repo's gates through the project's environment: tests, lint, typecheck.
 
 Triage each failure: regression or pre-existing. Prove pre-existing on the base commit before fixing.
 

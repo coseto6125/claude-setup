@@ -49,8 +49,8 @@ const DROP_STYLE_REMINDER = true
 // lang-drift-scan.py 2026-10-03..10-15, next block English: 1.0% before any English block, 37.6% right after
 // one, then 18.4% 1-2 Chinese blocks later, 9.4% 3-9 later, 1.4% from 10 on.
 const DRIFT_HOLD = 10
-const DRIFT_NOTE =
-  'A recent text block to the user was in English. Write the next one, and every one after it, in the language the `# Language` section names.'
+// Written in Chinese: it is the last text before the next block, and an English note primes English.
+const DRIFT_NOTE = '上一則給使用者的文字跑成英文了。從這一則起，改回 `# Language` 指定的語言。'
 // Chinese blocks still needed to clear the note; 0 when it is off.
 const langDriftHold = atom({ plugin: 'token-saver', key: 'langDriftHold' } as const, 0)
 

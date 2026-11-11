@@ -17,7 +17,7 @@ A="$WORK"; export A   # WORK holds base/ (repo snapshot), rules/, task.txt, runs
 # Deletes only a direct child of /tmp that this script made. An empty path, a nested path or `..` is refused.
 rm_tmp() { for p; do case "$p" in *..*|/tmp/*/*) echo "rm_tmp: refused '$p'" >&2 ;; /tmp/?*) rm -rf -- "$p" ;; *) echo "rm_tmp: refused '$p'" >&2 ;; esac; done; }
 CLAUDE_CONFIG_DIR=$(mktemp -d /tmp/agentic-cfg.XXXXXX) || exit 1; export CLAUDE_CONFIG_DIR; trap 'rm_tmp "$CLAUDE_CONFIG_DIR"' EXIT INT TERM; printf '{}' > "$CLAUDE_CONFIG_DIR/settings.json"
-cp ~/.claude/.credentials.json "$PRELOAD_DIR"/CLAUDE.md "$PRELOAD_DIR"/RTK.md "$PRELOAD_DIR"/ECP.md "$CLAUDE_CONFIG_DIR"/
+cp ~/.claude/.credentials.json "$PRELOAD_DIR"/CLAUDE.md "$PRELOAD_DIR"/RTK.md "$PRELOAD_DIR"/ECP.md "$CLAUDE_CONFIG_DIR"/; [ ! -d "$PRELOAD_DIR/rules" ] || cp -r "$PRELOAD_DIR/rules" "$CLAUDE_CONFIG_DIR/rules"
 python3 -I "$(dirname "$0")/isolation_gate.py" --script agentic --cfg "$CLAUDE_CONFIG_DIR" --proj "${PROJ_MD:-}" ${GATE_FORCE:+--force} -- --setting-sources user,project --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' || exit 3
 PROJ_MD="${PROJ_MD:-}"; export PROJ_MD
 JOBS_F=$(mktemp); for arm in ${ARMS:-control seven codex3}; do for i in $(seq 1 "${N:-3}"); do printf '%s\t%s\n' "$arm" "$i" >> "$JOBS_F"; done; done

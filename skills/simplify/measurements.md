@@ -124,3 +124,116 @@ Each entry sat beside the rule it names. The rule text stays in SKILL.md.
 Rule: Launch exactly one, and only at Tier 1 or Tier 2: its recall falls as the diff grows, and parallel calls hang. A `TRUNCATED` line at the end of its report means…
 
 Measured 2026-09-11 on the earlier `nemotron-3-super-120b-a12b:free`, not yet on ultra: 4 of 5 planted defects located per trial, every failure_scenario invented, a lock held across a network call missed in every read; 4 of 4 on a 52-line diff, 2.3 of 4 on a 2034-line one.
+
+## 2026-10-22, Gemini reader through agy, unmeasured for recall
+
+Probes on agy 1.1.25 with `gemini-3.8-flash-high`, Google AI Plus tier. They set `gemini-review.sh`, not a wording in SKILL.md.
+
+- `gemini` CLI 0.65.0 with personal OAuth fails with `IneligibleTierError`. Google moved individual users to Antigravity, so the reader runs on `agy`.
+- `agy models` on the Plus tier lists only `gemini-3.8-flash-{high,medium,low}` for Gemini, plus Claude and GPT-OSS models. agy's settings default to a Claude model, so the script pins `--model`.
+- `--mode plan` answered once and wrote a `plan.md` for approval once, with no review. The script runs headless without it.
+- Headless agy auto-denies `write_file` and every command outside `permissions.allow`, and prints `jetski: no output produced`. Two write attempts left the repo unchanged. File reads need no permission, and `--add-dir` opens the brief's directory.
+- `--print-timeout` expiry exits 0 and prints `[agy] print timeout … returning partial output` on stderr. A missing login prints `Authentication required` and waits forever.
+- A used-up quota writes `RESOURCE_EXHAUSTED (code 429): Individual quota reached … Resets in <time>` to agy's log (seen 2026-09-03 in `~/.gemini/antigravity-cli/log/`).
+- One live review of a 3-line diff with a planted `items[-n:]` bug at `n == 0` found it at confidence 100 in 55 s. One trial, one defect: no recall figure yet.
+
+## 2026-10-22, brevity rewrite of SKILL.md
+
+Measured on `claude-opus-5-5`, `preloaded.sh`, CLI 2.1.307. Rows: `~/.claude/prompt-runs/2026-10-22-simplify-brevity` and `…-brevity-p7r2`. About 181 calls.
+
+The rewrite removed rationale clauses, merged the three reader exit paragraphs into one skip rule, and moved the readers into `### Cross-family readers` with a reader column in the tier table. 2427 to about 2020 words. Every probe with a working control tied A at n=5 or n=10: tier for a small auth diff, readers at Tier 1, Gemini skip on quota, codex exit 3, Reuse agent, Spec placement. Waiting on codex and opus at HIGH saturate under the global CLAUDE.md.
+
+- **The free-reader clause "this reader has no tools and no repo access, so a path it cannot open is a section it cannot review" is load-bearing.** It looks like rationale. Without it, 6/10 briefs named `~/.claude/skills/simplify/CHECKLIST.md` for a reader that cannot open it; with it, 0/10. Restored verbatim.
+- The merged skip rule ("a skip, not a stop … carry on") made the model say the review continues 5/5, against 2/5 for the old per-reader paragraphs (exploratory).
+- The description dropped "This is", the "tiered, so most diffs cost zero Claude sub-agents…" clause and the trigger "look at my diff". `route.sh` (fixed the same day to mirror the deployed skill surface) showed no routing loss: 4 listed triggers 5/5 or 10/10 in both arms, "look at my diff" 10/10 in both, 3 vague requests (看一下我改了什麼, 幫我檢查剛剛的修改有沒有問題, can you check what I changed?) 10/10 in B, and 2 non-review requests never routed to simplify. Rows: `~/.claude/prompt-runs/2026-10-22-simplify-route-desc-{A,B}` and `…-route-vague-{A,B}`. Untested: a request ambiguous between review and explanation that mentions no change.
+
+Removed rationale, kept here for maintainers: graph context is optional, so the skill runs without ecp. Codex is a different family, so its mistakes are uncorrelated with Claude's. The challenge list is what same-family reviewers cannot give. Spec runs as its own agent, so intent findings are never reranked against style. Reuse is a mechanical graph lookup, so it runs on haiku. Phase 2 raises Security paths to HIGH, so the Security dimension and Tier 3 arrive together. A diff can be clean on every axis and still build the wrong thing, so Spec findings are never ranked against the rest.
+
+## 2026-10-27, Tier 1 self-review skips CHECKLIST.md on sonnet (candidate not shipped)
+
+Agentic runs, rust-review inventory module as an uncommitted diff, prompt "審一下這個 diff", CLI 2.1.311, live CLAUDE.md preloaded, n=3 per cell. Archive: `~/.claude/prompt-runs/2026-10-27-simplify-tier1-ab`. Candidate B added one paragraph before "**HIGH runs Tier 3.**": "**At Tier 1, before your first finding or edit:** read CHECKLIST.md in full, and start the cross-family readers the row names."
+
+| | A opus | B opus | A sonnet | B sonnet |
+|---|---|---|---|---|
+| CHECKLIST.md before first edit | 3/3 | 3/3 | 1/3 | 3/3 |
+| codex + free reader started | 3/3 | 3/3 | 0/3 | 0/3 |
+| rung ledger in the final reply | 1/3 | 0/3 | 0/3 | 0/3 |
+| issues named, of 7 | 19/21 | 18/21 | 18/21 | 18/21 |
+
+- `claude-opus-5-5` already follows Tier 1. `claude-sonnet-5-5` with B read the paragraph and still skipped the readers; two replies say so in words.
+- B is not shipped: no change in issues named, and the main session here runs opus.
+- Gemini exited 5 (quota) in all 6 opus runs. Opus runs took 177 to 448 s, sonnet runs 41 to 53 s.
+- Open: the ledger rule in CHECKLIST.md is skipped by both models at Tier 1. Phase 5's summary format does not name it, so the rule may only bind agent reports.
+
+Decision 2026-10-27: the rung ledger binds dispatched reviewers only. `CHECKLIST.md` now says so, and a self-review walks the same rungs with no ledger in the user summary. Reason: the round-3 scores did not track the ledger (one ledger run in 12), and the missed `report` bool sits inside Parameters rung 2 already. Not measured as a wording change.
+
+## 2026-10-27, Correctness rung 4 "Err mapped to a default" (candidate not shipped)
+
+Text-decision probes, tools off, `preloaded.sh`, CLI 2.1.311. Archive: `~/.claude/prompt-runs/2026-10-27-ab-retro-r3`. Candidate appended to rung 4: "For an `Err` mapped to a default (`map_or`, `unwrap_or`, `.ok()`, `is_ok()`), name each error kind the default absorbs. A permission error or a not-a-directory error that reads as not-found is a finding. For a filesystem path, name what the code does when the path is a symlink."
+
+| probe | n | old | new |
+|---|---|---|---|
+| `read_dir(dst).map_or(true, …)` before a destructive `--fix` (excerpt, then full diff) | 5 | 5/5 opus, 5/5 sonnet | saturated |
+| deliberate cosmetic `.ok()` fallback, flagged at confidence ≥50 (false positive) | 7 | 0/7 opus, 0/7 sonnet | 3/7 opus, 4/7 sonnet |
+
+- The real miss (PR #877, caught by CodeRabbit) happened in long agentic reviews of a large diff; the control already finds it in isolation, so the miss is attention, not a missing rung.
+- Not shipped: no effect detected for `claude-opus-5-5` / `claude-sonnet-5-5`, and a measured false-positive regression. A narrower form (only a default that feeds a destructive or state-changing action) is untested.
+
+## 2026-10-30, ecp flow / ecp pattern / Orphaned code edits
+
+Origin: comparison with the Claude Code team's code review post (claude.dev, 2026-10-15) and its "flag the class of bug" convergence fix. Edits: Correctness 10 adds `ecp flow --subject return`; Phase 5 fix gate adds sibling `ecp pattern` and lets sibling and orphan fixes reach any file; Quality 14 *Orphaned code* (function and config key by `ecp impact` + `git grep`, parameter by `ecp flow --subject binding`); Score-0 list exempts orphans that rung 14 names. Rung 14's public-API exemption was cut on the reasoning that Phase 5 already keeps API changes as proposals.
+
+Preloaded A/B, whole skill body per arm (control = pre-edit SKILL.md + CHECKLIST.md), `NO_TOOLS=1`, n=5, CLI 2.1.312, 75 calls. Rows: `~/.claude/prompt-runs/2026-10-30-simplify-edits-opus` and `…-sonnet`. Hit = the first proposed command (chains scored per command).
+
+| probe | model | control | B |
+|---|---|---|---|
+| p2 sibling: confirmed bare-except finding, next command is `ecp pattern` | claude-opus-5-5 | 0/5 | 5/5 |
+| p1 return shape changed, `ecp flow --subject return` | claude-opus-5-5 | 0/5 | 0/5 |
+| p4 parameter no longer read, `ecp flow --subject binding` | claude-opus-5-5 | 0/5 | 1/5 |
+| p3 last call of a helper removed, command targets the helper (real commit eywa `ef4b6ee`) | claude-opus-5-5 | 5/5 saturated | not run |
+| p3 same | claude-sonnet-5-5 | 1/5 | 2/5 |
+| p5 public API orphaned, avoids DELETE NOW | claude-opus-5-5 / claude-sonnet-5-5 | 10/10 | 10/10 |
+
+- Siblings: effect. [shipped]
+- Public-API exemption cut: no regression detected. [shipped]
+- Correctness 10 `ecp flow`, Quality 14 parameter and function sentences: no effect detected for these models and probes. Text probes see only the first command, and `ecp flow` sits after `ecp impact` in the chain, so the null is unsettled. Settle with an agentic run before deleting. [shipped, unsettled]
+- Score-0 orphan exception and the Phase 5 scope exception: not isolated.
+- Same day, later: Phase 2 risk floor adds CI workflow, CI config, installer and release script files as **HIGH**; Phase 5 summary closes with `## Not covered` (merged blind spots, plus must-read files at HIGH). Source: the post's "some paths always need a person" and "if you can't say what the checks would miss, ask for a real review". [shipped, unmeasured]
+
+## 2026-10-30, free reader removed
+
+The user removed the free reader (`free-reader.py`, `nvidia/nemotron-3-ultra-550b-a55b:free`) from Tiers 1 and 2. The script now sits in `~/.claude/skills-archive/simplify-free-reader-2026-10-30/`.
+
+- Last run, on a 2-file, 12-line test-only diff (PHP, framework-upgrade test fixes): 9 findings at confidence 35 to 95, 0 confirmed. The 95 finding ("an anonymous class with no parent constructor rejects a constructor argument") failed a one-line `php -r` probe. codex on the same diff reported clean, with probes that showed each test still fails without its guard.
+- The ultra model never had a recall measurement. The 2026-09-11 rows above measured `nemotron-3-super-120b-a12b:free`, and that model already invented every failure_scenario.
+- The one recorded catch (session de4c5c82) was also found by codex, so no catch was unique to this reader.
+- The measured clause "this reader has no tools and no repo access…" went with it. The Gemini brief keeps the repo-path and credential rules, because that brief also leaves the machine.
+- Same day, Gemini moved to Phase-2 HIGH risk only, because the user has little Gemini quota. Tiers 1 and 2 now start codex alone.
+- Same day, `gemini-review.sh` passes `--settings` with `read_file(<brief dir>)` and `read_file(<repo>)` added to the user's `permissions.allow`. The last run had ended with exit 2: headless agy soft-denied `ReadFile` on the patch file. Unmeasured against a live agy: whether `--settings` merges or replaces the allow list (the script merges either way), and whether a directory rule covers its files (agy's own example `read_file(/Users/alice/notes)` is a directory).
+
+### Deliberately absent: test-first sentence in the Phase 5 fix gate, 2026-11-01
+
+Tried: "Fix a confirmed Correctness finding test-first. When the test stays green on the unfixed code, the finding goes under `## Scanned, not acted on`." Source: pstack `interrogate` (a finding survives only when a run proves it). Preloaded A/B, SKILL.md + CHECKLIST.md, `NO_TOOLS=1`, claude-opus-5-5, n=3. Probe: confirmed avg([]) ZeroDivisionError finding, list the next actions. Hit = a failing pytest run before the fix edit. Control 3/3, B 3/3: saturated, because CHECKLIST Correctness rung 14 already drives it. Reverted. The "stays green" branch was not scored. Rows: `~/.claude/prompt-runs/2026-11-01-c1`.
+
+### Deliberately absent: cite a prior red run in Correctness rung 14.1, 2026-11-01
+
+Tried: "When the author already ran the test red before the fix, cite that output. Otherwise revert the fix…". Preloaded A/B, `NO_TOOLS=1`, claude-opus-5-5, n=3. P1 (red run already in the session): old 3/3, new 3/3 cite it and skip the revert. P2 (fix first, no red run): old 3/3, new 3/3 revert and require the failure. Saturated, no regression, reverted. Rows: session 9a45f906 scratchpad `ab.XS6DSU/c8` (ephemeral).
+
+### Quality rung 10: own-code WHY is a finding, added 2026-11-01
+
+Text appended to rung 10: "A WHY that explains a surprise in our own code is a finding: propose the rename, extraction or fix that makes the comment unneeded. Keep a WHY about an external dependency, platform or protocol." Source: pstack `comment-sicko` (an own-code surprise gets a reshape flag; an external gotcha keeps its comment). Preloaded A/B, CHECKLIST.md old vs new, `NO_TOOLS=1`, claude-sonnet-5-5 (the Quality reviewer's model), n=5 (one control row failed, 4 valid). Probe: a diff adding (a) a WHAT comment, (b) "save() leaves the cache stale, so refresh twice" over our own code, (c) a boto3 pagination WHY. Rows: session 9a45f906 scratchpad `ab.XS6DSU/c13.Z4W9V5` (ephemeral).
+
+| sub-hit | control | B |
+|---|---|---|
+| (a) deleted | 4/4 | 5/5 |
+| (b) proposes fixing the cause in our code (save() or a rename) | 0/4 | 3/5 |
+| (b) proposes any code change (drop the second refresh) | 4/4 | 5/5 |
+| (c) kept | 4/4 | 5/5 |
+
+- (b) strict: weak effect at small n. (a), (c): saturated, no regression. [shipped, weak]
+- B filed (b) under both rung 10 and rung 11 in 3 of 5 rows: a duplicate finding.
+- Confounds: the probe told the reviewer which code is ours, and the "twice" bait is itself a rung 11 target. Not run: a diff with no own-code WHY (false-positive rate), other models.
+
+### Not added: a Phase 5 rule to merge findings at the same file:line, 2026-11-01
+
+Baseline only, preloaded SKILL.md + CHECKLIST.md, `NO_TOOLS=1`, claude-opus-5-5, n=3. Probe: five findings, one pair from two reviewers on `store.py:41`, one pair from rungs 10 and 11 on `report.py:88`. Two rungs on one line: merged 3/3. Two reviewers on one line: merged 2/3. The split row judged the Quality citation wrong, because the fixture's grep output showed a different statement on that line. Merging happens with no rule, so none was added. Rows: session 9a45f906 scratchpad `ab.XS6DSU/c14.st0bl7` (ephemeral).

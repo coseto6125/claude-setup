@@ -311,8 +311,15 @@ Checked 2026-09-22.
 Not a component source. It is a competing frontend skill, MIT, and its three
 dials map one to one onto this skill's `--variance`, `--motion` and `--density`.
 Its production-test tells are merged into `local/anti-patterns.md`. Read them there.
-Installing taste-skill alongside this one buys a second copy of the same rules in a
-single 87KB file.
+
+Rechecked at v2.1.5 (2026-11-01). Merged: dashboard rules into `local/data-screens.md`,
+load-and-reveal rules into `local/motion-craft.md`, the headline budget, copy formulas and
+new tells into `local/anti-patterns.md`, and the frame checks into
+`local/web-delivery-checklist.md`. Not merged: its `library/*.json` (1.7MB of studied sites,
+sections and photos with no per-entry license), its ornament bans that its own
+`references/research.md` calls the owner's taste, and its "8 moving elements per page" floor.
+Its own blind test scored the skill 7.7 against 7.8 for no skill in the final round
+(`references/research.md`), so take checkable rules only.
 
 ---
 

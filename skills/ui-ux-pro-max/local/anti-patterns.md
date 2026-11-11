@@ -1,6 +1,6 @@
 # Anti-Patterns & Technical Standards
 
-Condensed from Impeccable (pbakaus/impeccable v4.1.2 `reference/craft-floor.md`). Updated 2026-08-28. Use this as a checklist to catch common mistakes after building.
+Condensed from Impeccable (pbakaus/impeccable v4.1.2 `reference/craft-floor.md`, 2026-08-28; additions from skill v4.8.0, 2026-11-01). Use this as a checklist to catch common mistakes after building.
 
 ## AI Slop Tells
 
@@ -10,12 +10,14 @@ A style borrowed to signal a category the page did not earn is wrong. These borr
 
 - **Fonts**: Skip system defaults (Inter, Roboto, Arial, Open Sans, Lato, Montserrat). Skip the second-reflex faces too: Fraunces, Newsreader, Lora, Crimson Pro, Playfair Display, Cormorant, Syne, IBM Plex, Space Mono, Space Grotesk, DM Sans, DM Serif, Outfit, Plus Jakarta Sans, Instrument Sans. These are good faces. They appear so often in generated output that they give a project no voice. Browse Pangram Pangram, Velvetyne, ABC Dinamo, Future Fonts, Klim Type Foundry. Source and self-host the display face. The closest installed font is a failure, not a fallback.
 - **Color**: Purple gradients on white, cyan/neon on dark, gradient text on headings and metrics, glowing accents, generic glassmorphism. Pick light or dark from the use scene: who reads this, where, under what ambient light. Picking it from the category is a reflex.
-- **Layout**: Three equal feature cards, hero metric template (big number + subtitle + icon), everything centered, cards wrapping everything, cards nested inside cards, rounded rectangles with generic drop shadows. A modal for a task that needs neither interruption nor protected focus. Section numbers (01 / 02 / 03) unless the sequence itself carries information the reader needs.
+- **Layout**: Three equal feature cards, hero metric template (big number + subtitle + icon), everything centered, cards wrapping everything, cards nested inside cards, rounded rectangles with generic drop shadows. A modal for a task that needs neither interruption nor protected focus. Section numbers (01 / 02 / 03) unless the sequence itself carries information the reader needs. Two hero skeletons are templates whatever style paints them: a split hero (copy on one side, the product on the other, a badge row under it), and a centred headline over a row of cards. A landing page section list copied from `data/landing.csv` ("Feature grid/cards (4-6)") is the same template.
+- **Main action**: On a landing page, the main action is the one the visitor came to take, in its working form: an airline's route-and-dates search, a clinic's open slots, a store's add to cart. A link that points at it elsewhere does not count.
 - **Eyebrow above a heading**: Never. The heading carries its own weight. Delete the label.
 - **Motion**: Bounce/elastic easing (tacky since ~2015), overshoot effects. One authored moment beats one identical entrance on every section.
 - **Content**: "Elevate your workflow," John Doe, 99.99%, emoji avatars, SVG-egg placeholders, repeating the same information (redundant headers, intros that restate the heading)
+- **Invented proof**: Never invent customers, quotes from named people, press logos, user counts, ratings or benchmarks. Write every section in full. Where the brief gives no detail, write a sample detail and list each one in the delivery report for the client to confirm.
 - **Decoration**: Large icons with rounded corners above every heading (templated look), a colored `border-left` or `border-right` above 1px on cards, list items, callouts, or alerts, sparklines and progress rings standing in for content. Monospace type is wrong unless the content is code, data, or measurement. A hard offset shadow (`box-shadow: 4px 4px 0`) is wrong unless the world is actually neobrutalist. Unicode glyphs and emoji standing in for an icon system are wrong. Draw icons from one real library at one stroke weight. When the resolved style is hand-drawn, `local/sources.md` names the four sets that fit it and the license each one carries.
-- **Cut-outs**: A circle, polygon, or radial-gradient mask approximating a photo subject's edge reads worse than no cut-out at all. Derive an alpha matte from the actual image, or ship a real cut-out asset.
+- **Cut-outs**: A circle, polygon, or radial-gradient mask approximating a photo subject's edge reads worse than no cut-out at all. Derive an alpha matte from the actual image, or ship a real cut-out asset. Check the composite on a light and a dark ground: white areas stay solid, interior holes clear, and fine edges show no halo.
 - **Browser surfaces**: The parts you did not draw still carry the design. Theme `::selection`, `caret-color`, custom scrollbars, `text-underline-offset`, and tabular numerals from the palette. This is the cheapest signal that a page was built rather than assembled, and the one models skip most reliably.
 - **Hierarchy**: Making every button primary. Use ghost buttons, text links, and secondary styles.
 - **Portfolio sites**:
@@ -33,7 +35,7 @@ to *look* designed. Condensed from Leonxlnx/taste-skill (MIT) §9.F-9.G,
 2026-08-24. Treat each as a hard ban unless the brief asks for it by name.
 
 **Hero and top of page**
-- Version or status labels as the hero eyebrow: `V0.6`, `BETA`, `ALPHA`, `EARLY ACCESS`, `INVITE-ONLY PREVIEW`. Only when the brief is about launch status.
+- Version or status labels as the hero eyebrow: `V0.6`, `BETA`, `ALPHA`, `EARLY ACCESS`, `INVITE-ONLY PREVIEW`, or a pill badge (`New`, `Beta`, `Introducing`) above the headline. Only when the brief is about launch status; otherwise say it in the supporting sentence.
 - A decoration text strip across the hero bottom: `BRAND. MOTION. SPATIAL.`, `TYPE / FORM / MOTION`, `ESTD. 2018 · LISBON`. Agency-portfolio cliché. Allowed only when the strip carries real links or real status.
 - Scroll cues of any kind: `Scroll`, `↓ scroll`, `Scroll to explore`, animated mouse-wheel icons. The reader is looking at the hero. They know what scroll is.
 
@@ -53,6 +55,18 @@ to *look* designed. Condensed from Leonxlnx/taste-skill (MIT) §9.F-9.G,
 - The em-dash `—` anywhere the user can see it: headline, eyebrow, pill, body, quote, attribution, caption, button, alt text. Use a period, a comma, a colon, parentheses, or two sentences. The en-dash `–` as a separator goes too; ranges take a hyphen.
 - A headline split with `<br>` and half of it italicized, used as a default design move.
 - Vertical rotated text. Only when the brief is explicitly experimental and the composition needs it.
+- One word of a headline styled differently: italic, serif, coloured, underlined, or in a pill.
+- Three or more tiny uppercase letter-spaced captions around the viewport. Use sentence case at a readable size, placed with the content it describes.
+
+**Colour cliché**
+- A yellow-cream ground with a rust, clay or burnt-orange accent. Either half alone is suspect.
+
+**Copy formulas** (added from taste-skill v2.1.5 `references/copy.md`, 2026-11-01)
+- The mad-lib: "The AI-powered platform for modern teams".
+- The tricolon: "Fast. Simple. Secure."
+- The correction: "It's not just a tool, it's a workflow", "More than a …".
+- "X, reimagined / redefined / made simple", "Welcome to …", "Meet …" for a product nobody has met.
+- Genre verbs: unlock, supercharge, seamless, empower, elevate.
 
 **Labels and captions**
 - Poetic section labels: `From the field`, `Field notes`, `On our desks`, `Currently on the bench`. Use the plain functional label or none.
@@ -76,6 +90,8 @@ to *look* designed. Condensed from Leonxlnx/taste-skill (MIT) §9.F-9.G,
 
 - **Body text viewport edge**: Body text must never run to the absolute viewport edge without padding. At minimum, apply `1rem` inline padding on mobile. Flush text against the viewport edge reads as broken, not intentional.
 - **Vertical rhythm**: Line-height is the base unit for ALL vertical spacing. If body is `line-height: 1.5` on 16px (=24px), spacing should be multiples of 24px
+- **Hero headline length**: Two lines or fewer at every width. Do the arithmetic before you write: characters per line ≈ line width in px ÷ (font size in px × k), with k ≈ 0.5 for most faces (0.4 condensed, 0.58 wide or all-caps). About 32 characters (four to six words) survives a 390px phone at 44px. Shorten the sentence and move the rest into the supporting line. Never fix a long headline only by shrinking it.
+- **Line breaks in Latin text**: `text-wrap: balance` on headings, `text-wrap: pretty` on body copy. In a column too narrow for either, edit the copy or widen the column. Break a heading by hand only between phrases. Chinese text follows `local/cjk-line-breaking.md` instead.
 - **Modular scale**: Use 5 sizes with clear contrast, not 14/15/16/18 muddy steps. Ratios: 1.25 (major third), 1.333 (perfect fourth), 1.5 (perfect fifth)
 - **Measure**: `max-width: 65ch` for body text. Increase line-height (+0.05-0.1) for light-on-dark
 - **Font loading**: Use `font-display: swap` + size-adjust fallback metrics to prevent layout shift
@@ -138,7 +154,7 @@ to *look* designed. Condensed from Leonxlnx/taste-skill (MIT) §9.F-9.G,
 
 ## UX Writing
 
-- **Button labels**: Never "OK," "Submit," "Yes/No," "Click here." Use verb + object: "Save changes," "Create account," "Delete message"
+- **Button labels**: Never "OK," "Submit," "Yes/No," "Click here," "Get started," "Learn more." Use verb + object: "Save changes," "Create account," "Delete message"
 - **Destructive buttons**: "Delete" not "Remove" (delete = permanent, remove = recoverable). Show count: "Delete 5 items"
 - **Error formula**: What happened + why + how to fix. "Email needs an @ symbol" not "Invalid input"
 - **Don't blame users**: "Please enter a date in MM/DD/YYYY format" not "You entered an invalid date"
@@ -148,6 +164,10 @@ to *look* designed. Condensed from Leonxlnx/taste-skill (MIT) §9.F-9.G,
 - **Link text**: Standalone meaning—"View pricing plans" not "Click here." Alt text describes information, not the image
 
 ## Brand Register Guards
+
+Apply these guards in full to a Persuade surface: a landing page, a marketing page, a campaign. On an Operate surface (a dashboard, a tool) or a Read surface (docs, an article), ambition shows as precision and restraint, and patterns the visitor already knows earn their place. `local/data-screens.md` holds the Operate rules.
+
+Generic quiet is a tell too: grey text on white, one sans at one weight, and a grid of identical cards. Restraint still needs a point of view.
 
 ### The Inverse Test
 
@@ -159,9 +179,13 @@ The editorial-typographic lane is now saturated: Klim-influenced, magazine-cover
 
 The hand-drawn lane is filling the same way through 2026: doodle icon sets, wobbly borders, marker headline, paper ground. It stays a real answer for a build whose subject is handmade, taught, or drafted. It becomes the third-order reflex the moment it is reached for because the default set felt generic. `data/styles.csv` row 84's `Do Not Use For` column decides which case this is.
 
+The neobrutalist lane fills the same way: flat saturated ink, black boxes, hard offset shadows, heavy condensed display type. It is an answer only when the brief asks for it.
+
 ### Cultural-Symbol Palette Guardrail
 
 Reach past the obvious cultural color association. Green for sustainability, blue for finance, red for food—these are first-order reflexes. Let cultural reading come from typography and imagery, not color alone. The hue should be a brand decision, not a category reflex.
+
+A subject's world never licenses emblems tied to militarism, supremacy or hate movements as motifs, badges or ornament: the Rising Sun flag's rays, the Confederate battle flag, Nazi-era insignia and their stylised variants. Use that world's neutral forms instead. Content that documents such a symbol as fact stays as it is.
 
 ### Category-Reflex Check
 

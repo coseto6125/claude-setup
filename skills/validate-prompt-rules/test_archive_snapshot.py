@@ -277,3 +277,31 @@ def test_archive_baseDirBelowTop_kept(env):
     r = archive(env, str(env['work']), 'bb')
     assert r.returncode == 0, r.stderr
     assert (pathlib.Path(r.stdout.strip()) / 'probes' / 'base' / 'probe.md').exists()
+
+
+def test_preload_snapshot_rulesDir_copied(env):
+    (env['home'] / '.claude' / 'rules').mkdir()
+    (env['home'] / '.claude' / 'rules' / 'a.md').write_text('rule v1\n')
+    assert snap(env).returncode == 0
+    assert (env['work'] / 'preload' / 'rules' / 'a.md').read_text() == 'rule v1\n'
+
+
+def test_preload_snapshot_noRulesDir_succeedsWithoutRules(env):
+    assert snap(env).returncode == 0
+    assert not (env['work'] / 'preload' / 'rules').exists()
+
+
+def test_preload_snapshot_copyFailsWithRules_leavesNoStagingDir(env):
+    (env['home'] / '.claude' / 'rules').mkdir()
+    (env['home'] / '.claude' / 'rules' / 'a.md').write_text('rule\n')
+    (env['home'] / '.claude' / 'RTK.md').unlink()
+    snap(env)
+    assert [p.name for p in env['work'].iterdir()] == []
+
+
+def test_preload_snapshot_liveRulesDiffer_printsNote(env):
+    (env['home'] / '.claude' / 'rules').mkdir()
+    (env['home'] / '.claude' / 'rules' / 'a.md').write_text('rule v1\n')
+    snap(env)
+    (env['home'] / '.claude' / 'rules' / 'a.md').write_text('rule v2\n')
+    assert 'rules differs' in snap(env).stderr

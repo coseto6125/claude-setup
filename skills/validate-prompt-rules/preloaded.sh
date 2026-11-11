@@ -3,7 +3,7 @@
 # probes/<id>.json: the runner reads only scenario and ask; put scoring fields there for your own scorer. An arm's text comes from $WORK/<arm>.md when that file exists: the
 # whole body (frontmatter stripped) goes before the scenario, as the Skill tool delivers it. Otherwise rules/<NN>.<arm>.txt
 # is injected as "RULE you follow: …" where NN = id prefix. Pass full model IDs: an alias moves at a model release.
-# Control preloads ~/.claude/CLAUDE.md (+RTK, ECP) unless PRELOAD_USER=0. Write your own scorer over raw/<probe>.<arm>.<model>.<i>.txt.
+# Control preloads ~/.claude/CLAUDE.md (+RTK, ECP, rules/) unless PRELOAD_USER=0. Write your own scorer over raw/<probe>.<arm>.<model>.<i>.txt.
 # Probes load the deployed tool set. NO_TOOLS=1 adds `--tools ""` (cheaper, but no longer the deployed context).
 # Before trial 1 it runs isolation_gate.py (cached per CLI version; GATE_FORCE=1 reruns it) and exits 3 on a failed check.
 # The first run snapshots the preload into $WORK/preload/ (snapshot.sh); every later N step reads it. Delete it for a fresh run.
@@ -19,7 +19,7 @@ S="$WORK"; export S   # WORK holds probes/, rules/, raw/
 # Deletes only a direct child of /tmp that this script made. An empty path, a nested path or `..` is refused.
 rm_tmp() { for p; do case "$p" in *..*|/tmp/*/*) echo "rm_tmp: refused '$p'" >&2 ;; /tmp/?*) rm -rf -- "$p" ;; *) echo "rm_tmp: refused '$p'" >&2 ;; esac; done; }
 CLAUDE_CONFIG_DIR=$(mktemp -d /tmp/preloaded-cfg.XXXXXX) || exit 1; export CLAUDE_CONFIG_DIR; trap 'rm_tmp "$CLAUDE_CONFIG_DIR"' EXIT INT TERM; printf '{}' > "$CLAUDE_CONFIG_DIR/settings.json"
-cp ~/.claude/.credentials.json "$CLAUDE_CONFIG_DIR"/; [ "${PRELOAD_USER:-1}" = 1 ] && cp "$PRELOAD_DIR"/CLAUDE.md "$PRELOAD_DIR"/RTK.md "$PRELOAD_DIR"/ECP.md "$CLAUDE_CONFIG_DIR"/
+cp ~/.claude/.credentials.json "$CLAUDE_CONFIG_DIR"/; [ "${PRELOAD_USER:-1}" = 1 ] && cp "$PRELOAD_DIR"/CLAUDE.md "$PRELOAD_DIR"/RTK.md "$PRELOAD_DIR"/ECP.md "$CLAUDE_CONFIG_DIR"/ && { [ ! -d "$PRELOAD_DIR/rules" ] || cp -r "$PRELOAD_DIR/rules" "$CLAUDE_CONFIG_DIR/rules"; }
 echo "user surface:"; ls -A "$CLAUDE_CONFIG_DIR"
 python3 -I "$(dirname "$0")/isolation_gate.py" --script preloaded --cfg "$CLAUDE_CONFIG_DIR" --proj "${PROJ_MD:-}" ${GATE_FORCE:+--force} -- --setting-sources user,project --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' || exit 3
 PROJ_MD="${PROJ_MD:-}"; export PROJ_MD   # project CLAUDE.md to seed each probe cwd (optional)

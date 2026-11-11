@@ -14,3 +14,5 @@ seo-hreflang | ref en-uk | `en-uk` is the skill's example of an invalid locale c
 seo-cluster | ref blog-write | The step runs only under "If claude-blog IS installed"; the skill tests for that plugin first and has a branch for its absence.
 agent-routing | ref claude-api | `claude-api` is a skill bundled with Claude Code, absent from the bundled-skills cache that `refs` reads.
 external-writing | ref <project skill> | A project-level skill; the sentence names it only for the project where it exists.
+rust-port | rule 3 | Adapted from BeautifulRust rust-port. Every step ends in a judgement about the code being ported (what is observable, what is incidental, which Rust type fits), so no script can hold the answer.
+rust-best-practices | rule 2 | 476-line body kept inline on purpose. A/B 2026-10-27 on claude-sonnet-5-5 (n=3, archive prompt-runs/2026-10-27-2026-10-27-rust-fork-skill-ab): split into SKILL.md plus three files behind a pointer table, the refactor case fell from 36/36 (inline upstream) to 31/36, because 12 of 15 skill loads never opened api-design.md (opus 0/6). Re-measure before splitting again.
