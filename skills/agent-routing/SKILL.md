@@ -1,6 +1,6 @@
 ---
 name: agent-routing
-description: "Choose which agent runner, which channel, or which browser a piece of work goes to — Orca, the harness's own SendMessage, or ecp. Use while deciding between them, and whenever a task needs a browser at all: rendering a URL, screenshotting a local dev server, or checking how a page looks. Once the target is known, drive it directly with `orca-cli` for Orca worktrees, terminals, and the embedded browser, `orchestration` for supervising a task DAG, `computer-use` for desktop windows."
+description: "Choose which agent runner, which channel, or which browser a piece of work goes to — Orca, the harness's own SendMessage, or ecp. Use while deciding between them, and whenever a task needs a browser at all: rendering a URL, screenshotting a local dev server, or checking how a page looks. Also before you debug a failing web sign-in with curl. Once the target is known, drive it directly with `orca-cli` for Orca worktrees, terminals, and the embedded browser, `orchestration` for supervising a task DAG, `computer-use` for desktop windows."
 ---
 
 # Agent routing
@@ -119,6 +119,11 @@ plain shell work, and the browser rule never fires.
 
 - A URL, a local dev server, a web app, a rendered document → `orca-cli`, embedded browser.
 - A desktop window, a webview, an app that is not a page → `computer-use`.
+
+Start a local dev server on the port that `wt-port` prints: `PORT=$(wt-port) npm run dev`,
+or pass it to the server's own port flag. Each worktree gets its own stable port, so
+servers in parallel worktrees do not collide. A second service in the same worktree
+takes `wt-port api`.
 
 ## Reaching codex
 

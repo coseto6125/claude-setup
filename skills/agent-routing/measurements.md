@@ -14,3 +14,19 @@ Lessons the memory stated, with their status on 2026-10-22:
 - For teammates and named agents that report through idle notifications, keep "write the full report to `<scratchpad>/<name>.md`, end with the path plus a three-line summary" in the spawn prompt. [superseded 2026-10-22: agent-routing/SKILL.md asks for a report under 2,500 characters or numbered parts; that worked in session de4c5c82]
 - For an Agent-tool sub-agent, ask for the report in its reply (it arrives whole) and ask for files only for data; a brief that asks for a report file costs a refused call and a retry. [shipped 2026-10-22: agent-routing/SKILL.md, A sub-agent's report]
 - When the parent gets `Agent "X" is waiting on its own background work`, check `ps -eo etimes,args | grep '[c]laude -p'` and the run dir's newest write time, then SendMessage the agent that the job ended. [shipped 2026-10-22: agent-routing/SKILL.md, A sub-agent's report]
+
+## 2026-11-01, description: the sign-in debug trigger
+
+Origin: retro of session d30dbece. The user asked three times for a browser while the agent debugged a GitHub OAuth sign-in with curl for about 15 turns; agent-routing loaded only after the second ask.
+
+Added to the browser clause: "Also before you debug a failing web sign-in with curl." `route.sh`, claude-opus-5-5, CLI 2.1.316, n=5, isolation gate passed. Arms: old = the clause before; n1 = "..., checking how a page looks, or a sign-in the user must finish on a page."; n2 = the shipped sentence. Raw rows: session 7ccea9fa scratchpad `ab.UqHotC/work/raw/`.
+
+| scenario | old | n1 | n2 |
+|---|---|---|---|
+| GitHub OAuth sign-in fails, curl probes return 200 | 4/5 | 5/5 | 5/5 |
+| CLI prints a device-login URL the user must approve | 5/5 | 5/5 | 5/5 |
+| Google sign-in returns error=access_denied, find out why | 0/5 | 0/5 | 5/5 |
+| log in to a hosting dashboard and copy a token | 5/5 | 5/5 | 5/5 |
+| controls: agent-routing, computer-use, orca-cli x2, ui-ux-pro-max | 25/25 | 25/25 | 25/25 |
+
+Read: every miss went to `diagnose`. Only the debug moment ("before you debug ... with curl") takes the sign-in failure from `diagnose`; a sign-in noun phrase (n1) does not. No control lost a route. Not measured: sonnet and haiku readers, and the cost of taking a sign-in bug from `diagnose` when no browser is needed.

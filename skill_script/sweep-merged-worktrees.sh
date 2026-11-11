@@ -25,6 +25,9 @@
 #   4. `git status --porcelain` is empty (tracked and untracked);
 #   5. no process has its cwd or an open file inside it;
 #   6. no file outside target/ and .git changed in the last MIN_AGE_MIN minutes.
+#
+# Follow-ups: when <main>/.claude/FOLLOWUPS.md exists, each `mpm` entry marked in progress
+# (`mpm start`) by a PR or branch that is now merged is resolved with `mpm done --pr <N>`.
 set -u
 
 MIN_AGE_MIN=120
@@ -72,6 +75,33 @@ owner_active() {
     [ -n "$(find "$HOME/.claude/projects" -maxdepth 2 -name "$sid.jsonl" -mmin -"$SCRATCH_IDLE_MIN" -print -quit 2>/dev/null)" ]
 }
 
+# Resolve the repo's in-progress follow-ups whose PR or branch appears in $merged.
+# mpm before 0.2 rejects `status:in-progress`, so the query fails and nothing closes.
+close_followups() {
+    local main=$1 dir=$1/.claude id kind ref num
+    [ -f "$dir/FOLLOWUPS.md" ] && command -v mpm >/dev/null || return 0
+    # Every row has three non-empty columns: `read` collapses empty tab-separated fields.
+    # A marker that names neither a PR nor a branch has no edge and is skipped.
+    mpm --dir "$dir" query status:in-progress --json 2>/dev/null \
+        | jq -r '.entries[] | .edges as $e
+            | if $e.in_progress_pr then [.id, "pr", $e.in_progress_pr]
+              elif $e.in_progress_branch then [.id, "branch", $e.in_progress_branch]
+              else empty end | @tsv' 2>/dev/null \
+        | while IFS=$'\t' read -r id kind ref; do
+            case "$kind" in
+                pr) num=$(awk -F'\t' -v n="$ref" '$4 == n { print $4; exit }' <<<"$merged") ;;
+                branch) num=$(awk -F'\t' -v b="$ref" '$1 == b { print $4; exit }' <<<"$merged") ;;
+            esac
+            [ -n "$num" ] || continue
+            if [ "$dry" = 1 ]; then say "would close follow-up $id (PR #$num merged)"; continue; fi
+            if mpm --dir "$dir" done "$id" --pr "$num" --note "auto-closed by sweep: PR #$num merged" >/dev/null 2>>"$log"; then
+                say "closed follow-up $id (PR #$num merged)"
+            else
+                say "FAILED to close follow-up $id; see the mpm error above"
+            fi
+        done
+}
+
 sweep_repo() {
     local main=$1 key stamp merged
     key=$(printf '%s' "$main" | sha1sum | cut -c1-12)
@@ -99,11 +129,12 @@ sweep_repo() {
     fi
 
     merged=$(cd "$main" && gh pr list --state merged --limit 300 \
-        --json headRefName,headRefOid,mergedAt \
-        --jq '.[] | [.headRefName, .headRefOid, .mergedAt] | @tsv' 2>/dev/null) || merged="!"
+        --json headRefName,headRefOid,mergedAt,number \
+        --jq '.[] | [.headRefName, .headRefOid, .mergedAt, .number] | @tsv' 2>/dev/null) || merged="!"
     # A failed gh (offline, logged out) leaves the throttle open, so the next start retries.
     [ "$dry" = 0 ] && [ "$merged" != "!" ] && touch "$stamp"
     [ "$merged" = "!" ] && merged=""
+    close_followups "$main"
 
     git -C "$main" worktree list --porcelain | awk '
         /^worktree /{ if (path != "") print path "\t" branch; path = substr($0, 10); branch = "" }
@@ -116,7 +147,7 @@ sweep_repo() {
             [ -n "$branch" ] || continue
             row=$(awk -F'\t' -v b="$branch" '$1 == b { print; exit }' <<<"$merged")
             [ -n "$row" ] || continue
-            IFS=$'\t' read -r _ head_oid merged_at <<<"$row"
+            IFS=$'\t' read -r _ head_oid merged_at _ <<<"$row"
             age_min=$(( (now - $(date -d "$merged_at" +%s)) / 60 ))
             if [ "$age_min" -lt "$MIN_AGE_MIN" ]; then say "skip $name: merged ${age_min}m ago"; continue; fi
             tip=$(git -C "$path" rev-parse HEAD 2>/dev/null)

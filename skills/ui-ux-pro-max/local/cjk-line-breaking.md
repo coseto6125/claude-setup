@@ -7,8 +7,8 @@ Rules for where Chinese text wraps on a web page, by layout. They follow W3C *Re
 
 | Layout | How it breaks | CSS and markup |
 |---|---|---|
-| Heading, 1 to 3 lines, large type | At a phrase boundary only. Lines close to equal. No lone 1 or 2 characters on the last line. No 4/4/4 block of equal short lines | `word-break: keep-all; text-wrap: balance;` and a `<wbr>` between phrases in the copy. Give a heading the width its longest phrase needs, even into the column gap |
-| Short lead or caption, 1 to 3 lines | At a clause boundary (after a comma) when the copy has two clauses. Inside a clause, normal Chinese wrapping with full lines | Wrap the second clause in a `display: block` span. Bind units only (below). On a phone, where the lead runs past 3 lines, set the span to `display: inline`: the lead then wraps as prose |
+| Heading, 1 to 3 lines, large type | One continuous line of copy. It wraps only where the line runs out, at a phrase boundary, never at a forced point. Fit the heading on one line; when it does not fit, cut words. Only a display heading that cannot fit in two lines after cutting wraps, at punctuation. No lone 1 or 2 characters on the last line: fix that by cutting words or widening the heading box | `word-break: keep-all;` or BudouX phrase spans, so a word never splits (「雲端月／費」). No `text-wrap: balance`, no `<wbr>`, no `<br>` in the copy. Give a heading the width its longest phrase needs, even into the column gap |
+| Short lead, caption or card text, 1 to 3 lines | Normal Chinese wrapping with full lines. A sentence with two clauses still wraps where the line runs out, not after its comma | Bind units only (below). No `display: block` clause span, no `<br>` after a comma |
 | Prose paragraph | Normal Chinese wrapping: any character may end a line. Every line runs full. A new line starts only where the copy says so (for example after each 。 when the client asks) | `text-align: justify; text-justify: inter-character; line-break: strict; text-wrap: pretty;` one `display: block` span per sentence when sentences start new lines |
 | Narrow column or phone | The same rules as above at the narrow width. A quoted name or a date range moves whole to the next line | `display: inline-block` on the name, or a forced break before it. Shrink one name line to the line width with `font-size: min(1em, calc((100vw - pad) / name-width-in-em))` |
 | Mixed Chinese and Latin | A space between Chinese and Latin text. A product name, number + unit, or Latin phrase never splits | `U+00A0` between Latin and Chinese inside a unit (`外接 SSD`, `500 美元`). `U+2060` between Chinese characters of a unit (`禮⁠物⁠卡`). `U+2060` before `——` so the dash never starts a line |
@@ -32,6 +32,8 @@ Each of these shipped and was rejected as ugly. Use the method in the table inst
 | `text-wrap: pretty` with `text-align: start` | Pretty ends a line early at a comma, and the ragged edge shows it |
 | `text-align: justify` with long unbreakable runs | The short lines spread their characters apart |
 | A heading's `<wbr>` points that let every phrase take its own line | A 4/4/4 square block |
+| `text-wrap: balance` on a heading, with or without `<wbr>` | A one-sentence heading that fits one line splits into two short lines, often at its comma (rejected twice in review) |
+| The second clause of a short lead or card in a `display: block` span, or a `<br>` after its comma | 「這裡只有一句話，自然換行就好」: one sentence is cut into stacked clauses |
 
 ## Verification
 

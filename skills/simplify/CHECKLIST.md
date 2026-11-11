@@ -2,13 +2,15 @@
 
 The shared rungs for [`simplify`](SKILL.md) and any skill that points here. A section is done when **every** rung under it has ended as a finding, `clear`, or `n/a`.
 
-**Open your report with the rung ledger:** one line per rung of every section you own, in order.
+**A dispatched reviewer opens its report with the rung ledger:** one line per rung of every section it owns, in order.
 
 - `Correctness 3 clear: <what you checked, one clause>`
 - `Correctness 7 finding <k>` (the finding follows below the ledger)
 - `Correctness 9 n/a: <why the diff cannot touch it>`
 
-A rung with no ledger line counts as not reviewed.
+A rung with no ledger line counts as not reviewed. When you review the diff yourself, walk the same rungs, and leave the ledger out of the summary to the user.
+
+When the diff changes a `.rs` file or a `Cargo.toml`, open [`rust.md`](rust.md). The owner of Correctness also walks its *Rust correctness* rungs. The owner of Quality also walks its *Rust API and idiom* rungs. Ledger lines read `Rust correctness 3 clear: <what you checked>`.
 
 ## Confidence
 
@@ -22,7 +24,7 @@ Every finding carries a score 0–100 against these anchors:
 
 Score 0 for anything in these classes:
 
-- a line outside the diff, except a stale sentence that Quality's *Prose drift* rung names
+- a line outside the diff, except a stale sentence that Quality's *Prose drift* rung names, or an orphan that its *Orphaned code* rung names
 - anything lint or typecheck catches
 - a nitpick a senior engineer would let pass
 - a generic test-coverage or docs ask with no rule behind it
@@ -51,9 +53,9 @@ Applies only when a spec source resolved; with none, record "no spec available" 
 7. **Concurrency** — racy check-then-act, shared state without synchronization, lock ordering, await points invalidating earlier reads
 8. **Resource lifecycle** — leaks (files, sockets, listeners), double-free/double-close, missing cleanup on early return
 9. **Wrapper routing** — a new or changed cache, proxy, decorator, or adapter must reach the wrapped instance directly, not back through a registry, session, or global that re-enters it; check it forwards every method its callers use
-10. **Contract breakage** — callers relying on the OLD behavior of a changed function; `ecp impact --target X --direction upstream` enumerates them, verify each one survives the change
+10. **Contract breakage** — callers relying on the OLD behavior of a changed function; `ecp impact --target X --direction upstream` enumerates them, verify each one survives the change. When the diff changes what a function returns, also run `ecp flow --file <path> --line <n> --subject return --repo .` and verify each consumer it lists
 11. **Unexercised fallback** — a fast path with a fallback: `or_else`, a `None =>` arm, a cached probe. Run the same assertion on both branches. Force the fallback with the missing file or env var it keys on. A fallback that predates the diff still earns its judgement against the caller that reaches it now
-12. **Mirror drift** — a sentinel, cache key, or validator that must resolve the same way as the reader it guards. Open both and compare the resolution order (`ecp find "<the other half>"` locates the other half). Each half reads as correct alone, so a mismatch fails silently
+12. **Mirror drift** — a sentinel, cache key, or validator that must resolve the same way as the reader it guards. Open both and compare the resolution order (`ecp find "<the other half>" --mode bm25 --repo .` locates the other half). Each half reads as correct alone, so a mismatch fails silently
 13. **Recalled contracts** — shell quoting, CLI flag semantics, or library behaviour written from recall. Run the real thing once (`bash -c`, `--help`, `ctx7`), then build the tokenizer or the flag table from that output
 14. **Test that cannot go red** — a test shipped with a fix pins that fix only when it fails without it.
     1. Revert the fix in the working tree. Rebuild any binary the test runs, then run that test. Require the failure.
@@ -74,7 +76,7 @@ This section finds the hole the diff opens. A hole that already exists belongs t
 
 A finding names **the caller who should not reach it** and **the authority or data they obtain**. Without that pair it is a generic ask, and scores 0.
 
-Walk a group only when the diff can touch it: a diff that adds no route skips *Who may act*, and a diff that reads no external input skips *What the path believes*.
+Walk a group only when the diff can touch it: a diff that adds no route skips *Who may act*, a diff that reads no external input skips *What the path believes*, and a diff that changes no hook or guard skips *What a guard lets through*.
 
 These rungs say what to look for. When a rung fires, or when the diff touches a surface no rung covers, open [`security/SURFACES.md`](security/SURFACES.md). It probes which surfaces this repo has, and points at one depth file per surface: how to prove a finding, and which look-alikes to leave alone. Report each surface the probe does not find as skipped.
 
@@ -100,10 +102,14 @@ These rungs say what to look for. When a rung fires, or when the diff touches a 
 12. **Anonymous cost** — a route reachable without a session, that spends money or does work the caller sizes, states its per-caller ceiling.
 13. **Convenience paths** — a route, flag, or env branch that exists to make development easier ships deleted, not runtime-guarded. A guard is one edit away from being a production route.
 
+### What a guard lets through
+
+14. **Guard bypass** — a hook or guard that parses a command or a file to allow or deny fails closed: a token it cannot read denies. List the other spellings of the blocked action, such as quotes, `${VAR}`, a group, a subshell, a pipe, an env prefix, a variable set earlier, or `bash -c`. Name the test that blocks each one. A spelling with no blocking test is a finding.
+
 ## Reuse
 
 1. **Existing code that replaces a new function** — for each function, class or helper the diff adds:
-    1. Run `ecp find "<its purpose in 2-4 words>" --repo .` (for example `ecp find "upsert bot" --repo .`).
+    1. Run `ecp find "<its purpose in 2-4 words>" --mode bm25 --repo .` (for example `ecp find "upsert bot" --mode bm25 --repo .`). The default exact mode matches one symbol name, so a phrase always returns `found: false`.
     2. For each plausible hit, run `ecp inspect --name <hit> --repo .` and compare the signature and body.
     3. When the graph returns nothing, grep for the key verb and noun.
     4. Report the existing symbol at file:line, or `clear` with the queries you ran.
@@ -120,7 +126,7 @@ These rungs say what to look for. When a rung fires, or when the diff touches a 
 7. **Unnecessary JSX nesting** — wrapper elements adding no layout value
 8. **Nested conditionals 3+ deep** — flatten with early returns, guard clauses, lookup tables
 9. **Nested ternaries** — replace with `match`/switch, or if-else for two branches
-10. **WHAT-comments** — delete (identifiers say it); keep only non-obvious WHY
+10. **WHAT-comments** — delete (identifiers say it); keep only non-obvious WHY. A WHY that explains a surprise in our own code is a finding: propose the rename, extraction or fix that makes the comment unneeded. Keep a WHY about an external dependency, platform or protocol.
 11. **Unverified claims** — a comment that asserts a fact about the world, not intent: "output is unchanged", "these layouts share a path". It carries the command that proves it. Run that command, mark the sentence as an assumption, or delete it. A comment that says how another function behaves, as proof that this line is safe, is such a claim. Open that function and read it
 12. **Ambient test state** — a new test reads env vars, cwd, process-global statics, or a shared test binary. Name what it reads, then pin it or remove it. A pass counts as evidence once its reason is established. A suite that skips tests when a dependency is down still reads as green. Report the skip count beside the pass count, and name the run each count comes from
 13. **Prose drift** — the diff changes behaviour, but a sentence that describes the old behaviour stays.
@@ -130,6 +136,7 @@ These rungs say what to look for. When a rung fires, or when the diff touches a 
     4. The rung is done when every listed name has a hit list that ends as a finding or as clear.
 
     A stale sentence is a finding inside the diff or outside it. The finding quotes the stale sentence and the hunk that contradicts it; without that pair it scores 0. Its failure_scenario names the reader who acts on the sentence and what then breaks. A sentence that states the old behaviour as fact scores 75. Leave a changelog entry for a past release as written
+14. **Orphaned code** — a function, parameter, branch or config key whose last caller or reader the diff removes. Run `ecp impact --target X --direction upstream --repo .`, then `rtk bypass git grep -nw --untracked '<name>'`. No caller and no hit beyond the definition is a finding. For a parameter, run `ecp flow --file <path> --line <n> --column <c> --subject binding --repo .` with the column on its name. An empty `consumers` list is a finding. The fix deletes the orphan.
 
 **Readability guardrail** — a fix makes the code easier to read, not merely shorter. Reject dense one-liners, over-clever collapses, merged concerns, and a dropped abstraction that earned its place.
 
@@ -138,7 +145,7 @@ These rungs say what to look for. When a rung fires, or when the diff touches a 
 Read every CLAUDE.md that governs a changed file: the user-level `~/.claude/CLAUDE.md`, the repo root, and any CLAUDE.md or CLAUDE.local.md in a directory above a changed file. A directory's CLAUDE.md binds the files at or below it. With none above a changed file, record "no project rules apply".
 
 1. **Stated rule broken** — quote the rule and the line that breaks it, and name the CLAUDE.md path so the report cites both
-2. **Skill-owned rule broken** — a rule a language or stack skill states (`python-perf` for Python); quote it the same way
+2. **Skill-owned rule broken** — a rule a language or stack skill states (`python-perf` for Python, `rust-best-practices` and `rust-perf` for Rust); quote it the same way
 
 A convention finding carries a rule quote and a line quote. Anything short of that pair is a style preference, so leave it out.
 

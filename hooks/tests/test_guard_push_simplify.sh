@@ -33,18 +33,64 @@ check test_rmdir_variable_allowed             'rmdir $T'                        
 # Known limit: a separator inside a quoted string splits the segment, so this text trips the guard.
 check test_quoted_separator_known_false_positive 'git commit -m "x; rm -rf $y"'            2
 
+# A leading sleep of 10 s or more, or of a length the guard cannot read: blocked (rc=2).
+run_bg() { jq -nc --arg c "$1" '{tool_input:{command:$c,run_in_background:true}}' | bash "$SCRIPT" >/dev/null 2>&1; echo $?; }
+check test_command_sleep_long_blocked         'command sleep 110; cat /tmp/x.output'       2
+check test_plain_sleep_long_blocked           'sleep 30'                                   2
+check test_env_sleep_long_blocked             'env sleep 60'                               2
+check test_backslash_sleep_long_blocked       '\sleep 20'                                  2
+check test_absolute_sleep_long_blocked        '/bin/sleep 15'                              2
+check test_sleep_variable_length_blocked      'command sleep $W; curl -s x'                2
+check test_sleep_minutes_suffix_blocked       'sleep 2m'                                   2
+check test_cd_then_command_sleep_blocked      'cd /tmp; command sleep 60; cat x.output'    2
+check test_quoted_variable_length_blocked     'command sleep "$W"'                         2
+check test_sleep_in_loop_body_allowed         'for i in 1 2; do command sleep 15; done'    0
+check test_mid_command_fixed_wait_allowed     'orca-ide reload; sleep 10; orca-ide eval x' 0
+check test_quoted_until_loop_allowed          'timeout 100 bash -c "until grep -q x f; do sleep 2; done"' 0
+check test_sleep_in_substitution_blocked      'x=$(sleep 30; echo done)'                   2
+check test_sleep_short_allowed                'sleep 2; curl -s localhost:8000'            0
+check test_sleep_nine_seconds_allowed         'sleep 9'                                    0
+check test_sleep_fraction_allowed             'sleep 0.5'                                  0
+check test_sleep_with_redirect_allowed        'sleep 1 >/dev/null'                         0
+check test_sleep_text_in_grep_allowed         'grep -n "sleep 60" run.sh'                  0
+check test_sleep_in_data_heredoc_allowed      $'cat > /tmp/x.sh <<\'EOF\'\nsleep 60\nEOF'  0
+if [ "$(run_bg 'sleep 2720 && curl -s x')" = 0 ]; then pass=$((pass+1)); else fail=$((fail+1)); echo "FAIL test_sleep_background_call_allowed"; fi
+
+# pgrep -f / pkill -f with a pattern that matches the hook's own shell: blocked (rc=2).
+check test_pkill_f_plain_pattern_blocked      'pkill -f "sleep 205"'                       2
+check test_pgrep_f_in_substitution_blocked    'kill -0 $(pgrep -f "viberank" | head -1)'   2
+check test_pgrep_combined_f_flag_blocked      'pgrep -fa node'                             2
+check test_pkill_signal_then_f_blocked        'pkill -9 -f viberank'                       2
+check test_pgrep_full_long_flag_blocked       'pgrep --full server.py'                     2
+check test_pgrep_value_option_then_f_blocked  'pgrep -u user -f node'                      2
+check test_pkill_f_bracket_pattern_allowed    'pkill -f "[v]iberank"'                      0
+check test_pgrep_exact_name_allowed           'pgrep -x node'                              0
+check test_pkill_name_allowed                 'pkill viberank'                             0
+check test_pgrep_text_in_echo_allowed         'echo "pgrep -f x"'                          0
+check test_pgrep_in_grep_alternation_allowed  'grep -n "^#\|pgrep -f" notes.md'            0
+check test_sleep_in_grep_alternation_allowed  'grep -n "a\|sleep 60" run.sh'               0
+check test_quoted_pipe_then_real_pgrep_blocked 'grep "a|b" f; pgrep -f node'               2
+msg=$(jq -nc --arg c 'command sleep 110; cat x' '{tool_input:{command:$c}}' | bash "$SCRIPT" 2>&1 >/dev/null)
+if [[ "$msg" == *'  command sleep 110'* ]]; then pass=$((pass+1)); else fail=$((fail+1)); echo "FAIL test_sleep_message_names_the_command: $msg"; fi
+
 # Push guard: the review is bound to file content through review-mark.sh. Each
 # case runs in a fresh repo with a bare remote; the hook reads the repo from cwd.
 # The sibling review-mark.sh, so a mirror checkout tests its own copy, not the installed one.
 export REVIEW_MARK; REVIEW_MARK="$(cd "$(dirname "$0")/../../skills/simplify" && pwd)/review-mark.sh"; MARK=$REVIEW_MARK
-mkdir -p "$HOME/.cache"; T=$(mktemp -d "$HOME/.cache/guard-test.XXXXXX"); trap 'case "$T" in "$HOME"/.cache/guard-test.?*) rm -rf -- "$T" ;; esac' EXIT   # under $HOME so `~` paths resolve
+T=$(mktemp -d /tmp/guard-test.XXXXXX)
 g() { git -c user.email=t@t -c user.name=t "$@"; }
-repo() {   # a repo whose main is pushed to a bare origin; prints its path
+sync_origin() {   # Populate the fixture refs without executing git push.
+  local origin
+  origin=$(g -C "$1" remote get-url origin) || return
+  g -C "$origin" fetch -q "$1" +refs/heads/main:refs/heads/main &&
+    g -C "$1" fetch -q origin
+}
+repo() {   # a repo whose main matches a bare origin; prints its path
   local r o; r=$(mktemp -d "$T/r.XXXXXX"); o=$(mktemp -d "$T/o.XXXXXX")
   {
     git init -q --bare "$o"; git init -q -b main "$r"
     printf 'a\n' > "$r/a.txt"; g -C "$r" add a.txt; g -C "$r" commit -q -m a
-    g -C "$r" remote add origin "$o"; g -C "$r" push -q origin main
+    g -C "$r" remote add origin "$o"; sync_origin "$r"
   } >/dev/null 2>&1
   printf '%s' "$r"
 }
@@ -102,12 +148,71 @@ pcheck test_cd_literal_then_push_blocked              "$(push_rc "$o" "cd $r && 
 pcheck test_cd_variable_then_push_blocked             "$(push_rc "$o" 'cd $U && git push')" 2
 pcheck test_subshell_push_blocked                     "$(push_rc "$r" '(git push)')" 2
 pcheck test_bash_c_push_blocked                       "$(push_rc "$r" "bash -c 'git push'")" 2
-pcheck test_dash_c_tilde_unreviewed_blocked           "$(push_rc "$o" "git -C ~${r#"$HOME"} push")" 2
+pcheck test_dash_c_tilde_unreviewed_blocked           "$(push_rc "$o" "git -C ~/../../${r#/} push")" 2
 pcheck test_dash_c_variable_blocked                   "$(push_rc "$o" 'git -C $HOME/x push')" 2
 pcheck test_dash_c_quoted_unreviewed_blocked          "$(push_rc "$o" "git -C \"$r\" push")" 2
 pcheck test_git_dir_env_blocked                       "$(push_rc "$o" "GIT_DIR=$r/.git git push")" 2
 pcheck test_git_dir_flag_blocked                      "$(push_rc "$o" "git --git-dir=$r/.git push")" 2
 "$MARK" mark "$r" >/dev/null
+b=$(repo); edit "$b"; commit "$b"   # unreviewed; $r is reviewed from here on
+pcheck test_dash_c_braced_var_blocked                 "$(push_rc "$r" 'git -C "${U}" push')" 2
+pcheck test_dash_c_braced_default_var_blocked         "$(push_rc "$r" "git -C \${U:-$b} push")" 2
+# A leading literal assignment resolves; every other spelling of the variable fails closed.
+pcheck test_leading_var_dash_c_reviewed_allowed       "$(push_rc "$o" "W=$r; git -C \$W push")" 0
+pcheck test_leading_var_dash_c_unreviewed_blocked     "$(push_rc "$o" "W=$b; git -C \$W push")" 2
+pcheck test_leading_var_cd_reviewed_allowed           "$(push_rc "$o" "W=$r; cd \$W && git push")" 0
+pcheck test_leading_var_cd_unreviewed_blocked         "$(push_rc "$o" "W=$b; cd \$W && git push")" 2
+pcheck test_leading_var_chain_reviewed_allowed        "$(push_rc "$o" "S=${r%/*}; W=\$S/${r##*/}; git -C \$W push")" 0
+pcheck test_leading_var_quoted_braced_allowed         "$(push_rc "$o" "W=\"$r\" && git -C \"\${W}\" push")" 0
+pcheck test_leading_var_export_blocked                "$(push_rc "$o" "export W=$r; git -C \$W push")" 2
+pcheck test_leading_var_reassigned_blocked            "$(push_rc "$o" "W=$r; W=$b; git -C \$W push")" 2
+pcheck test_leading_var_reassigned_dynamic_blocked    "$(push_rc "$o" "W=$r; W=\$(pwd); git -C \$W push")" 2
+pcheck test_leading_var_for_loop_blocked              "$(push_rc "$o" "W=$r; for W in $b; do :; done; git -C \$W push")" 2
+pcheck test_leading_var_read_blocked                  "$(push_rc "$o" "W=$r; IFS= read -r W < /dev/null; git -C \$W push")" 2
+pcheck test_leading_var_printf_v_blocked              "$(push_rc "$o" "W=$r; printf -v W %s $b; git -C \$W push")" 2
+pcheck test_leading_var_unset_blocked                 "$(push_rc "$o" "W=$r; unset W; git -C \$W push")" 2
+pcheck test_var_after_command_blocked                 "$(push_rc "$o" "true; W=$r; git -C \$W push")" 2
+pcheck test_var_conditional_blocked                   "$(push_rc "$o" "false || W=$r; git -C \$W push")" 2
+pcheck test_var_in_pipe_blocked                       "$(push_rc "$o" "W=$r | true; git -C \$W push")" 2
+pcheck test_var_in_background_blocked                 "$(push_rc "$o" "W=$r & git -C \$W push")" 2
+pcheck test_var_in_subshell_blocked                   "$(push_rc "$o" "(W=$r); git -C \$W push")" 2
+pcheck test_var_in_if_blocked                         "$(push_rc "$o" "if true; then W=$r; fi; git -C \$W push")" 2
+pcheck test_var_env_prefix_blocked                    "$(push_rc "$o" "W=$r git -C \$W push")" 2
+pcheck test_var_relative_value_blocked                "$(push_rc "${r%/*}" "W=${r##*/}; git -C \$W push")" 2
+pcheck test_var_with_tail_dynamic_blocked             "$(push_rc "$o" "W=$r\$X; git -C \$W push")" 2
+pcheck test_var_default_form_blocked                  "$(push_rc "$o" "W=$r; git -C \${W:-$b} push")" 2
+pcheck test_var_quoted_space_blocked                  "$(push_rc "$o" "W=\"$r push\"; git -C \$W")" 2
+pcheck test_var_ifs_anywhere_blocked                  "$(push_rc "$o" "W=$r; IFS=/; git -C \$W push")" 2
+pcheck test_var_prefix_name_not_matched_blocked       "$(push_rc "$o" "W=$r; git -C \$WX push")" 2
+pcheck test_group_push_reviewed_allowed               "$(push_rc "$o" "{ git -C $r push; }")" 0
+pcheck test_group_cd_unreviewed_blocked               "$(push_rc "$r" "{ cd $b; git push; }")" 2
+pcheck test_group_cd_variable_blocked                 "$(push_rc "$r" '{ cd $X; git push; }')" 2
+pcheck test_then_cd_blocked                           "$(push_rc "$r" "if true; then cd $b; fi; git push")" 2
+pcheck test_cd_inside_if_block_blocked                "$(push_rc "$b" "if false; then echo a; cd $r; fi; git push")" 2
+pcheck test_builtin_cd_unreviewed_blocked             "$(push_rc "$r" "builtin cd $b && git push")" 2
+pcheck test_builtin_cd_reviewed_allowed               "$(push_rc "$o" "builtin cd $r && git push")" 0
+pcheck test_push_inside_loop_blocked                  "$(push_rc "$r" 'for i in 1 2; do git push; done')" 2
+pcheck test_push_in_function_blocked                  "$(push_rc "$r" 'f() { git push; }; f')" 2
+pcheck test_push_inside_if_reviewed_allowed           "$(push_rc "$r" 'if git diff --quiet; then git push; fi')" 0
+pcheck test_loop_before_push_reviewed_allowed         "$(push_rc "$r" 'for f in a b; do echo $f; done; git push')" 0
+pcheck test_quoted_subcommand_blocked                "$(push_rc "$b" 'git "push"')" 2
+pcheck test_dash_c_quoted_space_var_blocked           "$(push_rc "$b" 'git -C "${W:-a b}" push')" 2
+pcheck test_ifs_split_push_blocked                    "$(push_rc "$r" "W=$b:push; IFS=:; git -C \$W")" 2
+pcheck test_dynamic_command_word_push_blocked         "$(push_rc "$b" 'G=git; P=push; $G $P')" 2
+pcheck test_dynamic_word_then_plain_push_allowed      "$(push_rc "$r" '$EDITOR x; git push')" 0
+pcheck test_push_in_substitution_of_git_blocked       "$(push_rc "$b" 'git status $(git push)')" 2
+pcheck test_bash_c_cd_then_push_blocked               "$(push_rc "$r" "bash -c 'cd $b; git push'")" 2
+pcheck test_multiline_subshell_cd_blocked             "$(push_rc "$b" "(
+cd $r;
+); git push")" 2
+pcheck test_eval_cd_blocked                           "$(push_rc "$r" "eval \"cd $b\"; git push")" 2
+pcheck test_heredoc_wrapper_option_shell_blocked      "$(push_rc "$b" "command -p bash <<'EOF'
+git push
+EOF")" 2
+pcheck test_apostrophe_in_double_quotes_allowed     "$(push_rc "$r" 'echo "remote'"'"'s tree"; git push')" 0
+pcheck test_escaped_quote_then_push_allowed           "$(push_rc "$r" 'echo \'"'"'x; git push')" 0
+pcheck test_stash_push_allowed                        "$(push_rc "$b" 'git stash push')" 0
+pcheck test_push_word_in_git_argument_allowed         "$(push_rc "$b" 'git log --grep push')" 0
 pcheck test_cd_literal_reviewed_allowed               "$(push_rc "$o" "cd $r && git push")" 0
 pcheck test_dash_c_absolute_reviewed_allowed          "$(push_rc "$o" "git -C $r push")" 0
 
@@ -165,7 +270,7 @@ r=$(repo); edit "$r"; "$MARK" mark "$r" >/dev/null; head -c 6000000 /dev/zero > 
 pcheck test_add_all_with_oversize_untracked_blocked   "$(push_rc "$r" 'git add -A && git commit -m x && git push origin main')" 2
 pcheck test_commit_am_ignores_oversize_untracked      "$(push_rc "$r" 'git commit -am x && git push origin main')" 0
 
-r=$(repo); head -c 6000000 /dev/zero > "$r/data.bin"; commit "$r"; g -C "$r" push -q origin main >/dev/null 2>&1
+r=$(repo); head -c 6000000 /dev/zero > "$r/data.bin"; commit "$r"; sync_origin "$r" >/dev/null 2>&1
 printf 'x' >> "$r/data.bin"; "$MARK" mark "$r" >/dev/null; commit "$r"
 pcheck test_tracked_large_file_edit_reviewed_allowed  "$(push_rc "$r" 'git push origin main')" 0
 
@@ -173,7 +278,7 @@ r=$(repo); for i in $(seq 1 12); do printf '%s\n' "$i" > "$r/c$i.txt"; done
 for i in $(seq 1 12); do "$MARK" mark "$r" >/dev/null & done; wait; commit "$r"
 pcheck test_concurrent_marks_twelve_keep_records      "$(push_rc "$r" 'git push origin main')" 0
 
-pcheck test_push_outside_git_repo_allowed             "$(push_rc "$T" 'git push')" 0
+pcheck test_push_outside_git_repo_denied              "$(push_rc "$T" 'git push')" 2
 pcheck test_non_push_git_allowed                      "$(push_rc "$T" 'git status && git log')" 0
 
 # rm forms where rm is not the first word of its segment.
@@ -265,11 +370,78 @@ pcheck test_push_with_corrupt_remote_ref_blocked      "$(push_rc "$r" 'git push'
 "$MARK" mark "$r" >/dev/null 2>&1
 "$MARK" check-worktree "$r" >/dev/null 2>&1
 pcheck test_check_worktree_with_corrupt_remote_ref_errors "$?" 2
-r=$(repo); printf 'f\n' > "$r/becomesdir"; commit "$r"; g -C "$r" push -q origin main >/dev/null 2>&1
+r=$(repo); printf 'f\n' > "$r/becomesdir"; commit "$r"; sync_origin "$r" >/dev/null 2>&1
 g -C "$r" rm -q becomesdir; mkdir "$r/becomesdir"; printf 'n\n' > "$r/becomesdir/new"; commit "$r"; "$MARK" mark "$r" >/dev/null
 pcheck test_push_file_replaced_by_dir_reviewed_allowed "$(push_rc "$r" 'git push origin main')" 0
 r=$(repo); printf 'x\n' > "$r/tab"$'\t'"name"; "$MARK" mark "$r" >/dev/null 2>&1
 pcheck test_mark_failure_leaves_no_temp_file          "$(find "$r/.git" -maxdepth 1 -name 'claude-reviewed-content.*' ! -name '*.lock' | wc -l)" 0
+
+# A quoted-delimiter heredoc feeds data, not commands, to a consumer that is no shell:
+# its body never pushes. The repo holds an unreviewed commit, so a push it misreads is rc=2.
+r=$(repo); edit "$r"; commit "$r"
+pcheck test_cat_heredoc_body_mentions_git_push_allowed      "$(push_rc "$r" $'cat > /tmp/shim <<\'EOF\'\n# route git push origin to the clean URL\nEOF')" 0
+pcheck test_python_heredoc_body_mentions_stash_push_allowed "$(push_rc "$r" $'python3 - <<\'EOF\'\nprint("then git stash push -u")\nEOF')" 0
+pcheck test_dash_heredoc_body_mentions_git_push_allowed     "$(push_rc "$r" $'cat <<-"EOF"\n\tgit push origin main\n\tEOF')" 0
+pcheck test_git_commit_heredoc_message_mentions_push_allowed "$(push_rc "$r" $'git commit -F - <<\'EOF\'\nfix: git push no longer races\nEOF')" 0
+pcheck test_unquoted_heredoc_substitution_push_blocked      "$(push_rc "$r" $'cat <<EOF\n$(git push origin main)\nEOF')" 2
+pcheck test_bash_heredoc_body_push_blocked                  "$(push_rc "$r" $'bash <<\'EOF\'\ngit push origin main\nEOF')" 2
+pcheck test_push_after_data_heredoc_blocked                 "$(push_rc "$r" $'cat > /tmp/x <<\'EOF\'\nnotes\nEOF\ngit push origin main')" 2
+# `git` inside a path (.github, /git/) is no git command.
+pcheck test_github_path_then_push_word_allowed              "$(push_rc "$r" "grep -n if: .github/workflows/a.yml; sed -i 's/do not push before it/ok/' /tmp/notes.md")" 0
+pcheck test_absolute_git_path_push_blocked                  "$(push_rc "$r" '/usr/bin/git push origin main')" 2
+
+# Review cases 1-7: each command targets an unreviewed repository in Bash.
+r=$(repo); edit "$r"; commit "$r"
+pcheck test_push_array_reassignment_denied "$(push_rc "$r" "W=/tmp; W[0]=$r; git -C \$W push")" 2
+pcheck test_push_append_reassignment_denied "$(push_rc "$r" "W=${r%/*}; W+=/${r##*/}; git -C \$W push")" 2
+pcheck test_push_relative_reassignment_denied "$(push_rc "$r" 'W=/tmp; W=.; git -C $W push')" 2
+pcheck test_push_quoted_export_denied "$(push_rc "$r" "W=/tmp; export \"W=$r\"; git -C \$W push")" 2
+pcheck test_push_quoted_declare_denied "$(push_rc "$r" "W=/tmp; declare \"W=$r\"; git -C \$W push")" 2
+pcheck test_push_read_array_denied "$(push_rc "$r" "W=/tmp; read -r \"W[0]\" <<< $r; git -C \$W push")" 2
+pcheck test_push_printf_array_denied "$(push_rc "$r" "W=/tmp; printf -v W[0] %s $r; git -C \$W push")" 2
+pcheck test_push_read_attached_redirection_denied "$(push_rc "$r" "W=/tmp; read W<<< $r; git -C \$W push")" 2
+pcheck test_push_escaped_read_denied "$(push_rc "$r" "W=/tmp; \\read W <<< $r; git -C \$W push")" 2
+pcheck test_push_quoted_read_denied "$(push_rc "$r" "W=/tmp; \"read\" W <<< $r; git -C \$W push")" 2
+pcheck test_push_background_and_list_denied "$(W="$r" push_rc "$r" 'W=/tmp && : & git -C "$W" push')" 2
+pcheck test_push_comment_cd_denied "$(push_rc "$r" $'W=/tmp; # comment ; cd $W\ngit push')" 2
+pcheck test_push_unquoted_heredoc_cd_denied "$(push_rc "$r" $'W=/tmp; cat <<EOF\ncd $W\nEOF\ngit push')" 2
+pcheck test_push_alias_reassignment_denied "$(push_rc "$r" "W=/tmp; shopt -s expand_aliases
+alias change='W=$r'
+change
+git -C \$W push")" 2
+pcheck test_push_special_underscore_denied "$(push_rc "$r" "_=/tmp; : $r; git -C \$_ push")" 2
+pcheck test_push_special_pwd_denied "$(push_rc "$r" "PWD=/tmp; cd $r; git -C \$PWD push")" 2
+pcheck test_push_special_oldpwd_denied "$(push_rc "$r" 'OLDPWD=/tmp; cd /; git -C $OLDPWD push')" 2
+# The literal directory named $W contains an actual unreviewed repository.
+g clone -q "$r" "$r/\$W"; edit "$r/\$W"; commit "$r/\$W"
+pcheck test_push_single_quoted_path_denied "$(push_rc "$r" "W=/tmp; git -C '\$W' push")" 2
+pcheck test_push_single_quoted_assignment_denied "$(push_rc "$r" "W=/tmp; W='\$W'; git -C \$W push")" 2
+
+# Inject dependency failure and nounset failure through the actual input reader.
+test_guard_internal_error_denied() {
+  local body=$1 result rc input
+  input=$(jq -nc --arg cwd "${3:-/tmp}" '{tool_input:{command:"git push"},cwd:$cwd}')
+  result=$(bash -c "$body; source \"\$1\"" guard-test "$SCRIPT" 2>&1 <<< "$input"); rc=$?
+  pcheck "test_guard_${2}_denied" "$rc" 2
+  if [[ "$result" == *'Blocked: push guard internal error; command denied.'* || "$result" == *'Blocked: the push guard failed at line '* ]]; then
+    pass=$((pass+1))
+  else
+    fail=$((fail+1)); echo "FAIL test_guard_${2}_reason: $result"
+  fi
+}
+test_guard_internal_error_denied 'cat() { return 73; }' dependency_error
+test_guard_internal_error_denied 'cat() { local missing; unset missing; printf "%s" "$missing"; }' unbound_variable
+test_guard_internal_error_denied 'cat() { return 2; }' dependency_exit_two
+test_guard_internal_error_denied 'awk() { return 73; }' segment_producer_error
+test_guard_internal_error_denied 'sed() { return 73; }' segment_filter_error
+test_guard_internal_error_denied 'readonly special_var' assignment_error
+test_guard_internal_error_denied 'readonly known_vars' array_initialization_error
+test_guard_internal_error_denied 'jq() { if [[ "$*" == *run_in_background* ]]; then return 73; fi; command jq "$@"; }' background_query_error
+test_guard_internal_error_denied 'git() { return 73; }' git_lookup_error
+test_guard_internal_error_denied 'git() { if [[ "$*" == *config* ]]; then return 73; fi; command git "$@"; }' git_config_error "$r"
+test_guard_internal_error_denied 'git() { if [[ "$*" == *"HEAD^{commit}"* ]]; then return 73; fi; command git "$@"; }' git_head_error "$r"
+g -C "$r" config remote.origin.push ''
+pcheck test_push_empty_remote_refspec_denied "$(push_rc "$r" 'git push')" 2
 
 echo "pass=$pass fail=$fail"
 [ "$fail" = 0 ]

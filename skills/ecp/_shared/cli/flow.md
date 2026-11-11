@@ -34,6 +34,7 @@ A call that discards its return value does not create a return-value dependency 
 The engine analyzes JS/TS, Python, and PHP sources within the supplied directory.
 Ignore rules filter untracked files. Tracked sources remain visible in both snapshots, subject to dependency/cache directory exclusions.
 Missing external code remains an analysis boundary.
+Blade templates (`*.blade.php`) are rejected: flow does not parse `@php` blocks, `{{ }}` echoes or directives.
 The loader rejects scopes larger than 2,048 files or 32 MiB instead of silently analyzing a partial snapshot.
 Overlay JSON input also has a 32 MiB limit before parsing.
 
@@ -46,12 +47,20 @@ The engine distinguishes lexical bindings and assignment versions, merges branch
 Loops use bounded fixed-point iteration. Recursive value dependencies use cyclic summaries.
 Named JS/TS imports and reexports, plus Python from-imports, connect supported values across files.
 Closure captures and tracked object aliases connect values across functions.
-PHP includes and namespace imports remain explicit boundaries.
+PHP `use` clauses resolve the classes that the analyzed sources declare.
+Static, `self::`, `parent::`, `static::` and `$this->` method calls reach the declared method.
+`$this->` and `static::` calls also reach subclass overrides.
+Python class attribute calls and `self.` calls reach the class's methods, and `self.` calls also reach subclass overrides.
+Inherited members and class attributes follow the Python method resolution order.
+`@staticmethod` receives no receiver and `@classmethod` receives the class. A call to a method with another decorator stays an `external_call` boundary.
+PHP `use` aliases apply to their namespace block and match class names without regard to case.
+PHP includes, `use function`, `use const`, trait methods and undeclared classes remain explicit boundaries.
 Selected numeric builtins have explicit models. Their assumptions appear as `builtin_model` boundaries.
 Destructuring, asynchronous scheduling, exception paths, iterator protocols, and unresolved external effects retain explicit boundaries.
 Recursive heap and callable identities remain approximate. These limits apply even when `truncated` is false.
 
 Use `--max-nodes`, `--max-call-depth`, and `--max-steps` to bound analysis.
+The queried file, then the files its imports name, get the budget before the rest of the snapshot.
 When a budget stops analysis, inspect the boundary and truncation fields before making a claim.
 An empty consumer list establishes no broader conclusion than the reported coverage permits.
 

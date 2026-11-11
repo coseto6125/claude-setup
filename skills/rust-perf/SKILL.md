@@ -20,6 +20,7 @@ A proposed fix is a hypothesis. That includes a follow-up's `next-action`, a com
 
 ### A/B protocol
 
+- Before the first run, write the result that would change the decision.
 - Build release binaries only. Debug and release differed 5x on the same hook, so a debug number predicts nothing.
 - Interleave the runs of every binary. Report the median and p10.
 - Record peak RSS with `/usr/bin/time -f "%e s %M KB"`.

@@ -91,6 +91,18 @@ a hung one.
 
 Fluid Functionalism ships both as components. See `local/sources.md`.
 
+## Load and reveal
+
+Rules for page-level entrances, from taste-skill v2.1.5 `references/motion.md` § 10 (2026-11-01):
+
+- Put the headline, the supporting sentence and the main picture in the HTML, painted on the first frame. The load sequence settles by 1.2s and moves four elements at most.
+- No preloader, no counter, no entry gate, no custom cursor, no wheel capture.
+- Put every hidden starting state under `html.js` and `@media (prefers-reduced-motion: no-preference)`. Without JS or with reduced motion, the page shows finished.
+- A reveal fires once. Nothing in view stays hidden for more than 900ms. Nothing above the fold waits for scroll.
+- A pinned sideways gallery only for a row under three screens long, with keyboard support.
+- `overflow: hidden` on an ancestor stops a `view()` scroll timeline from firing. Use `overflow: clip`.
+- A sticky child of a grid needs `align-self: start`, or it stretches and never sticks.
+
 ## Reduced motion is a designed state
 
 `local/anti-patterns.md` § Motion states the requirement. This is the removal list it
@@ -115,3 +127,4 @@ and the stagger cap. Two checks are specific to this layer:
 
 - Interrupting an animation mid-flight leaves no broken state. Reverse it halfway and look.
 - Focus order and focus rings survive the animation.
+- An ambitious effect (a scroll scene, a shader, a choreographed sequence) runs in the browser and is checked for timing, easing and smoothness. An effect that runs can still stutter, ease wrong or land on the wrong frame. Batch the fixes between looks.

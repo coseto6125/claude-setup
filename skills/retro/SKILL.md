@@ -19,7 +19,14 @@ Collect the evidence first:
 - each correction from the user, and the turn that caused it,
 - each tool call that failed or was repeated on the same target,
 - each long search for a file, a fact or a command,
-- each tool call whose output was much larger than what the agent used.
+- each tool call whose output was much larger than what the agent used,
+- each memory file that the session showed to be wrong.
+
+List the failed tool calls with the script, not by reading the transcript:
+
+```sh
+python3 ~/.claude/skills/retro/failures.py ~/.claude/projects/<project dir> --session <session id> --min-sessions 1
+```
 
 **Done** when every item on that list has its turn quoted.
 
@@ -39,7 +46,7 @@ Filter each item first:
 | Rules | Did the agent break a rule it had loaded, or follow a rule that no longer fits? | A wording change in `CLAUDE.md` or a skill. Read the rule's measurement first (`~/.claude/maintainer-notes.md`, or `measurements.md` beside the skill) |
 | Tool economy | Did a call cost far more tokens than it returned in value? | A narrower command, an `rtk` filter, or a script that returns only the answer |
 | Information access | Did the agent lack a fact it could not get? | A log tee, read access, or a reference file |
-| Lesson | Is the fix a fact about the user or the project, not a rule? | A memory file, per the memory rules in the system prompt |
+| Lesson | Is the fix a fact about the user or the project, not a rule? Did the session show a memory file to be wrong? | A new, corrected or deleted memory file, per the memory rules in the system prompt |
 
 For an item a check could catch, pick the highest level that works: remove the wrong path from the code, then a type, then a lint or hook whose error names the right command, then a test. A prose rule comes last, and only for a judgment call.
 
@@ -47,9 +54,10 @@ For an item a check could catch, pick the highest level that works: remove the w
 
 ## 4. Report
 
-List the candidates from most to least costly. For each one give:
+Rank the candidates by cost: the cost in one session times the session count. For each one give:
 
 - the evidence: the quoted turn, with its session ID,
+- the session count: the `sessions` column of `failures.py` for a failure, or an `rg` over the project's other transcripts for a correction,
 - the category,
 - the target file and the exact change,
 - for a check, the level you picked and why each higher level does not work,

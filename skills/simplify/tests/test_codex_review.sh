@@ -8,7 +8,7 @@ cat > "$T/bin/codex" <<EOF
 #!/usr/bin/env bash
 # fake-codex-$$
 if [ "\$1" = login ]; then [ "\${FAKE_LOGIN:-ok}" = ok ]; exit; fi
-prompt="\${!#}"; printf '%s' "\$prompt" > "$T/prompt.seen"
+prompt="\${!#}"; [ "\$prompt" = - ] && prompt=\$(cat); printf '%s' "\$prompt" > "$T/prompt.seen"
 echo "OpenAI Codex banner"; echo "exec: reading files"
 case "\$FAKE_MODE" in
   finish)    printf 'hook: Stop\ntokens used\n56,323\nFINDING one\nFINDING two\n' ;;
@@ -35,6 +35,11 @@ test_finish_exits_writes_report_without_marker_or_count() {
 test_brief_with_quotes_newlines_passes_verbatim() {
   run finish brief.md out.md >/dev/null
   check "${FUNCNAME[0]}" "$(cat "$T/prompt.seen")" "$(cat "$T/brief.md")"
+}
+test_brief_over_argv_limit_passes_verbatim() {
+  head -c 140000 /dev/zero | tr '\0' x > "$T/big.md"
+  check "${FUNCNAME[0]} rc" "$(run finish big.md big.out)" 0
+  check "${FUNCNAME[0]} verbatim" "$(cmp -s "$T/prompt.seen" "$T/big.md"; echo $?)" 0
 }
 test_linger_after_report_returns_and_kills_codex() {
   start=$SECONDS; rc=$(run linger brief.md linger.md)

@@ -115,6 +115,8 @@ This section is the canonical dispatch policy — skills that fan out defer to i
 
 From sonnet up, require **blind spots** too: what it did not read, run, or verify.
 
+Spawn a delegate without a `name`. SendMessage to its agentId still resumes it with its context. Give a name only to a delegate you message while it runs, or that other delegates message. TaskStop a named delegate once you have used its result.
+
 ### Across rounds
 
 Each return is a decision point — re-check, follow a thread, dispatch more, or finish. The goal fixes what "done" means; you decide how to reach it.
@@ -131,10 +133,10 @@ Subscription-billed, so its capacity is free. Reach for it where a *different* p
 
 ### Model and effort
 
-Always pass an explicit model matched to task difficulty. When unsure between two tiers, pick the lower one. State the chosen config plus a one-line rationale so the user can override.
+Always pass an explicit model matched to task difficulty. When unsure between two tiers, pick the lower one. State the chosen config plus a one-line rationale so the user can override. Before you group items into batches, pick the tier of each item. Put items of different tiers in different batches.
 
-- **Haiku** — read-only inventory, grep/stats aggregation, single-rule application when the rule lists its instances, dead-code removal, fixture sampling, per-item scoring against a fixed rubric (`subagent_type: lite-scan` when read-only suffices)
-- **Sonnet** — standard implementation with the reuse or extraction named in the brief, bounded TDD, checklist-driven review of a scoped diff
+- **Haiku** — read-only inventory, grep/stats aggregation, single-rule application when the rule lists its instances, dead-code removal, fixture sampling, per-item scoring against a fixed rubric (`subagent_type: lite-scan` when read-only suffices). Also checklist-driven review of a scoped diff when the checklist names every item (general-purpose agent, never `lite-scan`), and bounded TDD when the brief names every site to fix
+- **Sonnet** — standard implementation with the reuse or extraction named in the brief, bounded TDD that must also find sibling bugs the brief does not name
 - **Opus** — design judgment, cross-cutting architecture, ambiguous scope, security review, reverse-engineering (`subagent_type: deep-review` when read-only suffices)
 
 For read-only work name the `subagent_type` (`lite-scan`, `deep-review`), not the bare model.

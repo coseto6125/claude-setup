@@ -17,7 +17,7 @@ command -v codex >/dev/null || { echo "codex not installed" >&2; exit 4; }
 codex login status >/dev/null 2>&1 || { echo "codex not logged in" >&2; exit 4; }
 # setsid puts codex in its own process group, so one kill reaches the node wrapper and its native child.
 setsid codex exec -m "${CODEX_MODEL:-gpt-6-astra}" -c model_reasoning_effort="medium" \
-  --sandbox read-only --skip-git-repo-check -C "$PWD" "$(cat "$brief")" < /dev/null > "$log" 2>&1 &
+  --sandbox read-only --skip-git-repo-check -C "$PWD" - < "$brief" > "$log" 2>&1 &
 pid=$!
 # A finished codex can stay alive for an hour after its report, so every exit path ends the group.
 stop() {

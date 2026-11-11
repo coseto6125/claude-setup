@@ -252,3 +252,23 @@ Preloaded live `CLAUDE.md` + `ECP.md` + `RTK.md`, skill body injected as a Skill
 - E2: the control proposes a with/without run 10/10 but never names `validate-prompt-rules`; only the naming moves.
 - Sonnet D arm A (2/10) scores below its control (4/5); unexplained, stem scorer, 2 rows read by hand.
 - Not run: haiku. Tools off, no output style, no skill listing.
+
+## 2026-11-01 — "Before you add a sentence": fold step and cross-file step 1, not shipped
+
+Origin: the user saw new bullets pile up where an existing bullet could carry the meaning. Candidates: B widened step 1 ("the document and the section ... Search the always-loaded files and the skills") and added step 3 ("Rewrite the nearest bullet ... only when every existing bullet differs from it in both trigger and action"). B2 replaced that step 3 with "Before you append a bullet, compare its action with the action of every existing bullet. When one matches, rewrite that bullet to cover both cases, and append nothing."
+
+Preloaded control (live user `CLAUDE.md`, `RTK.md`, `ECP.md`, `rules/`), skill body before the scenario, NO_TOOLS, n=5 per cell, 150 calls, 0 errors. Fictional tool `fx`. Hit counts:
+
+| probe | model | control | A (live) | B | B2 |
+|---|---|---|---|---|---|
+| P1 new trigger, shared action (fold = hit) | claude-opus-5-5 | 0/5 | 0/5 | 0/5 | 0/5 |
+| P1 | claude-sonnet-5-5 | 0/5 | 0/5 | 0/5 | 0/5 |
+| P2 unrelated rule (new bullet = hit) | both | 10/10 | 10/10 | 10/10 | 10/10 |
+| P3 rule owned by another file (right file = hit) | both | 10/10 | 10/10 | 10/10 | not run |
+| P4 near-restatement of one bullet (fold = hit) | claude-opus-5-5 | 5/5 | 5/5 | 5/5 | 5/5 |
+| P4 | claude-sonnet-5-5 | 0/5 | 5/5 | 5/5 | 5/5 |
+
+- P4 sonnet: the live body already moves the near-restatement fold from 0/5 to 5/5. B and B2 add nothing over A.
+- P1: no wording moved either model. Both treat a new trigger as a new bullet even when the action is shared. Two wordings failed, so a third prose tweak is not the next move.
+- P3: saturated in control twice (rebuilt once). The cross-file widening of step 1 shows no effect.
+- Untested: the Skill-tool delivery path, tools on, haiku, n above 5. Rows: `~/.claude/prompt-runs/2026-11-01-wfa-fold`.

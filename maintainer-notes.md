@@ -72,6 +72,10 @@ Same session as the punctuation guardrail result in `## Method notes`, `### Leav
 - Writing discipline: "Give one concept one term for the whole document, with no synonym rotation." became "One term per concept, document-wide." Probe: a ~150-word instruction from notes that use several names for one concept. claude-opus-5-5 8/10 against 9/10 (bare 4/5); claude-sonnet-5-5 and claude-haiku-5-5 2/10 against 1/10 (bare 0/5). The rule rarely holds on sonnet and haiku in either wording. 12 rows hand-labelled.
 
 
+### Think-first anchor (lang-anchor, 2026-11-05)
+
+`hooks/lang-anchor.sh` now injects 「給使用者看的文字一律用<language>，寫之前先想一句。」 on every UserPromptSubmit, PostToolUse and SessionStart `compact`. The old tail 「含工具之間的一句說明」 is gone. Basis is observational only: a scan of 87 client-project sessions found 16.2% English in text blocks right after a tool result with no thinking block before them, against 2.6% with one. A resumed A/B could not reproduce the drift (control 0/25 trials, claude-opus-5-5; rows `~/.claude/prompt-runs/2026-11-05-langdrift-think-first/`). Check after 2026-11-12 with `lang-drift-scan.py 2026-11-06`: the share of post-tool text blocks with a thinking block before them should rise, and the English share should fall below 5.0%. Keep the token-saver drift note until that scan shows the drop.
+
 ### Drift-triggered note (token-saver, 2026-10-03)
 
 Two sessions on 2026-10-02 drifted with every scheduled reminder present: lang-anchor on each prompt and notification, and the per-request output_style reminder. So token-saver now reacts to the drift itself. A main-loop text block with 60+ Latin letters and under 15% CJK sets `langDrift` (the scanner counts under 5%; the wider bar also catches an English note that quotes a Chinese term, 5 of 7 blocks in the 5 to 15% band were English); while it is set, the output_style reminder comes back with one sentence that names the drift; a Chinese block (10+ CJK characters) clears it. Updated since: the atom is `langDriftHold`, and the note clears only after `DRIFT_HOLD` (10) Chinese blocks in a row (`mods/token-saver/hooks/register.ts`). Verified live with `claude -p` on claude-haiku-4-5-20251001: reminder dropped, then 236 chars after a scripted English note, then dropped after a Chinese one. Not A/B measured: `-p` does not drift on its own. Judge it with the 2026-10-09 scan (FU-2026-10-02-1cadf62b5435).
@@ -177,6 +181,15 @@ Two things this pins down. First, opus alone cannot measure this rule: on opus t
 - "Delete before you optimize", coverage clause: "no coverage is a sign you don't know it's dead, not permission to skip the check" became "No coverage means unknown, not dead." New probe b1f (delete a branch no test reaches; hit = check coverage first). Hand labels: a row that says "no test reaches it, so delete" is a miss. claude-opus-5-5 6/10 against 5/10, claude-haiku-5-5 2/15 against 1/15, bare 0/5. Lenient regex (any test check) on haiku: 5/15 against 3/15. The clause is weak on haiku in both wordings. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-ae/`.
 - The Core Philosophy pointer "(What a *session* should spend …)" became "(Session spend: see Dispatch.)". Untestable: the confusion needs a misleading line to appear, so bare scores 5/5 by design; A and B 10/10 on claude-opus-5-5.
 
+### Two ponytail sentences, not added 2026-11-01
+
+Source: `DietrichGebert/ponytail` `AGENTS.md`. Candidates: S1 "Code you move or merge keeps its error handling and validation." on the Consolidate line, S2 "Use an installed dependency before you add a new one, and never add a dependency for a few lines." on the stdlib bullet. Leave-one-out (A = live, B = live plus both), bare as saturation check, NO_TOOLS, n=5, haiku/sonnet/opus-5-5, 180 rows.
+
+- M1 (merge keeps exists check and decode fallback): A 14/15, B 15/15, bare opus 3/5. The live file already carries S1's behaviour.
+- D1 (ISO duration, pydantic listed) and D1b (retry with backoff, httpx listed): bare already 100% of answered rows. S2 untested on haiku (D1b A and B 5/5 no-answer).
+- D2 (PDF, adding a library is right): every answered row adds pypdf in every arm. The 13 non-hits are tool-call attempts under `--tools ""` (sonnet: `npx ctx7` lookups for pypdf, from the ctx7 rule), not refusals.
+- Rows: `~/.claude/prompt-runs/2026-11-01-pt-borrow-s1s2/`.
+
 ### Amdahl bound in the bench-verification brief, added 2026-10-17
 
 Preloaded control (live `CLAUDE.md` + `ECP.md` + `RTK.md`), the rule appended as system prompt, n=5, single-word verdict ask. Probe P2: a helper at 8% of request time, the request "35% faster". claude-sonnet-5-5: 0/5 control against 5/5 rule (reworded scenario: 1/5 against 5/5). claude-opus-5-5: 5/5 both arms, saturated by the preload (bare 2/5). Clean benchmark (P5): 20/20 "faster" with the rule, no over-call. The other checklist items (no limiter, unconsumed generator, debug against release build) saturated on both models, so only the bound shipped. The quoted check is item 4 of that checklist, word for word; the checklist's verdict line ("inconclusive when ...") rode along in the measured arm and is not shipped. Untested: the item alone, the pasted-into-brief path, and a free-form ask. Rows: session c6a25fc8 scratchpad `prompt-ab/bench-run/`.
@@ -238,6 +251,7 @@ Preloaded control (live CLAUDE.md, RTK.md, ECP.md; the project `CLAUDE.md`). The
 
 - Breaking-change bullet: the four sentences that restated `ECP.md`'s rule became "apply the breaking-change rule in `ECP.md`"; the automatic-upgrade sentences stay. `ECP.md` is @-included, so both always load. Same N1/N2p/G1/G2b probes as 2026-10-15, n=10, old file against new. B at or above A in all 12 cells: claude-haiku-5-5 N1 9 to 10, G2b 8 to 10; claude-sonnet-5-5 G2b 3/10 both (the accepted miss); every change made without asking reported (68/68, 67/67). Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-r1/`.
 - Debugging line: "repeating a tweak on the same spot means the strategy is wrong, so switch it" became "a second tweak on the same spot means switch strategy". Prior-saturated on two probe designs (bare 5/5, claude-opus-5-5 and claude-sonnet-5-5). The line is a no-op candidate; haiku not run. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-ae/`.
+- Debugging line, 2026-11-01: `hooks/loop-guard.py` (PostToolUseFailure) backs it at run time. On the third failure in one transcript with the same signature and the same error line, it adds a note to switch strategy or run codex. Replay over 16,495 past transcripts: it fires in 76 of them, 95 times. That history undercounts: `auto-etoon.sh` piped commands into `| etoon`, which hid their exit codes until the same day's fix, so the live rate is higher.
 
 ### "Before the first edit on work that leaves this machine…" added 2026-10-21
 
@@ -384,6 +398,12 @@ new query param 5/5), inert on haiku (0/5, 1/5, 0/5) — not added. Rows: sessio
 
 Re-run 2026-10-09 with the same plant and a rebuilt preload, n=5: claude-opus-5-5 0/5, 5/5, 5/5. claude-haiku-5-5 0/5, 4/5, 4/5. The class sentence alone now works on haiku-5-5, so the measured reason for the Dispatch edge-list line ("haiku needs them") is gone. The line stays: one plant at n=5 cannot license a deletion, and the list costs little. Open: an n=15 run, and claude-sonnet-5-5, which the line also names. Rows: session c7da8904 scratchpad `rv-wfa1.KV13IS/m2a/`.
 
+### Deliberately absent: moment-trigger bullet for the bug test, 2026-11-01
+
+Tried: split "Write a test that reproduces the bug, then make it pass." into its own bullet, "When you find a bug's cause, write its reproducing test and run it red before you edit the code." Trigger: in ECP and client-project transcripts, 27 Bash commands stash a fix, run the test, and pop it back (fix first, red check after). Tool-on A/B (`agentic.sh`, Read/Edit/Write/Bash, fixture `avg([])`, cause stated in the prompt), claude-opus-5-5, n=5: old 5/5, new 5/5, every trial test, red, fix, green. Saturated, reverted. The probe misses the real context: 15 of the 27 commands come from sub-agents, and most of the rest from main sessions, that apply a list of review findings. Rows: session 9a45f906 scratchpad `ab.XS6DSU/c7` (ephemeral).
+
+Follow-up baseline, same day: a batch of three review findings with spelled-out fixes, sub-agent framing, tool-on, live CLAUDE.md, claude-opus-5-5, n=5. 4/5 trials wrote and ran all tests red before any source edit. 1/5 fixed first, then stashed the fix to see red, the transcript pattern. Base rate too low to A/B at a small n (a 1-in-5 miss needs about 15 to 20 trials per arm), and rung 14 already catches the miss, so no rule was added. Rows: `ab.XS6DSU/c9` (ephemeral).
+
 ### Reworded 2026-08-24 — pilot only, not shipping-grade
 
 Old wording: "When you have reproduced a bug, write the failing test before you write the fix."
@@ -468,6 +488,15 @@ Re-check after CLI 2.1.300 ("Fixed Claude polling a background command's output 
 | S2: `make crunch` nohups the job and returns at once | 5/5 | 0/5 (foreground `until`/`for` sleep loops) |
 
 Read: S1 is saturated, so the platform fix covers the model's own background command. S2 is the detached-process shape of the 09-17 lapse, and the main-session half still carries it: keep the wording as is. 0 `pgrep` in 20 runs, so the `pgrep -f` sentence was not exercised; its sonnet row above stands. Not run: sonnet, haiku, which of the three removed sentences carries S2, long context. Spend about $3. Raw rows: session 292270f4 scratchpad `waitloop/exp.psTx5D/`, `waitloop/exp2.3AvVhn/` (`scores_hand.tsv`).
+
+### Hook backstop for the wait-loop rule, added 2026-11-01
+
+`hooks/guard-push-simplify.sh` blocks two shapes of this rule. The bullet stays as written: the hook stops the command, and the bullet steers the plan before the command exists. The bullet names only `pgrep -f`; the hook covers `pkill -f` too, so the bullet was not widened.
+
+- A leading `sleep` of 10 s or more under a prefix word, a backslash or a path (`command sleep 110`), or with a length the hook cannot read (`sleep $W`). The harness blocks a plain long leading `sleep`, not these forms. Evidence: retro of session d30dbece, four rejected `command sleep N; cat <task output>` calls.
+- `pgrep -f` / `pkill -f` with a pattern that has no bracket expression. The Bash tool's shell carries the whole command in its argv (`/bin/bash -c ... eval '<command>'`, checked on CLI 2.1.316), so that pattern always matches the shell. `pkill -f` then kills it: exit 144, five times in d30dbece.
+
+Replay over 7,117 distinct past Bash commands that contain sleep, pgrep or pkill: 325 sleep blocks (295 plain leading sleeps the harness already blocks, 24 `command sleep` bypasses, 1 false positive: `(cd X && exec sleep 40) & sleep 1`), and 1,324 pgrep/pkill blocks. A segment with an odd quote count is skipped, because a separator inside a quoted grep alternation (`grep "a\|pgrep -f" f`) split it; that removed 171 false positives. Not measured: whether an agent, once blocked, finds another bypass (`python -c 'time.sleep(110)'`, `timeout 110 tail -f`).
 
 ### Sub-agent foreground clause, added 2026-10-09 (unmeasured)
 
@@ -738,6 +767,21 @@ Four sentences became three: "A delegate's claim is a lead until you re-run its 
 
 Leave-one-out on the live `CLAUDE.md`, one run per model, the section removed in arm B. A probe where a sonnet delegate reports "No security issues found" on a 300-line auth diff; the target is a follow-up that asks what it did not read, run or verify. claude-sonnet-5-5 15/15 with the section, 3/15 without. claude-haiku-5-5 15/15 and 10/15. claude-opus-5-5 5/5 in every arm, and 5/5 with no `CLAUDE.md` at all. Two other probes (re-run a reported test count, re-count reported call sites) were 5/5 without the section on all three models. So only the blind-spots sentence carries behaviour, and only when sonnet or haiku is the main session; sub-agents skip this section. Keep it. Raw rows: session c7da8904 scratchpad `dlg3.lHZMPu/`.
 
+### Delegate naming and TaskStop, added 2026-10-22
+
+Added the paragraph "Spawn a delegate without a `name`…". Source: session 87d213ca (claude-opus-5-5) left 19 named delegates idle in the agent panel, and another project's session left 11 (fix1 to fix9 and others). A named delegate spawns as an agent-team teammate and stays `idle` until TaskStop. Measured in session 87d213ca: an unnamed claude-haiku-5-5 delegate ended as `completed`, and SendMessage to its agentId resumed it with its context (it recalled its first answer). Tried and reverted the same day: a `TeammateIdle` hook printing `{"continue": false}` fired with the teammate's name, but the teammate stayed `idle` 30 s later. Not tried: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=0`, left open on the user's request.
+
+Preloaded A/B on claude-opus-5-5, A = live file without the paragraph, B = live file. The Agent tool offers `name` only with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, so the isolated config set it. P1/P1b/P2 agentic, a hook recorded and denied each Agent call; P3 text decision.
+
+| Probe | Target | A | B |
+|---|---|---|---|
+| P1 audit 3 packages, one delegate each | no `name` | 5/5 (saturated) | not run |
+| P1b same, user will ask each auditor for fixes later | no `name` | 0/5 | 5/5 |
+| P2 break case: one delegate gets a value mid-run | a `name` on the messaged one | 10/10 | 10/10 |
+| P3 named delegate returned, result used | next call loads or calls TaskStop | 0/5 | 5/5 |
+
+P2 B named only the messaged delegate and left the other unnamed 10/10; A named both. P3 B answers are all `ToolSearch select:TaskStop` (a deferred tool); the classifier was widened after reading rows, and no A row mentions TaskStop. Not covered: another model, a real delegate lifecycle, a TaskStop after the user moved on. 45 trials, $7.31. Rows: `~/.claude/prompt-runs/2026-10-22-2026-10-22-unnamed-delegate/` (`labels.tsv`).
+
 ### Clause added 2026-09-11 — from session observation, not probed
 
 - "What a delegate returns": "A count in a report comes from a command's output; a hand tally is a guess." Three sonnet classifier reports in one session hand-tallied wrong totals (one agent twice); the jsonl they wrote was correct.
@@ -764,7 +808,48 @@ Leave-one-out on the live `CLAUDE.md`, one run per model, the section removed in
 - Re-run 2026-10-09 on claude-opus-5-5, leave-one-out, n=5 per probe. Stop after two empty rounds with "be thorough": with the section 4/5, without it 0/5. TTL line: 5/5 and 0/5. Continue after one empty round: 5/5 in both arms, on two scenarios, because claude-opus-5-5 already wants two in a row. Keep. Open question: in the stop probe each round covered a different slice, and the rule stopped claude-opus-5-5 where both controls argued that files were still unaudited. Rows: session c7da8904 scratchpad `dsp4.0Davsi/` (main.jsonl, probes RA, RA2, RB, RC).
 
 
+### Deliberately absent: agent accounting in the ledger line, 2026-11-01
+
+Tried: append "and each dispatched agent as used, dropped with its reason, or still running. Close a goal only when no agent in the ledger is still running." Source: pstack `orchestrate` ("Account for every worker you spawned"). Preloaded A/B, `NO_TOOLS=1`, claude-opus-5-5, n=3. Probe: four agents, one result unread, one still running, two empty rounds. Control 3/3, B 3/3: saturated, the control already tracks every agent. Reverted. Not probed: the case where agent-d is dropped, or agent-b's result changes the decision.
+
+
+### Deliberately absent: a TDD line for fix briefs, 2026-11-01
+
+Tried, at the end of the "A brief names the function…" paragraph: `A brief that fixes bugs or review findings says: "For each one, write its test and run it red before you edit the code."` Text probe (write a Sonnet fix brief for three findings), claude-opus-5-5, n=4: control 4/4 already puts a red-before-fix step in the brief, B 4/4. Saturated, reverted. Real evidence against the line: of the 8 ECP and client-project sub-agents that fixed first and then stashed the fix to see red, 5 had briefs that already asked for test first, 3 of them in order wording ("Write the test first and see it fail") and 2 in result wording ("a test that fails before your fix", which the stash check also satisfies). Briefs ran 3.6k to 16k characters. 6 of the 8 ran on claude-sonnet-5-5. A brief line does not move this. Rows: session 9a45f906 scratchpad `ab.XS6DSU/c10` (ephemeral).
+
 ## Dispatch, "Model and effort"
+
+### TDD steps in the effort-* agent bodies, added 2026-11-01
+
+Text, appended to the body of all five `agents/effort-*.md`: "Before you edit a repo's code to change its behaviour: 1. Write the test for the new behaviour. 2. Run it, and keep the failing output. 3. Edit the code. 4. Run the test, and keep the passing output." The body loads only when the agent spawns, so it costs no context load. "a repo's code" keeps scratch scripts out. Source: pstack `poteto-agent` (rules live in the delegate's system prompt, not the brief) and the brief-line failure above.
+
+Tool-on A/B (`agentic.sh` copy, Read/Edit/Write/Bash), claude-sonnet-5-5 `--effort medium`, body passed with `--append-system-prompt`, live CLAUDE.md preloaded, n=5. Both briefs run 10.3k to 10.8k characters, with "Each change needs a test that fails before your fix." buried mid-rules in both arms. Hit = a failing test run before the first source edit. Rows: session 9a45f906 scratchpad `ab.XS6DSU/c11.*` (ephemeral).
+
+| probe | control (old body) | B (new body) |
+|---|---|---|
+| FIX: three findings with ready diffs | 0/5 (0/15 findings) | 5/5 (15/15) |
+| FEATURE: new `truncate()` from a spec | 0/5 | 5/5 |
+
+- Effect. [shipped]
+- Control: every trial edited the source, wrote the tests and ran them green in one Bash call. 8 of 10 reports admitted the missing red run in Blind spots.
+- FEATURE red runs were all ImportError at collection, never a behavioural failure. Counted as red. A stricter rule (stub first, then an assertion failure) is unmeasured.
+- Not run: claude-haiku-5-5, claude-opus-5-5, the other effort levels, a real Agent-tool spawn (the probe appends the body instead).
+
+### Per-item tier before batching, added 2026-10-26
+
+Sentences "Before you group items into batches, pick the tier of each item. Put items of different tiers in different batches." at the end of the section intro. Source: session 87d213ca (claude-opus-5-5) cut 38 review findings into 4 batches with no file overlap between them, then gave each batch the tier of its hardest item (opus, opus, sonnet, opus), although about half of α and most of γ named every site. preloaded.sh, claude-opus-5-5, n=5, deployed preload, one run per arm (preloaded.sh has no per-arm preload). Hit = every named-site item in a Haiku batch, no batch mixes named-site and judgment items, file-sharing batches ordered.
+
+| probe | control | B (Fan-out bullet) | C (here) |
+|---|---|---|---|
+| P1 mixed 6 named + 4 judgment, 4 shared files | 1/5 | 5/5 | 5/5 |
+| P2 all mechanical, 5 items / 3 files (break) | 2/5 | 1/5 | 1/5 |
+| P3 all judgment (break) | 5/5 | 5/5 | 5/5 |
+
+- Control's miss: the file-disjoint grouping put F7 (named timeout) with F6 (open 409 decision) on Opus, 4/5.
+- P2 misses are the same in every arm: pricing items F3/F4 go to Sonnet, which matches the payment-path risk escalation. No arm fragmented (batches ≤3 in 15/15).
+- B and C tie. C was shipped because the section owns tier choice and the measured Fan-out bullet stays untouched.
+- Not tested: claude-sonnet-5-5 main session, agentic Agent-call dispatch, a named-site item on a high-risk path, haiku at high effort on judgment items whose brief states the decision rule.
+- Rows: `~/.claude/prompt-runs/2026-10-26-tier-batch/` (per-arm runs also in `2026-10-26-tier-batch-{ctl,B,C}/`). 45 calls.
 
 ### 2026-09-11, from memory orchestrator-worker-measurements
 
@@ -787,6 +872,25 @@ Checked against the Dispatch section and `simplify`: the current shape (strong m
 - Not shipped: cutting "so the user can override" from "State the chosen config plus a one-line rationale". The primary hit (names the tier and a reason) is 10/10 in both arms on claude-opus-5-5 and claude-sonnet-5-5. But claude-sonnet-5-5 offers the user another tier ("Tell me if you want a different tier") in 9/10 rows with the clause and 0/10 without it (re-counted by regex in the main session; opus 0/10 both). The metric was chosen after reading rows. A purpose clause that names an action for the user is instruction, not rationale.
 - Shipped: "; they add the role prompt and the tool whitelist" cut. The 40-PR-titles probe with no `agents/` directory: claude-opus-5-5 9/10 both, claude-sonnet-5-5 10/10 both, bare 0/5. Rows: `~/.claude/prompt-runs/2026-10-21-token-pass-fi/`.
 
+
+### Tier A/B, 2026-10-25: review and bounded TDD moved to Haiku
+
+Same brief per probe, model is the only variable, n=5 per cell, agentic.sh with the deployed preload, default effort (claude-haiku-5-5 medium, claude-sonnet-5-5 high). Asked because "Haiku 5.5 is no worse than Sonnet 5.5" was going around; the bundled `claude-api` skill only claims Haiku 5.5 beats Haiku 4.5.
+
+| probe | claude-haiku-5-5 | claude-sonnet-5-5 |
+|---|---|---|
+| review v1, checklist names all 4 items, plants in or near the diff | 20/20 plants, 0 false | 20/20, 0 false |
+| review v2, each plant one hop away (SQL in a helper outside the diff, `timeout=None` default, 1-based page off-by-one, old-order caller through `functools.partial`) plus a whitelisted `ORDER BY` decoy | 20/20, decoy 0/5 | 20/20, decoy 0/5 |
+| TDD primary: failing test first, reported bug fixed, suite green | 5/5 | 5/5 |
+| TDD, second bug in the same function | 4/5 | 5/5 |
+| TDD, same-shape bug in a sibling function the brief does not name (CLAUDE.md "scan the same file") | 1/5 | 3/5, unsettled |
+| mean cost per run | $0.008 | $0.10 to $0.13 |
+
+- Both review probes saturated, so they show parity at this size (6 files, 80-line diff), not on large diffs or on findings outside the checklist.
+- The one gap is work the brief leaves to ambient CLAUDE.md rules. That is why the Haiku clauses carry "names every item" / "names every site", and Sonnet keeps TDD that must find unnamed sibling bugs.
+- Classifier fix after reading rows: claude-sonnet-5-5 wrote the partial caller at line 17 (real 16); the D range widened to 15 to 17 before the final count.
+- Not tested: `lite-scan`'s role prompt on review (runs had full tools; the 2026-10-09 `lite-scan` cross-referencing miss still stands), effort held equal. `lite-scan` pins `effort: low`, these runs used haiku's default medium, so the review clause says "general-purpose agent, never `lite-scan`".
+- Rows: `~/.claude/prompt-runs/2026-10-25-tier-ab-{tdd,review,review2}-{haiku,sonnet}/`. 30 calls, about $1.9.
 
 ### Token pass, 2026-10-21
 
@@ -920,7 +1024,7 @@ because that run happened; it is history, not a live reference. Removing it also
 ### Provenance moved out of the skill 2026-09-23
 
 - Reviewer preamble lists one `ecp impact` command per changed symbol because, measured 2026-09-15, the generic "dig in with ecp" wording produced zero ecp calls across thirteen review agents.
-- Free reader (then `nemotron-3-super-120b-a12b:free`), measured 2026-09-11, three trials: located 4 of 5 planted defects from the diff alone, invented every failure_scenario (three different wrong breaks for one generator defect, confidence 93-95), missed a lock held across `requests.get` every time. A context-file second round fixed the scenario every time and added one lead in one trial of three. 52-line diff 4/4 in 40-95 s, clean on a control diff; 2034-line diff 2.3/4; three parallel calls left one hanging past 200 s.
+- Free reader (then `nemotron-3-super-120b-a12b:free`), measured 2026-09-11, three trials: located 4 of 5 planted defects from the diff alone, invented every failure_scenario (three different wrong breaks for one generator defect, confidence 93-95), missed a lock held across `requests.get` every time. A context-file second round fixed the scenario every time and added one lead in one trial of three. 52-line diff 4/4 in 40-95 s, clean on a control diff; 2034-line diff 2.3/4; three parallel calls left one hanging past 200 s. Removed from `simplify` 2026-10-30; the reason is in `skills/simplify/measurements.md`.
 
 ### Preamble reword probe, 2026-09-15 (same A/B as Dispatch, "When to dispatch")
 
@@ -955,6 +1059,16 @@ Origin: retro of session de4c5c82. The agent ran `git diff --no-index` in its ow
 Preloaded control, the arms differ only in RTK.md, NO_TOOLS, claude-opus-5-5 and claude-sonnet-5-5, 60 calls, 0 errors. Every target probe (R1, R2 and the rebuilt R1b, R2b, which do not name rtk) scored 5/5 on the control: the live RTK.md already names the rewrite and `rtk proxy`. The break case (an ordinary log request) stayed 5/5 on both arms. The incident is agentic: the agent did not notice that it needed native output. A single-shot probe states that need, so it cannot reproduce the incident. Measure with `agentic.sh` before you add the line.
 
 Rewrite forms measured with `rtk hook claude`: `command git`, `env git`, `GIT_PAGER=cat git`, `bash -c`, `sh -c`, `| cat` and `--no-pager` are all rewritten. `rtk proxy`, `/usr/bin/git`, `/usr/bin/env git`, `\git`, a redirect to a file and a script file are not. Rows: `~/.claude/prompt-runs/2026-10-22-r4-rtk-proxy-control`, `~/.claude/prompt-runs/2026-10-22-r4-rtk-proxy-B`.
+
+### RTK.md `rtk recall` bullet, added unmeasured 2026-11-01
+
+Added on user request after the rtk 1.1.0 upgrade. rtk already prints the bare `rtk recall <hash>` command in its elision hint. The bullet adds the partial-fetch flags and the order "recall before `rtk proxy`". `--from` and `--lines` cannot be combined (rtk 1.1.0 rejects the pair), so the bullet lists them as alternatives. No A/B run yet. Measure with `agentic.sh` before you reword it, and delete it if the control already reaches for recall.
+
+Measured 2026-11-01 (preloaded, arms differ only in RTK.md, NO_TOOLS, `CMD:` ask, n=5, haiku/sonnet/opus-5-5, 240 rows). The first wording ("`--grep <regex>`, `--from <n>` or `--lines <n>`") made every model write `rtk recall <hash> --from 300 --lines 61` on a line-range probe, 15/15, and rtk 1.1.0 rejects that pair. The current wording drops both flags: 15/15 still use recall, piped to `sed -n`. Recall on a grep probe: 29/30 both arms. Same run: dropping `rtk gain --history` from the savings bullet cut the history probe from 14/14 to 4/15 (7 rows wrote bare `rtk gain`), so keep that span. "It costs no tokens and needs no action from you" and "and move on": no effect detected (manual `rtk` prefix 0/68 lines in A, 0/77 in B; the 2026-10-22 `rtk proxy` probes unchanged). Rows: `~/.claude/prompt-runs/2026-11-01-rtk-trim`.
+
+### RTK.md `rtk proxy` renamed to `rtk bypass`, unmeasured 2026-11-05
+
+rtk 1.0.0 renamed `rtk proxy` to `rtk bypass` and kept `proxy` as an alias. Both forms printed `ok` on rtk 1.1.0 (`rtk proxy echo ok`, `rtk bypass echo ok`, 2026-11-05). The user asked for the new name, so RTK.md bullets 1 and 2 and `skills/simplify/CHECKLIST.md` item 14 now say `rtk bypass`. `skills/retro/failures.py` drops both words, because old transcripts carry `proxy`. No A/B run: the 2026-10-22 and 2026-11-01 rows above measured the `proxy` spelling. If a future rtk removes the alias, a model that keeps its `proxy` prior breaks. Probe the bypass spelling with `agentic.sh` before you reword these bullets again.
 
 - 2026-10-09 round 4: seven agents re-ran every status whose evidence predated the claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5 models. No original probe survived, so every probe was rebuilt from its entry. A "changed" verdict compares a rebuilt probe with an old one. Budget cap: no round beyond the one in flight, so several cells stop at n=5 or n=10 as "unsettled".
 

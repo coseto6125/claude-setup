@@ -20,6 +20,9 @@ Run this before handing over UI code. Each line is one check; the Do/Don't colum
 | Hover feedback | A visible change — color, shadow, or border | No signal that the element is interactive |
 | Transition timing | `transition-colors duration-200` (150–300ms) | Instant changes, or anything over 500ms |
 | Focus | A visible focus ring reachable by Tab | Focus styles removed for looks |
+| Custom control (slider, drag surface, scrollable strip) | Tapped, then dragged to completion with the target input. A swipe along the page's scroll axis across it scrolls the page | Mouse-only handlers, no `touch-action` on a pointer-event drag surface |
+| Interrupted gesture | A second pointer, `pointercancel`, `lostpointercapture`, release outside, and window `blur` each clear the drag state and release capture. The next drag works without a reload | Drag state that nothing clears on cancel |
+| Gesture evidence | The report names the engine or device that produced it (Chromium is not Safari) and what stayed untested | A screenshot or a resized viewport offered as proof of a gesture |
 
 ## Light/dark contrast
 
@@ -35,10 +38,15 @@ Run this before handing over UI code. Each line is one check; the Do/Don't colum
 
 | Check | Do | Instead of |
 |-------|----|-----------|
-| Floating navbar | `top-4 left-4 right-4` | `top-0 left-0 right-0` |
+| Navbar | On the same side margins as the content, at most a tenth of the first screen tall | A floating pill on its own inset, a header on one margin and the page on another |
 | Fixed-element clearance | Content padded past the navbar height | Content sliding under fixed elements |
 | Container width | One `max-w-6xl` (or `max-w-7xl`) throughout | A different width per section |
+| Side margins | Equal left and right margins at every width, never under 16px | A page pushed to one side |
+| First screen | One `h1` that says what this is, painted on the first frame, two lines at most | A bare name or slogan, a loader, an empty block over a quarter of the screen |
+| Sections | A heading on every section. When text takes one half, the other half holds the picture, a column, a list or a figure | A small caps or mono label standing in for a heading, half the width left as plain ground |
 | Responsive | Verified at 375 / 768 / 1024 / 1440px, no horizontal scroll at any of them | Desktop-only verification |
+| First viewport, desktop | At every width from 1280 to 1600px, the first-viewport content stays above the fold and no fixed-pixel grid wraps | Checking only the fixed breakpoints |
+| Shipped notes | No design notes, prompts or direction text in HTML comments, `data-*` attributes or the bundle | Working notes delivered to the browser |
 
 ## Accessibility
 

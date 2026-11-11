@@ -16,16 +16,15 @@ Pick one branch before you do anything else:
 
 ## Step 0: Route by what you are making
 
-Read the row that matches, load what it names, then continue through the Build
-Workflow. This file is the only always-loaded layer; everything it points at
-loads on demand.
+Pick the row that matches. After its search, and before you write the first line
+of code, Read every file in its `Read before you build` column.
 
-| Making | Search | Then read | Reference source |
+| Making | Search | Read before you build | Reference source |
 |---|---|---|---|
 | One control: button, input, select, modal, tabs, toast, agent progress state | `--domain ux` + `--stack <stack>` | `local/design-patterns-library.md`, `local/motion-craft.md` | Fluid Functionalism, beUI, lucide-animated for an icon that moves |
 | One page section: hero, pricing, feature block, footer | `--domain landing` | `local/anti-patterns.md` | 21st, Watermelon blocks |
 | A whole landing or marketing page | `--design-system` | `local/anti-patterns.md`, `local/web-delivery-checklist.md` | Watermelon showcases, 21st templates |
-| A dashboard or data-dense app screen | `--design-system --density 8`, then `--domain chart` | `local/design-patterns-library.md`, `local/cognitive-load.md` | HeroUI Pro, ReUI, Watermelon dashboards |
+| A dashboard or data-dense app screen | `--design-system --density 8`, then `--domain chart` | `local/data-screens.md`, `local/cognitive-load.md` | HeroUI Pro, ReUI, Watermelon dashboards |
 | Motion: scroll choreography, page transition, 3D or shader hero | `--domain gsap`, plus `--stack threejs` for 3D | `local/motion-craft.md` | GSAP, ThreeUI, GlideCN for a route change |
 | A theme or token system: colors, radius, type scale | `--domain color`, then `--domain typography` | `local/wcag-checklist.md` | tweakcn |
 | Chinese text that wraps to two or more lines: a heading, a lead, a paragraph, a phone layout | `--domain typography "chinese"` | `local/cjk-line-breaking.md` | clreq, BudouX |
@@ -57,8 +56,6 @@ Work priority 1→10 when deciding what to fix first. Query full rule text with 
 | 9 | Navigation | HIGH | `ux` | Predictable back behavior, bottom nav ≤ 5, deep linking | Overloaded nav, broken back button |
 | 10 | Charts & Data | LOW | `chart` | Legends, tooltips, accessible colors | Color as the only encoding |
 
----
-
 ## Running the search tool
 
 The script lives in the skill's own directory, not the project directory. Invoke it by absolute path from any working directory:
@@ -69,6 +66,15 @@ python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain <dom
 
 If `python3` is missing, try `python`, then `py -3`. Requires Python 3.x, no external dependencies.
 
+When a search result conflicts with a `local/` file, the `local/` file wins. Known conflicts:
+
+| Search output | Use instead |
+|---|---|
+| `back.out(...)` easing in a `--domain gsap` snippet | an ease-out curve (`local/anti-patterns.md` § Motion) |
+| "Feature grid/cards (4-6)" in a `--domain landing` section order | sections chosen from the page's argument (Step 1) |
+| `legend-visible` ("Always show legend") | no legend for a single series (`local/data-screens.md` § Charts) |
+| "Smooth Area" in `--domain chart` | a straight line (`local/data-screens.md` § Charts) |
+
 `--design-system` prints `-f ascii` by default. Pass `-f markdown` for a document, or `--json` for the raw design-system dict plus persistence status.
 
 ## Build Workflow
@@ -78,8 +84,11 @@ If `python3` is missing, try `python`, then `py -3`. Requires Python 3.x, no ext
 Extract from the request:
 - **Product type** — SaaS, e-commerce, portfolio, dashboard, entertainment, tool, productivity, or a hybrid
 - **Audience & context** — age group, usage setting (commute, leisure, work)
+- **Surface** — Persuade (landing, marketing), Read (docs, articles) or Operate (dashboards, tools). Persuade gets full commitment: bold, distinct work. On Read and Operate, ambition shows as precision and restraint, and patterns the visitor already knows earn their place
 - **Style keywords** — playful, vibrant, minimal, dark mode, content-first, immersive
 - **Stack** — read it off the project: `package.json` deps (`react`/`next`/`vue`/`svelte`/`nuxt`/`astro`/`@angular`), `pubspec.yaml` (Flutter), `*.xcodeproj` or `Package.swift` (SwiftUI), `composer.json` (Laravel), React Native markers (`app.json` + `react-native`). When nothing is detectable, ask the user which stack to target — every recommendation downstream is routed by this answer.
+
+For a page, write its argument before any layout: one claim per section, in the order the page shows them. Delete a section with no claim.
 
 ### Step 2: Generate the design system (required for any new page or project)
 
@@ -91,17 +100,7 @@ Searches product/style/color/landing/typography in parallel, applies the reasoni
 
 ### Step 2b: Persist it (Master + Overrides)
 
-Add `--persist` together with `--output-dir` pointed at the project root — without `--output-dir` the files land in whatever directory the tool happened to run from:
-
-```bash
-python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system --persist -p "Project Name" --output-dir "<project-root>" [--page "dashboard"]
-```
-
-Writes `design-system/<project-slug>/MASTER.md` (global source of truth) and `design-system/<project-slug>/pages/`; `--page` adds `pages/<page>.md`.
-
-When `MASTER.md` already exists, `--persist` silently leaves it untouched unless you pass `--force` — so a run that looks successful may have written nothing.
-
-**Retrieval when building a page:** read `design-system/<project-slug>/pages/<page>.md` if it exists (its rules override Master), otherwise use `MASTER.md`.
+Before you run `--persist`, read `local/design-md.md` § Persisting the design system. When building a page in a project that has one, read `design-system/<project-slug>/pages/<page>.md` if it exists (its rules override Master), otherwise `MASTER.md`.
 
 ### Step 2c: Design dials (optional)
 
@@ -153,8 +152,15 @@ Available: `html-tailwind`, `react`, `nextjs`, `vue`, `nuxtjs`, `nuxt-ui`, `svel
 ### Step 5: Before delivering
 
 Read the checklist matching the target and run through every item:
-- **Web / desktop** → `local/web-delivery-checklist.md` (cursor and hover feedback, light-mode glass and border visibility, floating-element spacing, container width, 375/768/1024/1440px)
+- **Web / desktop** → `local/web-delivery-checklist.md` (hover feedback, custom-control gestures, light-mode contrast, margins and first screen, 375/768/1024/1440px)
 - **Native / mobile app** (iOS, Android, React Native, Flutter) → `references/pro-rules.md` (touch feedback, safe areas, Dynamic Type, scrim legibility)
+
+Then look at the render:
+
+1. Render the build and take screenshots at the checklist widths. Judge the screenshots, not the code.
+2. Drive every reachable state: open, closed, hover, focus, error, empty, overlong content. Check each for overlap and clipping.
+3. Fix the top three findings, then look again. Stop after three rounds, and report what is left.
+4. Run the last round on the production build.
 
 ### Step 6: Measure it (web only)
 
@@ -179,29 +185,15 @@ so one before-run against one after-run proves nothing.
 
 ## Troubleshooting
 
-| Problem | Where to look |
-|---------|---------------|
-| Can't decide on style/color | Re-run `--design-system` with different keywords, or add `--variance` |
-| Dark mode contrast issues | `references/quick-reference.md` §6 |
-| Animations feel unnatural | `references/quick-reference.md` §7, or `--domain gsap` |
-| Form UX is poor | `references/quick-reference.md` §8 |
-| Navigation feels confusing | `references/quick-reference.md` §9 |
-| Layout breaks on small screens | `references/quick-reference.md` §5 |
-| Performance / jank | `references/quick-reference.md` §3 |
-| Bad PageSpeed score, don't know why | `local/lighthouse-verify.md` (measure first; the audit titles mislead) |
-| A component works but feels dead | `local/motion-craft.md` |
-
----
+When a result looks wrong (style, dark-mode contrast, motion, forms, navigation, small screens, performance, a PageSpeed score), read `local/troubleshooting.md`.
 
 ## Design Critique
 
 Read `local/critique-framework.md` and follow it. It runs a design-director review producing a **scored, prioritized report**: AI-slop detection, Nielsen 0–40 scorecard, cognitive-load and emotional-journey checks, persona red flags, P0–P3 issues, and optional cross-run trend tracking.
 
-Deep references it loads on demand (all under `local/`): `heuristics-scoring.md` (scoring rubric), `personas.md`, `anti-patterns.md` (slop tells + technical standards), `cognitive-load.md`, `wcag-checklist.md`, `testing-resources.md`, `design-patterns-library.md`.
+Deep references it loads on demand (all under `local/`): `heuristics-scoring.md` (scoring rubric), `personas.md`, `anti-patterns.md` (slop tells + technical standards), `cognitive-load.md`, `wcag-checklist.md`, `testing-resources.md`, `design-patterns-library.md`, `data-screens.md` (dashboards and app screens).
 
 When the artifact under review is a live URL or a buildable web project, measure it before writing the report — `local/lighthouse-verify.md`. Measured accessibility and performance findings outrank anything you infer by reading the page.
-
----
 
 ## Upgrading from upstream
 

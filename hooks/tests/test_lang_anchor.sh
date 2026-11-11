@@ -10,7 +10,8 @@ nocheck() { if [[ "$2" != *"$3"* ]]; then pass=$((pass+1)); else fail=$((fail+1)
 
 printf '{"language":"Deutsch"}' > "$T/.claude/settings.json"
 check   test_main_session_gets_anchor        "$(run PostToolUse '{"session_id":"s"}')"  '"hookEventName":"PostToolUse"'
-check   test_anchor_names_language           "$(run UserPromptSubmit '{}')"             'user sees in Deutsch'
+check   test_anchor_names_language           "$(run UserPromptSubmit '{}')"             '給使用者看的文字一律用Deutsch'
+check   test_anchor_asks_thought_first       "$(run PostToolUse '{}')"                 '寫之前先想一句'
 check   test_empty_agent_id_is_main_session  "$(run PostToolUse '{"agent_id":""}')"     'Deutsch'
 nocheck test_subagent_gets_nothing           "$(run PostToolUse '{"agent_id":"a1"}')"   'hookSpecificOutput'
 check   test_subagent_exits_zero             "$(run PostToolUse '{"agent_id":"a1"}')"   'rc=0'

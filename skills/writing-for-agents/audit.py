@@ -276,10 +276,10 @@ def main(argv: list[str]) -> int:
         base = Path(argv[1]) if len(argv) > 1 else Path.home() / ".claude/skills"
         findings = [f for t in sorted(p for p in base.iterdir() if (p / "SKILL.md").is_file()) for f in audit(t)]
     elif argv:
-        base = Path(argv[0])
-        base = base.parent if base.name == "SKILL.md" else base
-        findings = [f for t in [Path(a) for a in argv] for f in audit(t)]
-        findings += refs([Path(a) if Path(a).name == "SKILL.md" else Path(a) / "SKILL.md" for a in argv], base.parent)
+        targets = [Path(a).resolve() for a in argv]
+        base = targets[0].parent if targets[0].name == "SKILL.md" else targets[0]
+        findings = [f for t in targets for f in audit(t)]
+        findings += refs([t if t.name == "SKILL.md" else t / "SKILL.md" for t in targets], base.parent)
     else:
         print(__doc__)
         return 2

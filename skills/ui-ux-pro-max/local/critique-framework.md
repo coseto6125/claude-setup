@@ -18,7 +18,9 @@ Adapted from tdimino's `design-critique` + `minoan-frontend-design`. Deep refere
 
 ## Step 1 — Holistic Review (as design director)
 
-Read the source (HTML/CSS/JS/TS); if browser automation is available, inspect visually in a **fresh tab** (never reuse — prevents state interference). Evaluate:
+Judge from screenshots first, then read the source (HTML/CSS/JS/TS) to locate each finding. When you wrote the code yourself, judge only from the screenshots. Capture them in a **fresh tab** (never reuse — prevents state interference). When the app cannot run, start from committed visual-regression goldens or screenshot fixtures, and check that they match the current tokens, CSS and components. Evaluate:
+
+- **Five-second test** — from the first screen alone, can you say what this is, who it is for and what to do next?
 
 - **AI slop detection** — does this look like every other AI interface? Check `anti-patterns.md` "AI Slop Tells". Tells: AI palette (purple-on-white, neon-on-dark), gradient text, glassmorphism, hero-metric template, identical card grids, generic/second-tier fonts (Inter, *and* over-used Fraunces/Outfit/Space Grotesk), side-tab accent borders, an eyebrow above a heading, styles borrowed to signal a category the page did not earn (monospace, block shadows, emoji as icons), and unthemed browser surfaces (`::selection`, caret, scrollbars, underline offset). **The test:** if someone said "AI made this," would you believe it instantly?
 - **Visual hierarchy** (eye flow, primary-action clarity), **composition** (balance, whitespace, rhythm), **typography**, **color** (purposeful, cohesive, accessible), **states & edge cases** (empty/loading/error/success).

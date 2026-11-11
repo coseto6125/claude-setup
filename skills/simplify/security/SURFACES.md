@@ -4,7 +4,7 @@ Layer 2 of the security review. Read this file when a review reaches the Securit
 
 | Layer | Where | Cost | Read when |
 |-------|-------|------|-----------|
-| 1 — rungs | [`../CHECKLIST.md`](../CHECKLIST.md) § Security | 13 short rungs | every diff that touches a route, auth, tenancy, a permission, a credential, a webhook, a model-callable tool, or a caller-supplied URL |
+| 1 — rungs | [`../CHECKLIST.md`](../CHECKLIST.md) § Security | 14 short rungs | every diff that touches a route, auth, tenancy, a permission, a credential, a webhook, a model-callable tool, a caller-supplied URL, or a guard hook |
 | 2 — router | this file | one table | once the Security section opens |
 | 3 — depth | the files beside this one | one file per present surface | only for a surface the repo HAS and the diff TOUCHES |
 

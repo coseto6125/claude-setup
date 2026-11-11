@@ -184,6 +184,17 @@ def test_refs_unknown_skill_still_reported(tmp_path):
     ]
 
 
+def test_main_relative_skill_path_resolves_sibling_skills_clean(tmp_path, monkeypatch, capsys):
+    for name, body in (("probe", "Use the `peer-agent` skill for the second read.\n"), ("peer-agent", "")):
+        (tmp_path / name).mkdir()
+        (tmp_path / name / "SKILL.md").write_text(SKILL_HEAD + body, encoding="utf-8")
+    monkeypatch.setattr(audit_mod, "bundled_skills", set)
+    monkeypatch.chdir(tmp_path / "probe")
+    for arg in ("SKILL.md", "."):
+        main([arg])
+        assert "not a skill here" not in capsys.readouterr().out
+
+
 def test_measured_aliases_alias_followed_by_score_reported():
     assert measured_aliases("> Measured on haiku 0/5.") == [(1, "haiku")]
 

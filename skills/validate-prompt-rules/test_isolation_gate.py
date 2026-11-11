@@ -22,8 +22,8 @@ def cfg():
     shutil.rmtree(d)
 
 
-def run_gate(cfg, flags, cwd_base='/tmp'):
-    return subprocess.run([sys.executable, '-I', str(GATE), '--script', 'test', '--cfg', str(cfg), '--cwd-base', cwd_base, '--force', '--', *flags],
+def run_gate(cfg, flags, cwd_base='/tmp', extra=()):
+    return subprocess.run([sys.executable, '-I', str(GATE), '--script', 'test', '--cfg', str(cfg), '--cwd-base', cwd_base, '--force', *extra, '--', *flags],
                           capture_output=True, text=True, timeout=600)
 
 
@@ -49,3 +49,36 @@ def test_gate_cwd_under_home_fails_leak(cfg):
     finally:
         shutil.rmtree(base)
     assert r.returncode == 3 and 'leak' in r.stderr, r.stdout + r.stderr
+
+
+ROUTE_FLAGS = ['--setting-sources', 'user', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}']
+
+
+def test_gate_skills_surface_route_flags_pass(cfg):
+    r = run_gate(cfg, ROUTE_FLAGS, extra=['--skills-surface'])
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert 'shadow' in r.stdout and 'surface' in r.stdout
+
+
+def test_gate_skills_surface_with_skills_disabled_fails_surface(cfg):
+    r = run_gate(cfg, [*ROUTE_FLAGS, '--disable-slash-commands'], extra=['--skills-surface'])
+    assert r.returncode == 3 and 'surface' in r.stderr, r.stdout + r.stderr
+
+
+def test_gate_mirrored_rules_count_as_preload_not_leak(cfg):
+    shutil.copytree(HOME_CLAUDE / 'rules', cfg / 'rules')
+    r = run_gate(cfg, FLAGS)
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+@pytest.mark.parametrize('mirror_rules', [False, True])
+def test_gate_cwd_base_under_home_fails_leak_before_any_call(cfg, mirror_rules):
+    if mirror_rules:
+        shutil.copytree(HOME_CLAUDE / 'rules', cfg / 'rules')
+    base = tempfile.mkdtemp(prefix='gate-test-home.', dir=pathlib.Path.home() / '.cache')
+    try:
+        r = subprocess.run([sys.executable, '-I', str(GATE), '--script', 'test', '--cfg', str(cfg), '--cwd-base', base, '--', *FLAGS],
+                           capture_output=True, text=True, timeout=30, env={'PATH': '/usr/bin:/bin', 'HOME': str(pathlib.Path.home())})
+    finally:
+        shutil.rmtree(base)
+    assert r.returncode == 3 and 'leak' in r.stderr and 'under' in r.stderr, r.stdout + r.stderr

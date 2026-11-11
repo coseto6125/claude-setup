@@ -9,8 +9,8 @@ hooks() { jq -cn --argjson c "$1" '{hooks:{PreToolUse:[{matcher:"Bash",hooks:($c
 check() { if [[ "$2" == *"$3"* ]]; then pass=$((pass+1)); else fail=$((fail+1)); echo "FAIL $1: want [$3] in [$2]"; fi; }
 eq() { if [ "$2" = "$3" ]; then pass=$((pass+1)); else fail=$((fail+1)); echo "FAIL $1: want [$3] got [$2]"; fi; }
 
-eq    test_combined_hook_only_silent       "$(run "$(hooks '["~/.claude/hooks/auto-etoon.sh"]')")"                        rc=0
-check test_standalone_rtk_hook_warns       "$(run "$(hooks '["~/.claude/hooks/auto-etoon.sh","rtk hook claude"]')")"      '"systemMessage":"settings.json has a standalone'
+eq    test_combined_hook_only_silent       "$(run "$(hooks '["etoon hook claude"]')")"                                    rc=0
+check test_standalone_rtk_hook_warns       "$(run "$(hooks '["etoon hook claude","rtk hook claude"]')")"      '"systemMessage":"settings.json has a standalone'
 check test_standalone_with_spaces_warns    "$(run "$(hooks '["  rtk hook claude "]')")"                                    'SessionStart'
 eq    test_rtk_inside_other_command_silent "$(run "$(hooks '["printf x | rtk hook claude | jq ."]')")"                     rc=0
 eq    test_no_hooks_key_silent             "$(run '{}')"                                                                   rc=0

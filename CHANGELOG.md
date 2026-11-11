@@ -3,6 +3,114 @@
 Tagged versions start at v0.1.0. The history before it is untagged: see the git log for the
 initial import, the live-config sync, and the skills README rebuild.
 
+## v0.1.13 — 2026-11-11
+
+### Added
+
+- `hooks/compact-handoff-nudge.sh` and its test. After a compaction, it asks the main session
+  to decide whether a fresh session takes over. It fires on the 5th compaction, then on every
+  3rd one.
+- `hooks/guard-cargo-disk.sh`, `hooks/lib/cargo_test_cap.py` and their tests. A compiling
+  cargo command is blocked in three cases: an editing sub-agent of the session still runs, a
+  `cargo test` has no test-thread cap, or the disk has less free space than a build can need.
+- `hooks/loop-guard.py` and its test. On the third failure with the same signature and the
+  same error line, it tells the agent to switch strategy or run codex. A replay over 16,495
+  past transcripts fires it in 76 of them.
+- `hooks/review-hook-edit.sh` and `hooks/track-subagents.sh`, each with a test.
+- `hooks/guard-push-simplify.sh`: two new guards. One blocks a leading `sleep` of 10 s or more
+  under a prefix word, such as `command sleep 110`. The other blocks `pgrep -f` and `pkill -f`
+  with a pattern that matches the command's own shell. A replay over 7,117 past commands finds
+  325 sleep blocks and 1,324 pgrep and pkill blocks.
+- `settings.example.json`: hook entries for `Elicitation`, `ElicitationResult`,
+  `PermissionRequest`, `PostCompact`, `PostToolBatch`, `PostToolUseFailure` and `SessionEnd`,
+  and the `compact-handoff-nudge.sh` entry on `SessionStart`.
+- `skills/catchup`: lists every call that waits on the user, with a pick and a risk for each.
+  Measured: a pick on every call goes from 0/5 to 5/5 on claude-opus-5-5. `measurements.md`
+  holds the evidence.
+- `skills/rust-best-practices` and `skills/rust-port`: customised from
+  morganlinton/BeautifulRust v1.4.0, commit `c6f56d2`, MIT. Each skill carries the upstream
+  `LICENSE`. `rust-best-practices/measurements.md` lists every divergence. The skill carries
+  third-party Rust reference copies under `references/`, and the lint files under `lints/`.
+- `skills/simplify/rust.md`: folds in the upstream rust-review rungs. `SKILL.md` opens it in
+  Phase 1 for a diff that changes a `.rs` file or a `Cargo.toml`.
+- `skills/simplify/gemini-review.sh` and its test: the Gemini reader through `agy`. It runs at
+  Phase-2 HIGH risk only.
+- `skills/simplify/prepass.sh` and its test: prints the blast radius of a diff from
+  `ecp impact --baseline`, with the risk line.
+- `skills/simplify/CHECKLIST.md`: Correctness rung 14, a hook or guard fails closed, with a
+  blocking test for each other spelling of the blocked action. Quality rung 14, orphaned code.
+  Phase 5 runs `ecp pattern` on a confirmed finding and fixes each sibling. Measured: the
+  sibling command goes from 0/5 to 5/5.
+- `skills/handoff`: a section, *Start the next session*, that launches the new session in
+  Orca.
+- `skills/python-perf/benchmarks.md`: three bench-brief lines. Measured: 0/3 to 3/3 on both
+  sub-hits.
+- `skills/retro/failures.py` and its test: counts tool failures across the sessions of one
+  project.
+- `skills/dep-audit/measurements.md` and `skills/python-perf/measurements.md`.
+- `skills/validate-prompt-rules`: `fork_fixture.py`, `long-context.md` and `mirror_surface.py`,
+  with tests. A probe can now resume a real session cut before the turn it measures.
+- `skills/ui-ux-pro-max/local/data-screens.md` and `measurements.md`.
+- `skill_script/pr-wait.sh` and `skill_script/wt-port.sh`, each with a test. `wt-port` prints
+  a stable dev-server port for each worktree.
+- `skills/ecp/.ecp-install.json`: the hashes of the installed ecp skill files.
+
+### Changed
+
+- `CLAUDE.md`: spawn a delegate without a `name`, and stop a named one when you have used its
+  result. Measured: claude-opus-5-5 goes from 0/5 to 5/5 on both probes that bear on the rule.
+- `CLAUDE.md`: pick the tier of each item before you group items into batches. Measured: 1/5
+  to 5/5 on the mixed probe.
+- `CLAUDE.md`: Haiku takes a checklist review of a scoped diff and bounded TDD when the brief
+  names every item or site. Measured: review 20/20 on both Haiku and Sonnet.
+- `ECP.md` and `skills/ecp`: the three failure tells read the new `found: null`, 
+  `unexplained_refs` and `ecp graph delta` output. The breaking-change rule asks the user only
+  when the change alters what an end user or an agent calls, reads or does. The `ecp` CLI
+  references describe the new Cypher subset, `ecp contracts` and `ecp flow` behaviour.
+- `RTK.md`: `rtk proxy` becomes `rtk bypass`, and a bullet adds `rtk recall <hash> --grep`.
+  Measured: 15/15 models use recall once the wording drops `--from` and `--lines`.
+- `agents/effort-*.md`: each body adds a four-step test-first rule. Measured: 0/5 to 5/5 on a
+  fix probe and on a feature probe, on claude-sonnet-5-5.
+- `hooks/ecp-graph-nudge.sh`: reads the repo from ecp's own header line and no longer parses a
+  leading `cd`.
+- `hooks/lang-anchor.sh`: injects a think-first sentence. `mods/token-saver/hooks/register.ts`
+  writes its drift note in Chinese, so an English note does not prime English.
+- `settings.example.json`: `etoon hook claude --pre "$HOME/.claude/bin/cc-auto-etoon cap"`
+  replaces `auto-etoon.sh`. ecp's own `ecp hook pre-tool-use` and `ecp hook post-tool-use`
+  entries replace the `ecp-graph-nudge.sh` entry. It also reorders the env and
+  `skillOverrides` keys.
+- `skills/simplify/SKILL.md`: the tier table gains a reader column. Codex runs at every tier
+  from 1 up, and Gemini runs at Phase-2 HIGH risk. Phase 2 reads `prepass.sh`. A changed CI
+  config, installer or release script is HIGH risk. The summary ends with `## Not covered`.
+- `skills/agent-routing`: the description adds the sign-in debug trigger. Measured: the
+  `access_denied` probe goes from 0/5 to 5/5. A paragraph names `wt-port`.
+- `skills/dep-audit`: the inventory lists open bot PRs, and a bump that needs a manifest edit
+  stays in scope. Measured: 0/5 to 5/5 on both probes.
+- `skills/mpm`: adds the `start` and `stop` commands and the `in-progress` status.
+- `skills/ui-ux-pro-max`: merges impeccable v4.8.0 and taste-skill v2.1.5, and the Step 0
+  pointer becomes a moment trigger. Measured: the routed files are read 0/5 to 5/5 on the
+  dashboard probe. The vendored `data/`, `scripts/` and `references/` are not summarised here.
+- `skills/rust-perf`: a bench brief states the deciding result before the first run. Measured:
+  0/3 to 3/3.
+- `skills/validate-prompt-rules`: a sub-agent that runs the harness uses `model: sonnet`.
+  `route.sh` mirrors the deployed skill surface.
+- `skills/writing-for-agents/audit.py`: resolves relative skill paths before it checks sibling
+  skills. `audit-exemptions.md` records the two Rust skill exemptions.
+- `maintainer-notes.md`: records each measured and each deliberately absent wording above.
+- `skill_script/sweep-merged-worktrees.sh`: closes the `mpm` follow-ups whose PR or branch
+  merged.
+- `README.md`: says the seo skills are adapted, not copied. 31 upstream `SKILL.md` files add
+  `disable-model-invocation: true`, and 23 of them also have edited bodies. `seo-lite` is
+  local. The hooks section counts 21 scripts, 16 of them wired. The skills table lists 38.
+  This release supersedes PR #12 (mpm skill sync) and PR #9 (README corrections).
+
+### Removed
+
+- `hooks/auto-etoon.sh`: the etoon rewrite moves to `etoon hook claude --pre`.
+- `skills/simplify/free-reader.py`: the free third reader finds no unique catch. Its last run
+  gives 9 findings and 0 confirmed.
+- `skills/ecp/_shared/cli/rename.md`: `ecp rename` leaves the skill's command table.
+
 ## v0.1.12 — 2026-10-22
 
 ### Added
